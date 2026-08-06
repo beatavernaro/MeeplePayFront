@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://api-hml.meeplepay.com.br/api',
+  apiUrl: 'https://localhost:55351/api',
 };
