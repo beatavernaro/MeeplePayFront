@@ -224,6 +224,7 @@ export class ComandaService {
   /**
    * Encerrar comanda
    */
+  /*
   encerrarComanda(): Observable<void> {
     return this.garantirComandaAtiva().pipe(
       switchMap((comandaAtiva) => {
@@ -240,7 +241,7 @@ export class ComandaService {
         );
       })
     );
-  }
+  }*/
 
   /**
    * Limpa todos os dados da sessão após encerrar comanda
@@ -463,6 +464,7 @@ export class ComandaService {
   private convertToComanda = (apiComanda: ApiComanda): Comanda => {
     return {
       id: apiComanda.id,
+      numeroComanda: apiComanda.numeroComanda,
       nomeCliente: apiComanda.nomeCliente,
       celular: apiComanda.celular,
       status: apiComanda.status,
@@ -481,6 +483,7 @@ export class ComandaService {
   private convertToComandaResumo = (apiComanda: ApiComanda): ComandaResumo => {
     return {
       id: apiComanda.id,
+      numeroComanda: apiComanda.numeroComanda,
       nomeCliente: apiComanda.nomeCliente,
       status: apiComanda.status,
       valorTotal: apiComanda.valorTotal || 0,

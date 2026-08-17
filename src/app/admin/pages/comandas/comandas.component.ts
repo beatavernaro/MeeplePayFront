@@ -42,8 +42,8 @@ export class AdminComandasComponent implements OnInit {
   totalReceitaAbertas$!: Observable<number>;
   totalReceitaEncerradas$!: Observable<number>;
 
-  displayedColumns: string[] = ['nome', 'dataCriacao', 'status', 'total', 'acoes'];
-  displayedColumnsEncerradas: string[] = ['nome', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
+  displayedColumns: string[] = ['numero', 'nome', 'dataCriacao', 'status', 'total', 'acoes'];
+  displayedColumnsEncerradas: string[] = ['numero', 'nome', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
 
   constructor(
     private comandaService: ComandaService,
