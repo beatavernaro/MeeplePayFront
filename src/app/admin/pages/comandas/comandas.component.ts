@@ -37,20 +37,23 @@ export class AdminComandasComponent implements OnInit {
   comandas$!: Observable<Comanda[]>;
   comandasAbertas$!: Observable<Comanda[]>;
   comandasEncerradas$!: Observable<Comanda[]>;
+  comandasPagas$!: Observable<Comanda[]>;
   totalAbertas$!: Observable<number>;
   totalEncerradas$!: Observable<number>;
+  totalPagas$!: Observable<number>;
   totalReceitaAbertas$!: Observable<number>;
   totalReceitaEncerradas$!: Observable<number>;
+  totalReceitaPagas$!: Observable<number>;
 
-  displayedColumns: string[] = ['numero', 'nome', 'dataCriacao', 'status', 'total', 'acoes'];
-  displayedColumnsEncerradas: string[] = ['numero', 'nome', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
+  displayedColumns: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
+  displayedColumnsEncerradas: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
 
   constructor(
     private comandaService: ComandaService,
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.carregarComandas();
@@ -79,6 +82,11 @@ export class AdminComandasComponent implements OnInit {
       shareReplay(1),
     );
 
+    this.comandasPagas$ = this.comandas$.pipe(
+      map((comandas) => comandas.filter((c) => c.status === 'PAGA')),
+      shareReplay(1),
+    )
+
     this.totalAbertas$ = this.comandasAbertas$.pipe(
       map((comandas) => comandas.length),
       shareReplay(1),
@@ -89,12 +97,22 @@ export class AdminComandasComponent implements OnInit {
       shareReplay(1),
     );
 
+    this.totalPagas$ = this.comandasPagas$.pipe(
+      map((comandas) => comandas.length),
+      shareReplay(1),
+    )
+
     this.totalReceitaAbertas$ = this.comandasAbertas$.pipe(
       map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
       shareReplay(1),
     );
 
     this.totalReceitaEncerradas$ = this.comandasEncerradas$.pipe(
+      map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
+      shareReplay(1),
+    );
+
+    this.totalReceitaPagas$ = this.comandasPagas$.pipe(
       map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
       shareReplay(1),
     );

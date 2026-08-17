@@ -50,7 +50,7 @@ export class AdminDashboardComponent implements OnInit {
     );
 
     this.comandasEncerradas$ = this.comandas$.pipe(
-      map((comandas) => comandas.filter((c) => c.status === 'ENCERRADA')),
+      map((comandas) => comandas.filter((c) => c.status === 'ENCERRADA' || c.status === 'PAGA')),
       shareReplay(1),
     );
 

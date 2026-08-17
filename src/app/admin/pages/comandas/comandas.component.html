@@ -199,5 +199,101 @@
         </mat-card>
       </div>
     </mat-tab>
+
+      <!-- Tab Comandas Pagas -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        Comandas Pagas ({{ (comandasPagas$ | async)?.length || 0 }})
+      </ng-template>
+
+      <div class="tab-content">
+        <div class="stats-row">
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <div class="stat-number">{{ (totalPagas$ | async) || 0 }}</div>
+              <div class="stat-label">Total Comandas Pagas</div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <div class="stat-number">
+                {{ formatarPreco((totalReceitaPagas$ | async) || 0) }}
+              </div>
+              <div class="stat-label">Receita Total</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <mat-card class="table-card">
+          <mat-card-content>
+            <table mat-table [dataSource]="(comandasPagas$ | async) || []" class="comandas-table">
+              <!-- Coluna Numero -->
+              <ng-container matColumnDef="numero">
+                <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
+                <td mat-cell *matCellDef="let comanda"> {{ comanda.numeroComanda }} </td>
+              </ng-container>
+
+              <!-- Coluna Nome -->
+              <ng-container matColumnDef="nome">
+                <th mat-header-cell *matHeaderCellDef>Nome do Cliente</th>
+                <td mat-cell *matCellDef="let comanda">{{ comanda.nomeCliente }}</td>
+              </ng-container>
+
+              <!-- Coluna Data de Abertura -->
+              <ng-container matColumnDef="dataCriacao">
+                <th mat-header-cell *matHeaderCellDef>Data de Abertura</th>
+                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataCriacao) }}</td>
+              </ng-container>
+
+              <!-- Coluna Data de Encerramento -->
+              <ng-container matColumnDef="dataEncerramento">
+                <th mat-header-cell *matHeaderCellDef>Data de Encerramento</th>
+                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataEncerramento) }}</td>
+              </ng-container>
+
+              <!-- Coluna Status -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let comanda">
+                  <mat-chip color="accent">{{ comanda.status }}</mat-chip>
+                </td>
+              </ng-container>
+
+              <!-- Coluna Total -->
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef>Total</th>
+                <td mat-cell *matCellDef="let comanda" class="total-cell completed">
+                  {{ formatarPreco(comanda.total) }}
+                </td>
+              </ng-container>
+
+              <!-- Coluna Ações -->
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef>Ações</th>
+                <td mat-cell *matCellDef="let comanda">
+                  <button mat-icon-button color="primary"
+                    (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes"
+                    class="action-btn">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumnsEncerradas"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumnsEncerradas" class="comanda-row"
+                (click)="visualizarComanda(row.id)"></tr>
+            </table>
+
+            <div *ngIf="!(comandasPagas$ | async)?.length" class="empty-state">
+              <mat-icon>check_circle</mat-icon>
+              <h3>Nenhuma comanda paga</h3>
+              <p>Ainda não há comandas pagas no sistema.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
   </mat-tab-group>
 </div>
