@@ -34,6 +34,11 @@
   }
 }
 
+.filtro-numero {
+  width: 100%;
+  max-width: 320px;
+}
+
 .tab-content {
   padding: 24px 0;
 }
@@ -124,7 +129,9 @@
     &:first-child {
       font-weight: 500;
       color: #333;
-      min-width: 200px;
+      width: 120px;
+      min-width: 120px;
+      max-width: 120px;
     }
 
     &:last-child {

@@ -22,6 +22,7 @@ import { Observable, combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { Produto } from '../../../shared/models/produto.model';
 import { ItemComanda } from '../../../shared/models/item-comanda.model';
+import { Comanda } from '../../../shared/models/comanda.model';
 import { ProdutoService } from '../../../core/services/produto.service';
 import { ComandaService } from '../../../core/services/comanda.service';
 import { LocalStorageService } from '../../../core/services/local-storage.service';
@@ -194,6 +195,7 @@ export class CardapioComponent implements OnInit {
   produtosFiltrados$!: Observable<Produto[]>;
   categorias$!: Observable<string[]>;
   itensComanda$!: Observable<ItemComanda[]>;
+  comandaAtual$!: Observable<Comanda | null>;
   totalItens = 0;
   searchControl = new FormControl('');
   categoriaSelecionada = new FormControl<string>('TODOS');
@@ -215,6 +217,7 @@ export class CardapioComponent implements OnInit {
     // Obter nome do usuário da sessão
     const userData = this.localStorageService.getUserData();
     this.nomeUsuario = userData?.nomeCliente || 'Cliente';
+    this.comandaAtual$ = this.comandaService.comandaAtual$;
 
     // Garantir que a comanda esteja carregada
     this.comandaService.garantirComandaAtiva().subscribe({

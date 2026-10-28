@@ -104,12 +104,13 @@ export class CarrinhoComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Encerrar Comanda',
-        message: 'Deseja finalizar sua comanda? Esta ação não pode ser desfeita.',
-        confirmText: 'Finalizar',
+        message: 'Para finalizar sua comanda dirija-se ao caixa.',
+        confirmText: '',
         cancelText: 'Continuar Consumindo',
       },
     });
 
+    /*
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.comandaService.encerrarComanda().subscribe({
@@ -125,6 +126,7 @@ export class CarrinhoComponent implements OnInit {
         });
       }
     });
+    */
   }
 
   formatarPreco(preco: number): string {

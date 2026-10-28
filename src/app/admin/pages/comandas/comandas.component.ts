@@ -8,9 +8,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Comanda } from '../../../shared/models/comanda.model';
@@ -29,6 +31,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatTabsModule,
     MatChipsModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './comandas.component.html',
   styleUrl: './comandas.component.scss',
@@ -37,20 +41,28 @@ export class AdminComandasComponent implements OnInit {
   comandas$!: Observable<Comanda[]>;
   comandasAbertas$!: Observable<Comanda[]>;
   comandasEncerradas$!: Observable<Comanda[]>;
+  comandasPagas$!: Observable<Comanda[]>;
   totalAbertas$!: Observable<number>;
   totalEncerradas$!: Observable<number>;
+  totalPagas$!: Observable<number>;
   totalReceitaAbertas$!: Observable<number>;
   totalReceitaEncerradas$!: Observable<number>;
+  totalReceitaPagas$!: Observable<number>;
+  comandasAbertasFiltradas$!: Observable<Comanda[]>;
+  comandasEncerradasFiltradas$!: Observable<Comanda[]>;
+  comandasPagasFiltradas$!: Observable<Comanda[]>;
 
-  displayedColumns: string[] = ['nome', 'dataCriacao', 'status', 'total', 'acoes'];
-  displayedColumnsEncerradas: string[] = ['nome', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
+  filtroNumero = new BehaviorSubject<string>('');
+
+  displayedColumns: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
+  displayedColumnsEncerradas: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
 
   constructor(
     private comandaService: ComandaService,
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.carregarComandas();
@@ -79,6 +91,11 @@ export class AdminComandasComponent implements OnInit {
       shareReplay(1),
     );
 
+    this.comandasPagas$ = this.comandas$.pipe(
+      map((comandas) => comandas.filter((c) => c.status === 'PAGA')),
+      shareReplay(1),
+    )
+
     this.totalAbertas$ = this.comandasAbertas$.pipe(
       map((comandas) => comandas.length),
       shareReplay(1),
@@ -89,6 +106,11 @@ export class AdminComandasComponent implements OnInit {
       shareReplay(1),
     );
 
+    this.totalPagas$ = this.comandasPagas$.pipe(
+      map((comandas) => comandas.length),
+      shareReplay(1),
+    )
+
     this.totalReceitaAbertas$ = this.comandasAbertas$.pipe(
       map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
       shareReplay(1),
@@ -97,6 +119,28 @@ export class AdminComandasComponent implements OnInit {
     this.totalReceitaEncerradas$ = this.comandasEncerradas$.pipe(
       map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
       shareReplay(1),
+    );
+
+    this.totalReceitaPagas$ = this.comandasPagas$.pipe(
+      map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
+      shareReplay(1),
+    );
+
+    this.comandasAbertasFiltradas$ = this.filtrarPorNumero(this.comandasAbertas$);
+    this.comandasEncerradasFiltradas$ = this.filtrarPorNumero(this.comandasEncerradas$);
+    this.comandasPagasFiltradas$ = this.filtrarPorNumero(this.comandasPagas$);
+  }
+
+  onFiltroNumeroChange(event: Event): void {
+    const valor = (event.target as HTMLInputElement).value;
+    this.filtroNumero.next(valor.replace(/\D/g, ''));
+  }
+
+  private filtrarPorNumero(comandas$: Observable<Comanda[]>): Observable<Comanda[]> {
+    return combineLatest([comandas$, this.filtroNumero]).pipe(
+      map(([comandas, filtro]) =>
+        filtro ? comandas.filter((c) => String(c.numeroComanda).includes(filtro)) : comandas,
+      ),
     );
   }
 
@@ -109,7 +153,7 @@ export class AdminComandasComponent implements OnInit {
       width: '400px',
       data: {
         title: 'Encerrar Comanda',
-        message: `Tem certeza que deseja encerrar a comanda #${comanda.id}?`,
+        message: `Tem certeza que deseja encerrar a comanda #${comanda.numeroComanda}?`,
         confirmText: 'Encerrar',
         cancelText: 'Cancelar',
       },

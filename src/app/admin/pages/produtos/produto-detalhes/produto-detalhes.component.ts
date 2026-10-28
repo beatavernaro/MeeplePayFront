@@ -66,7 +66,7 @@ interface Estatisticas {
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;" *ngIf="produto$ | async as produto">
         <!-- Informações básicas do produto -->
         <mat-card>
-          <mat-card-header>
+          <mat-card-header style="margin-bottom: 16px;">
             <mat-card-title style="color: #556b2f;">
               <mat-icon>info</mat-icon>
               Informações do Produto
@@ -79,18 +79,6 @@ interface Estatisticas {
                   >Nome:</label
                 >
                 <span style="font-size: 18px; color: #333;">{{ produto.nome }}</span>
-              </div>
-              <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Descrição:</label
-                >
-                <span style="font-size: 14px; color: #555;">{{ produto.descricao || 'Sem descrição' }}</span>
-              </div>
-              <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Categoria:</label
-                >
-                <span style="font-size: 14px; color: #555;">{{ produto.categoria || 'Sem categoria' }}</span>
               </div>
               <div>
                 <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
@@ -117,7 +105,7 @@ interface Estatisticas {
 
         <!-- Estatísticas do produto -->
         <mat-card>
-          <mat-card-header>
+          <mat-card-header style="margin-bottom: 16px;">
             <mat-card-title style="color: #556b2f;">
               <mat-icon>analytics</mat-icon>
               Estatísticas de Vendas

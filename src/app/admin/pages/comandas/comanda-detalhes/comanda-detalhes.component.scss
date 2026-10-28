@@ -123,9 +123,20 @@
   mat-card-actions {
     padding: 16px 20px !important;
     button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      background-color: var(--primary-green) !important;
+      color: var(--white) !important;
+      font-weight: 500;
+
+      &:hover {
+        background-color: var(--primary-green-dark) !important;
+      }
+
+      mat-icon {
+        margin-right: var(--space-2);
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
     }
   }
 }
@@ -133,6 +144,33 @@
 // Seção de itens sem borda
 .itens-section {
   margin-top: 16px;
+
+  .add-produto-section {
+    margin-bottom: 12px;
+
+    .add-produto-controls {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .produto-search-field {
+      flex: 1;
+      max-width: 520px;
+      min-width: 260px;
+    }
+
+    .adicionar-produto-btn {
+      height: 56px;
+      background-color: var(--primary-green) !important;
+      color: var(--white) !important;
+
+      &:hover:not(:disabled) {
+        background-color: var(--primary-green-dark) !important;
+      }
+    }
+  }
 
   .section-title {
     display: flex;
@@ -176,6 +214,27 @@
   .loading mat-spinner {
     margin: 0 auto 16px;
   }
+}
+
+.produto-option {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+
+  strong {
+    color: #556b2f;
+    font-weight: 600;
+  }
+}
+
+::ng-deep .produtos-autocomplete-panel.mat-mdc-autocomplete-panel {
+  background-color: #ffffff !important;
+}
+
+::ng-deep .produtos-autocomplete-panel .mat-mdc-option {
+  background-color: #ffffff !important;
 }
 
 .itens-grid {

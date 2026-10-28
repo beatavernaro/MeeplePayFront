@@ -4,6 +4,7 @@ export type ComandaStatus = 'ABERTA' | 'ENCERRADA';
 
 export interface Comanda {
   id: string;
+  numeroComanda: number;
   nomeCliente: string;
   celular: string;
   status: string;

@@ -1,5 +1,6 @@
 <app-header
   [nomeCliente]="nomeUsuario"
+  [numeroComanda]="(comandaAtual$ | async)?.numeroComanda"
   [showSearchField]="true"
   (searchChange)="onSearchChange($event)"
 >

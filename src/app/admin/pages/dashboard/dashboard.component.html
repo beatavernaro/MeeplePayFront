@@ -50,6 +50,7 @@
           <mat-icon>schedule</mat-icon>
           Comandas em Andamento
         </mat-card-title>
+        
       </mat-card-header>
       <mat-card-content>
         @if (comandasAbertas$ | async; as comandasAbertas) {
@@ -63,7 +64,7 @@
               @for (comanda of comandasAbertas; track comanda.id) {
                 <div class="comanda-item">
                   <div class="comanda-info">
-                    <h4>{{ comanda.nomeCliente }}</h4>
+                    <h4>Comanda #{{ comanda.numeroComanda }} — {{ comanda.nomeCliente }}</h4>
                     <p>{{ formatarData(comanda.dataCriacao) }}</p>
                   </div>
                   <div class="comanda-total">
@@ -102,7 +103,7 @@
               @for (comanda of comandasEncerradas.slice(-5); track comanda.id) {
                 <div class="comanda-item">
                   <div class="comanda-info">
-                    <h4>{{ comanda.nomeCliente }}</h4>
+                    <h4>Comanda #{{ comanda.numeroComanda }} — {{ comanda.nomeCliente }}</h4>
                     <p>{{ formatarData(comanda.dataEncerramento || comanda.dataCriacao) }}</p>
                   </div>
                   <div class="comanda-total">

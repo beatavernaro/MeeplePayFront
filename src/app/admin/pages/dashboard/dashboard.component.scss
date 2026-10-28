@@ -131,7 +131,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: var(--primary-green-light);
+        background-color: #ffffff;
 
         mat-icon {
           font-size: 28px;
@@ -141,7 +141,7 @@
         }
 
         &.completed {
-          background-color: #f0fdf4;
+          background-color: #ffffff;
 
           mat-icon {
             color: #16a34a;
@@ -149,7 +149,7 @@
         }
 
         &.revenue {
-          background-color: #fefce8;
+          background-color: #ffffff;
 
           mat-icon {
             color: #ca8a04;
@@ -157,7 +157,7 @@
         }
 
         &.pending {
-          background-color: #fef3c7;
+          background-color: #ffffff;
 
           mat-icon {
             color: #d97706;

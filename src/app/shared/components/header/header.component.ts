@@ -27,6 +27,9 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
         <div class="toolbar-content">
           <div class="header-greeting">
             <h2 class="greeting-text">{{ titulo || 'Olá, ' + nomeCliente }}</h2>
+            @if (numeroComanda) {
+              <span class="comanda-badge">Comanda #{{ numeroComanda }}</span>
+            }
           </div>
 
           @if (showSearchField) {
@@ -49,6 +52,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 export class HeaderComponent {
   @Input() nomeCliente: string = 'Cliente';
   @Input() titulo: string = '';
+  @Input() numeroComanda?: number | null;
   @Input() showSearchField: boolean = true;
   @Output() searchChange = new EventEmitter<string>();
 
