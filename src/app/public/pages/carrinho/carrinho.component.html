@@ -1,5 +1,6 @@
 <app-header
   titulo="Itens da Comanda"
+  [numeroComanda]="(comandaAtual$ | async)?.numeroComanda"
   [showSearchField]="false"
 >
 </app-header>

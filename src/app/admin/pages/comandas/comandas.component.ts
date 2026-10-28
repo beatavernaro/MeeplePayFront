@@ -8,9 +8,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Comanda } from '../../../shared/models/comanda.model';
@@ -29,6 +31,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatTabsModule,
     MatChipsModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './comandas.component.html',
   styleUrl: './comandas.component.scss',
@@ -44,6 +48,11 @@ export class AdminComandasComponent implements OnInit {
   totalReceitaAbertas$!: Observable<number>;
   totalReceitaEncerradas$!: Observable<number>;
   totalReceitaPagas$!: Observable<number>;
+  comandasAbertasFiltradas$!: Observable<Comanda[]>;
+  comandasEncerradasFiltradas$!: Observable<Comanda[]>;
+  comandasPagasFiltradas$!: Observable<Comanda[]>;
+
+  filtroNumero = new BehaviorSubject<string>('');
 
   displayedColumns: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
   displayedColumnsEncerradas: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
@@ -116,6 +125,23 @@ export class AdminComandasComponent implements OnInit {
       map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
       shareReplay(1),
     );
+
+    this.comandasAbertasFiltradas$ = this.filtrarPorNumero(this.comandasAbertas$);
+    this.comandasEncerradasFiltradas$ = this.filtrarPorNumero(this.comandasEncerradas$);
+    this.comandasPagasFiltradas$ = this.filtrarPorNumero(this.comandasPagas$);
+  }
+
+  onFiltroNumeroChange(event: Event): void {
+    const valor = (event.target as HTMLInputElement).value;
+    this.filtroNumero.next(valor.replace(/\D/g, ''));
+  }
+
+  private filtrarPorNumero(comandas$: Observable<Comanda[]>): Observable<Comanda[]> {
+    return combineLatest([comandas$, this.filtroNumero]).pipe(
+      map(([comandas, filtro]) =>
+        filtro ? comandas.filter((c) => String(c.numeroComanda).includes(filtro)) : comandas,
+      ),
+    );
   }
 
   visualizarComanda(id: number): void {
@@ -127,7 +153,7 @@ export class AdminComandasComponent implements OnInit {
       width: '400px',
       data: {
         title: 'Encerrar Comanda',
-        message: `Tem certeza que deseja encerrar a comanda #${comanda.id}?`,
+        message: `Tem certeza que deseja encerrar a comanda #${comanda.numeroComanda}?`,
         confirmText: 'Encerrar',
         cancelText: 'Cancelar',
       },
