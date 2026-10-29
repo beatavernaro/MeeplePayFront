@@ -11,19 +11,19 @@
   <div class="metric-grid stats-grid">
     <div class="metric-card">
       <span class="metric-card__label">Comandas abertas</span>
-      <span class="metric-card__value">{{ comandasAbertas()?.length }}</span>
+      <span class="metric-card__value">{{ totalAbertas() }}</span>
       <lucide-icon class="metric-card__icon" name="receipt-text" />
     </div>
 
     <div class="metric-card">
       <span class="metric-card__label">Comandas finalizadas</span>
-      <span class="metric-card__value">{{ comandasFinalizadas()?.length }}</span>
+      <span class="metric-card__value">{{ totalFinalizadas() }}</span>
       <lucide-icon class="metric-card__icon" name="circle-check" />
     </div>
 
     <div class="metric-card">
       <span class="metric-card__label">Receita total</span>
-      <span class="metric-card__value metric-card__value--accent">{{ totalReceita() | currency }}</span>
+      <span class="metric-card__value metric-card__value--accent">{{ totalReceita() ?? 0 | currency }}</span>
       <lucide-icon class="metric-card__icon" name="wallet" />
     </div>
   </div>
@@ -74,7 +74,7 @@
         </button>
       </header>
       <div class="list-card__body">
-        @if (comandasFinalizadas(); as comandasEncerradas) {
+        @if (ultimasFinalizadas(); as comandasEncerradas) {
           @if (comandasEncerradas.length === 0) {
             <div class="empty-state">
               <lucide-icon name="info" />
@@ -82,7 +82,7 @@
             </div>
           } @else {
             <ul class="comandas-list">
-              @for (comanda of comandasEncerradas.slice(-5); track comanda.id) {
+              @for (comanda of comandasEncerradas; track comanda.id) {
                 <li>
                   <button type="button" class="comanda-item" (click)="visualizarComanda(comanda.id)">
                     <span class="record-id">#{{ comanda.numeroComanda }}</span>

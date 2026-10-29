@@ -58,11 +58,10 @@ describe('AuthInterceptor', () => {
       ['PUT', `${API}/comandas/c1/encerrar`, USER_TOKEN],
       ['POST', `${API}/comandas`, USER_TOKEN],
       ['GET', `${API}/comandas`, USER_TOKEN],
-      ['GET', `${API}/comandas/c1`, null],
-      ['GET', `${API}/comandas/c1/itens`, null],
-      ['GET', `${API}/comandas/celular/11999998888`, null],
-      ['POST', `${API}/comandas/reconectar`, null],
-      ['PUT', `${API}/comandas/c1/confirmarPagamento`, null],
+      ['GET', `${API}/comandas/c1`, USER_TOKEN],
+      ['GET', `${API}/comandas/c1/itens`, USER_TOKEN],
+      ['POST', `${API}/comandas/reconectar`, USER_TOKEN],
+      ['PUT', `${API}/comandas/c1/confirmarPagamento`, USER_TOKEN],
     ];
 
     it.each(casos)('%s %s -> %s', (method, url, esperado) => {

@@ -11,6 +11,9 @@ import {
   UpdateItemComandaRequest,
   CreateComandaRequest,
   CreateComandaResponse,
+  ListarComandasParams,
+  Pagina,
+  ResumoStatusComanda,
 } from '../../shared/models/api.interfaces';
 
 export interface AcessoComanda {
@@ -212,12 +215,26 @@ export class ComandaService {
   // === ADMIN ===
 
   /**
-   * Lista todas as comandas, já com seus itens
+   * Uma página de comandas, sem os itens. Paginação, filtro e ordenação acontecem no banco
    */
-  obterComandasCompletas(): Observable<Comanda[]> {
+  listarComandasPaginado(params: ListarComandasParams = {}): Observable<Pagina<Comanda>> {
+    const query: Record<string, string | number | string[]> = {};
+    if (params.status?.length) query['status'] = params.status;
+    if (params.busca) query['busca'] = params.busca;
+    if (params.ordenarPor) query['ordenarPor'] = params.ordenarPor;
+    if (params.pagina) query['pagina'] = params.pagina;
+    if (params.tamanhoPagina) query['tamanhoPagina'] = params.tamanhoPagina;
+
     return this.http
-      .get<Comanda[]>(`${this.baseUrl}/comandas`)
-      .pipe(map((comandas) => comandas.map(normalizarComanda)));
+      .get<Pagina<Comanda>>(`${this.baseUrl}/comandas/admin/paginado`, { params: query })
+      .pipe(map((pagina) => ({ ...pagina, itens: pagina.itens.map(normalizarComanda) })));
+  }
+
+  /**
+   * Quantidade de comandas e soma dos totais de cada status (sempre os três status)
+   */
+  obterResumoComandas(): Observable<ResumoStatusComanda[]> {
+    return this.http.get<ResumoStatusComanda[]>(`${this.baseUrl}/comandas/admin/resumo`);
   }
 
   /**
