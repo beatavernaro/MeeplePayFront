@@ -1,6 +1,6 @@
 <main class="encerrada-container">
   <div class="encerrada-content">
-    @if (comandaAtual$ | async; as comanda) {
+    @if (comandaAtual(); as comanda) {
       <div class="success-header">
         <span class="status-icon" [class.status-icon--paga]="comanda.status === 'PAGA'">
           <lucide-icon [name]="comanda.status === 'PAGA' ? 'circle-check' : 'lock'" [size]="28" />
@@ -37,7 +37,7 @@
 
           <div class="total-row">
             <span class="total-label">{{ comanda.status === 'PAGA' ? 'Total' : 'Total a Pagar' }}</span>
-            <span class="total-value money">{{ formatarPreco(comanda.valorTotal) }}</span>
+            <span class="total-value money">{{ comanda.valorTotal | currency }}</span>
           </div>
         </mat-card-content>
       </mat-card>

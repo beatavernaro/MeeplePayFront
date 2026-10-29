@@ -1,207 +1,161 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
+import { CurrencyPipe, DatePipe, LowerCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { Comanda } from '../../../shared/models/comanda.model';
-import { ComandaService } from '../../../core/services/comanda.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { LucideAngularModule } from 'lucide-angular';
+import { Comanda, ComandaStatus } from '../../../shared/models/api.interfaces';
+import { ComandaService } from '../../../core/services/comanda.service';
+import { NotificacaoService } from '../../../core/services/notificacao.service';
+
+interface Aba {
+  status: ComandaStatus;
+  rotulo: string;
+  rotuloTotal: string;
+  rotuloReceita: string;
+  colunas: string[];
+  vazio: { icone: string; titulo: string; texto: string };
+}
+
+const COLUNAS_ABERTAS = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
+const COLUNAS_FECHADAS = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
+
+const ABAS: Aba[] = [
+  {
+    status: 'ABERTA',
+    rotulo: 'Abertas',
+    rotuloTotal: 'Total Abertas',
+    rotuloReceita: 'Receita Pendente',
+    colunas: COLUNAS_ABERTAS,
+    vazio: {
+      icone: 'receipt-text',
+      titulo: 'Nenhuma comanda aberta',
+      texto: 'Todas as comandas estão encerradas ou ainda não foram iniciadas.',
+    },
+  },
+  {
+    status: 'ENCERRADA',
+    rotulo: 'Encerradas',
+    rotuloTotal: 'Total Encerradas',
+    rotuloReceita: 'Receita Total',
+    colunas: COLUNAS_FECHADAS,
+    vazio: {
+      icone: 'circle-check',
+      titulo: 'Nenhuma comanda encerrada',
+      texto: 'Ainda não há comandas finalizadas no sistema.',
+    },
+  },
+  {
+    status: 'PAGA',
+    rotulo: 'Comandas Pagas',
+    rotuloTotal: 'Total Comandas Pagas',
+    rotuloReceita: 'Receita Total',
+    colunas: COLUNAS_FECHADAS,
+    vazio: {
+      icone: 'circle-check',
+      titulo: 'Nenhuma comanda paga',
+      texto: 'Ainda não há comandas pagas no sistema.',
+    },
+  },
+];
 
 @Component({
   selector: 'app-admin-comandas',
-  standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
+    CurrencyPipe,
+    DatePipe,
+    LowerCasePipe,
     MatButtonModule,
-    MatIconModule,
-    LucideAngularModule,
     MatTableModule,
     MatTabsModule,
-    MatChipsModule,
     MatTooltipModule,
     MatFormFieldModule,
     MatInputModule,
+    LucideAngularModule,
   ],
   templateUrl: './comandas.component.html',
   styleUrl: './comandas.component.scss',
 })
-export class AdminComandasComponent implements OnInit {
-  comandas$!: Observable<Comanda[]>;
-  comandasAbertas$!: Observable<Comanda[]>;
-  comandasEncerradas$!: Observable<Comanda[]>;
-  comandasPagas$!: Observable<Comanda[]>;
-  totalAbertas$!: Observable<number>;
-  totalEncerradas$!: Observable<number>;
-  totalPagas$!: Observable<number>;
-  totalReceitaAbertas$!: Observable<number>;
-  totalReceitaEncerradas$!: Observable<number>;
-  totalReceitaPagas$!: Observable<number>;
-  comandasAbertasFiltradas$!: Observable<Comanda[]>;
-  comandasEncerradasFiltradas$!: Observable<Comanda[]>;
-  comandasPagasFiltradas$!: Observable<Comanda[]>;
+export class AdminComandasComponent {
+  private comandaService = inject(ComandaService);
+  private notificacao = inject(NotificacaoService);
+  private router = inject(Router);
 
-  filtroBusca = new BehaviorSubject<string>('');
+  private readonly comandas = signal<Comanda[]>([]);
+  // Somente dígitos: nº da comanda ou celular
+  readonly filtroBusca = signal('');
 
-  displayedColumns: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
-  displayedColumnsEncerradas: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
+  readonly abas = computed(() => {
+    const filtro = this.filtroBusca();
+    return ABAS.map((aba) => {
+      const comandas = this.comandas().filter((c) => c.status === aba.status);
+      return {
+        ...aba,
+        comandas,
+        receita: comandas.reduce((total, c) => total + c.valorTotal, 0),
+        filtradas: filtro ? comandas.filter((c) => correspondeAoFiltro(c, filtro)) : comandas,
+      };
+    });
+  });
 
-  constructor(
-    private comandaService: ComandaService,
-    private router: Router,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-  ) { }
-
-  ngOnInit(): void {
+  constructor() {
     this.carregarComandas();
-  }
-
-  private carregarComandas(): void {
-    this.comandas$ = this.comandaService.obterComandasCompletas().pipe(
-      catchError((error) => {
-        console.error('Erro ao carregar comandas:', error);
-        this.snackBar.open('Erro ao carregar comandas. Tente novamente.', 'Fechar', {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
-        return of([]);
-      }),
-      shareReplay(1),
-    );
-
-    this.comandasAbertas$ = this.comandas$.pipe(
-      map((comandas) => comandas.filter((c) => c.status === 'ABERTA')),
-      shareReplay(1),
-    );
-
-    this.comandasEncerradas$ = this.comandas$.pipe(
-      map((comandas) => comandas.filter((c) => c.status === 'ENCERRADA')),
-      shareReplay(1),
-    );
-
-    this.comandasPagas$ = this.comandas$.pipe(
-      map((comandas) => comandas.filter((c) => c.status === 'PAGA')),
-      shareReplay(1),
-    )
-
-    this.totalAbertas$ = this.comandasAbertas$.pipe(
-      map((comandas) => comandas.length),
-      shareReplay(1),
-    );
-
-    this.totalEncerradas$ = this.comandasEncerradas$.pipe(
-      map((comandas) => comandas.length),
-      shareReplay(1),
-    );
-
-    this.totalPagas$ = this.comandasPagas$.pipe(
-      map((comandas) => comandas.length),
-      shareReplay(1),
-    )
-
-    this.totalReceitaAbertas$ = this.comandasAbertas$.pipe(
-      map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
-      shareReplay(1),
-    );
-
-    this.totalReceitaEncerradas$ = this.comandasEncerradas$.pipe(
-      map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
-      shareReplay(1),
-    );
-
-    this.totalReceitaPagas$ = this.comandasPagas$.pipe(
-      map((comandas) => comandas.reduce((total, comanda) => total + comanda.valorTotal, 0)),
-      shareReplay(1),
-    );
-
-    this.comandasAbertasFiltradas$ = this.filtrarPorNumeroOuCelular(this.comandasAbertas$);
-    this.comandasEncerradasFiltradas$ = this.filtrarPorNumeroOuCelular(this.comandasEncerradas$);
-    this.comandasPagasFiltradas$ = this.filtrarPorNumeroOuCelular(this.comandasPagas$);
   }
 
   onFiltroBuscaChange(event: Event): void {
     const valor = (event.target as HTMLInputElement).value;
-    this.filtroBusca.next(valor.replace(/\D/g, ''));
+    this.filtroBusca.set(valor.replace(/\D/g, ''));
   }
 
-  private filtrarPorNumeroOuCelular(comandas$: Observable<Comanda[]>): Observable<Comanda[]> {
-    return combineLatest([comandas$, this.filtroBusca]).pipe(
-      map(([comandas, filtro]) =>
-        filtro
-          ? comandas.filter(
-              (c) =>
-                String(c.numeroComanda).includes(filtro) ||
-                (c.celular || '').replace(/\D/g, '').includes(filtro),
-            )
-          : comandas,
-      ),
-    );
-  }
-
-  visualizarComanda(id: number): void {
+  visualizarComanda(id: string): void {
     this.router.navigate(['/admin/comandas', id]);
   }
 
   encerrarComanda(comanda: Comanda): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Encerrar Comanda',
-        message: `Tem certeza que deseja encerrar a comanda #${comanda.numeroComanda}?`,
-        confirmText: 'Encerrar',
-        cancelText: 'Cancelar',
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
+    this.notificacao
+      .confirmar(
+        {
+          title: 'Encerrar Comanda',
+          message: `Tem certeza que deseja encerrar a comanda #${comanda.numeroComanda}?`,
+          confirmText: 'Encerrar',
+          cancelText: 'Cancelar',
+        },
+        '400px',
+      )
+      .subscribe((confirmado) => {
+        if (!confirmado) return;
         this.comandaService.encerrarComandaAdmin(comanda.id).subscribe({
           next: () => {
-            this.snackBar.open('Comanda encerrada com sucesso!', 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
+            this.notificacao.sucesso('Comanda encerrada com sucesso!');
             this.carregarComandas();
           },
-          error: (error: any) => {
+          error: (error) => {
             console.error('Erro ao encerrar comanda:', error);
-            this.snackBar.open('Erro ao encerrar comanda', 'Fechar', {
-              duration: 3000,
-              panelClass: ['error-snackbar'],
-            });
+            this.notificacao.erro('Erro ao encerrar comanda');
           },
         });
-      }
+      });
+  }
+
+  private carregarComandas(): void {
+    this.comandaService.obterComandasCompletas().subscribe({
+      next: (comandas) => this.comandas.set(comandas),
+      error: (error) => {
+        console.error('Erro ao carregar comandas:', error);
+        this.notificacao.erro('Erro ao carregar comandas. Tente novamente.', { duracao: 5000 });
+        this.comandas.set([]);
+      },
     });
   }
+}
 
-  formatarPreco(preco: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(preco);
-  }
-
-  formatarData(data: Date | string | null): string {
-    if (!data) return '-';
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date(data));
-  }
+function correspondeAoFiltro(comanda: Comanda, filtro: string): boolean {
+  return (
+    String(comanda.numeroComanda).includes(filtro) ||
+    (comanda.celular || '').replace(/\D/g, '').includes(filtro)
+  );
 }

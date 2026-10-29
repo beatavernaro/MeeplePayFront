@@ -398,13 +398,6 @@ html {
     )
   );
 
-  @include mat.bottom-sheet-overrides(
-    (
-      container-background-color: var(--color-surface),
-      container-shape: var(--radius-overlay),
-    )
-  );
-
   @include mat.tooltip-overrides(
     (
       container-color: var(--color-surface-inverse),
@@ -625,6 +618,11 @@ lucide-icon {
 }
 
 // Snackbar feedback variants
+// Tooltips das ações da tabela de produtos
+.mat-mdc-tooltip.produtos-tooltip {
+  transform: translateY(14px) !important;
+}
+
 .success-snackbar {
   @include mat.snack-bar-overrides(
     (

@@ -15,276 +15,112 @@
   </mat-form-field>
 
   <mat-tab-group class="tabs-container">
-    <!-- Tab Comandas Abertas -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        Abertas ({{ (comandasAbertas$ | async)?.length || 0 }})
-      </ng-template>
+    @for (aba of abas(); track aba.status) {
+      <mat-tab>
+        <ng-template mat-tab-label>
+          {{ aba.rotulo }} ({{ aba.comandas.length }})
+        </ng-template>
 
-      <div class="tab-content">
-        <div class="metric-grid stats-row">
-          <div class="metric-card">
-            <span class="metric-card__label">Total Abertas</span>
-            <span class="metric-card__value">{{ (totalAbertas$ | async) || 0 }}</span>
-            <lucide-icon class="metric-card__icon" name="receipt-text" />
+        <div class="tab-content">
+          <div class="metric-grid stats-row">
+            <div class="metric-card">
+              <span class="metric-card__label">{{ aba.rotuloTotal }}</span>
+              <span class="metric-card__value">{{ aba.comandas.length }}</span>
+              <lucide-icon class="metric-card__icon" name="receipt-text" />
+            </div>
+
+            <div class="metric-card">
+              <span class="metric-card__label">{{ aba.rotuloReceita }}</span>
+              <span class="metric-card__value metric-card__value--accent">{{ aba.receita | currency }}</span>
+              <lucide-icon class="metric-card__icon" name="wallet" />
+            </div>
           </div>
 
-          <div class="metric-card">
-            <span class="metric-card__label">Receita Pendente</span>
-            <span class="metric-card__value metric-card__value--accent">{{ formatarPreco((totalReceitaAbertas$ | async) || 0) }}</span>
-            <lucide-icon class="metric-card__icon" name="wallet" />
-          </div>
-        </div>
-
-        <div class="surface-card table-surface">
+          <div class="surface-card table-surface">
             <div class="table-scroll">
-            <table mat-table [dataSource]="(comandasAbertasFiltradas$ | async) || []" class="comandas-table">
-              <!-- Coluna Numero -->
-              <ng-container matColumnDef="numero">
-                <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
-                <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
-              </ng-container>
+              <table mat-table [dataSource]="aba.filtradas" class="comandas-table">
+                <ng-container matColumnDef="numero">
+                  <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
+                  <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
+                </ng-container>
 
-              <!-- Coluna Nome -->
-              <ng-container matColumnDef="nome">
-                <th mat-header-cell *matHeaderCellDef>Nome do Cliente</th>
-                <td mat-cell *matCellDef="let comanda">{{ comanda.nomeCliente }}</td>
-              </ng-container>
+                <ng-container matColumnDef="nome">
+                  <th mat-header-cell *matHeaderCellDef>Nome do Cliente</th>
+                  <td mat-cell *matCellDef="let comanda">{{ comanda.nomeCliente }}</td>
+                </ng-container>
 
-              <!-- Coluna Data de Abertura -->
-              <ng-container matColumnDef="dataCriacao">
-                <th mat-header-cell *matHeaderCellDef>Data de Abertura</th>
-                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataCriacao) }}</td>
-              </ng-container>
+                <ng-container matColumnDef="dataCriacao">
+                  <th mat-header-cell *matHeaderCellDef>Data de Abertura</th>
+                  <td mat-cell *matCellDef="let comanda">{{ comanda.dataCriacao | date: 'dd/MM/yyyy' }}</td>
+                </ng-container>
 
-              <!-- Coluna Status -->
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let comanda">
-                  <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="dataEncerramento">
+                  <th mat-header-cell *matHeaderCellDef>Data de Encerramento</th>
+                  <td mat-cell *matCellDef="let comanda">
+                    {{ comanda.dataEncerramento ? (comanda.dataEncerramento | date: 'dd/MM/yyyy') : '-' }}
+                  </td>
+                </ng-container>
 
-              <!-- Coluna Total -->
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>Total</th>
-                <td mat-cell *matCellDef="let comanda" class="total-cell money">
-                  {{ formatarPreco(comanda.total) }}
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let comanda">
+                    <span class="status-badge" [class]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
+                  </td>
+                </ng-container>
 
-              <!-- Coluna Ações -->
-              <ng-container matColumnDef="acoes">
-                <th mat-header-cell *matHeaderCellDef>Ações</th>
-                <td mat-cell *matCellDef="let comanda">
-                  <button mat-icon-button 
-                    (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes" aria-label="Visualizar detalhes"
-                    class="action-btn">
-                    <lucide-icon name="eye" />
-                  </button>
-                  <button mat-icon-button (click)="encerrarComanda(comanda); $event.stopPropagation()"
-                    matTooltip="Encerrar comanda" aria-label="Encerrar comanda" class="action-btn action-btn--success">
-                    <lucide-icon name="check" />
-                  </button>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef>Total</th>
+                  <td mat-cell *matCellDef="let comanda" class="total-cell money" [class.completed]="aba.status !== 'ABERTA'">
+                    {{ comanda.total | currency }}
+                  </td>
+                </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns" class="comanda-row is-clickable"
-                (click)="visualizarComanda(row.id)"></tr>
-            </table>
+                <ng-container matColumnDef="acoes">
+                  <th mat-header-cell *matHeaderCellDef>Ações</th>
+                  <td mat-cell *matCellDef="let comanda">
+                    <button
+                      mat-icon-button
+                      (click)="visualizarComanda(comanda.id); $event.stopPropagation()"
+                      matTooltip="Visualizar detalhes"
+                      aria-label="Visualizar detalhes"
+                      class="action-btn"
+                    >
+                      <lucide-icon name="eye" />
+                    </button>
+                    @if (aba.status === 'ABERTA') {
+                      <button
+                        mat-icon-button
+                        (click)="encerrarComanda(comanda); $event.stopPropagation()"
+                        matTooltip="Encerrar comanda"
+                        aria-label="Encerrar comanda"
+                        class="action-btn action-btn--success"
+                      >
+                        <lucide-icon name="check" />
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="aba.colunas"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: aba.colunas"
+                  class="comanda-row is-clickable"
+                  (click)="visualizarComanda(row.id)"
+                ></tr>
+              </table>
             </div>
 
-            <div *ngIf="!(comandasAbertas$ | async)?.length" class="empty-state">
-              <lucide-icon name="receipt-text" />
-              <h3>Nenhuma comanda aberta</h3>
-              <p>Todas as comandas estão encerradas ou ainda não foram iniciadas.</p>
-            </div>
-        </div>
-      </div>
-    </mat-tab>
-
-    <!-- Tab Comandas Encerradas -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        Encerradas ({{ (comandasEncerradas$ | async)?.length || 0 }})
-      </ng-template>
-
-      <div class="tab-content">
-        <div class="metric-grid stats-row">
-          <div class="metric-card">
-            <span class="metric-card__label">Total Encerradas</span>
-            <span class="metric-card__value">{{ (totalEncerradas$ | async) || 0 }}</span>
-            <lucide-icon class="metric-card__icon" name="receipt-text" />
-          </div>
-
-          <div class="metric-card">
-            <span class="metric-card__label">Receita Total</span>
-            <span class="metric-card__value metric-card__value--accent">{{ formatarPreco((totalReceitaEncerradas$ | async) || 0) }}</span>
-            <lucide-icon class="metric-card__icon" name="wallet" />
+            @if (aba.comandas.length === 0) {
+              <div class="empty-state">
+                <lucide-icon [name]="aba.vazio.icone" />
+                <h3>{{ aba.vazio.titulo }}</h3>
+                <p>{{ aba.vazio.texto }}</p>
+              </div>
+            }
           </div>
         </div>
-
-        <div class="surface-card table-surface">
-            <div class="table-scroll">
-            <table mat-table [dataSource]="(comandasEncerradasFiltradas$ | async) || []" class="comandas-table">
-              <!-- Coluna Numero -->
-              <ng-container matColumnDef="numero">
-                <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
-                <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
-              </ng-container>
-
-              <!-- Coluna Nome -->
-              <ng-container matColumnDef="nome">
-                <th mat-header-cell *matHeaderCellDef>Nome do Cliente</th>
-                <td mat-cell *matCellDef="let comanda">{{ comanda.nomeCliente }}</td>
-              </ng-container>
-
-              <!-- Coluna Data de Abertura -->
-              <ng-container matColumnDef="dataCriacao">
-                <th mat-header-cell *matHeaderCellDef>Data de Abertura</th>
-                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataCriacao) }}</td>
-              </ng-container>
-
-              <!-- Coluna Data de Encerramento -->
-              <ng-container matColumnDef="dataEncerramento">
-                <th mat-header-cell *matHeaderCellDef>Data de Encerramento</th>
-                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataEncerramento) }}</td>
-              </ng-container>
-
-              <!-- Coluna Status -->
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let comanda">
-                  <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
-                </td>
-              </ng-container>
-
-              <!-- Coluna Total -->
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>Total</th>
-                <td mat-cell *matCellDef="let comanda" class="total-cell money completed">
-                  {{ formatarPreco(comanda.total) }}
-                </td>
-              </ng-container>
-
-              <!-- Coluna Ações -->
-              <ng-container matColumnDef="acoes">
-                <th mat-header-cell *matHeaderCellDef>Ações</th>
-                <td mat-cell *matCellDef="let comanda">
-                  <button mat-icon-button 
-                    (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes" aria-label="Visualizar detalhes"
-                    class="action-btn">
-                    <lucide-icon name="eye" />
-                  </button>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumnsEncerradas"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsEncerradas" class="comanda-row is-clickable"
-                (click)="visualizarComanda(row.id)"></tr>
-            </table>
-            </div>
-
-            <div *ngIf="!(comandasEncerradas$ | async)?.length" class="empty-state">
-              <lucide-icon name="circle-check" />
-              <h3>Nenhuma comanda encerrada</h3>
-              <p>Ainda não há comandas finalizadas no sistema.</p>
-            </div>
-        </div>
-      </div>
-    </mat-tab>
-
-      <!-- Tab Comandas Pagas -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        Comandas Pagas ({{ (comandasPagas$ | async)?.length || 0 }})
-      </ng-template>
-
-      <div class="tab-content">
-        <div class="metric-grid stats-row">
-          <div class="metric-card">
-            <span class="metric-card__label">Total Comandas Pagas</span>
-            <span class="metric-card__value">{{ (totalPagas$ | async) || 0 }}</span>
-            <lucide-icon class="metric-card__icon" name="receipt-text" />
-          </div>
-
-          <div class="metric-card">
-            <span class="metric-card__label">Receita Total</span>
-            <span class="metric-card__value metric-card__value--accent">{{ formatarPreco((totalReceitaPagas$ | async) || 0) }}</span>
-            <lucide-icon class="metric-card__icon" name="wallet" />
-          </div>
-        </div>
-
-        <div class="surface-card table-surface">
-            <div class="table-scroll">
-            <table mat-table [dataSource]="(comandasPagasFiltradas$ | async) || []" class="comandas-table">
-              <!-- Coluna Numero -->
-              <ng-container matColumnDef="numero">
-                <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
-                <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
-              </ng-container>
-
-              <!-- Coluna Nome -->
-              <ng-container matColumnDef="nome">
-                <th mat-header-cell *matHeaderCellDef>Nome do Cliente</th>
-                <td mat-cell *matCellDef="let comanda">{{ comanda.nomeCliente }}</td>
-              </ng-container>
-
-              <!-- Coluna Data de Abertura -->
-              <ng-container matColumnDef="dataCriacao">
-                <th mat-header-cell *matHeaderCellDef>Data de Abertura</th>
-                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataCriacao) }}</td>
-              </ng-container>
-
-              <!-- Coluna Data de Encerramento -->
-              <ng-container matColumnDef="dataEncerramento">
-                <th mat-header-cell *matHeaderCellDef>Data de Encerramento</th>
-                <td mat-cell *matCellDef="let comanda">{{ formatarData(comanda.dataEncerramento) }}</td>
-              </ng-container>
-
-              <!-- Coluna Status -->
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let comanda">
-                  <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
-                </td>
-              </ng-container>
-
-              <!-- Coluna Total -->
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>Total</th>
-                <td mat-cell *matCellDef="let comanda" class="total-cell money completed">
-                  {{ formatarPreco(comanda.total) }}
-                </td>
-              </ng-container>
-
-              <!-- Coluna Ações -->
-              <ng-container matColumnDef="acoes">
-                <th mat-header-cell *matHeaderCellDef>Ações</th>
-                <td mat-cell *matCellDef="let comanda">
-                  <button mat-icon-button 
-                    (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes" aria-label="Visualizar detalhes"
-                    class="action-btn">
-                    <lucide-icon name="eye" />
-                  </button>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumnsEncerradas"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsEncerradas" class="comanda-row is-clickable"
-                (click)="visualizarComanda(row.id)"></tr>
-            </table>
-            </div>
-
-            <div *ngIf="!(comandasPagas$ | async)?.length" class="empty-state">
-              <lucide-icon name="circle-check" />
-              <h3>Nenhuma comanda paga</h3>
-              <p>Ainda não há comandas pagas no sistema.</p>
-            </div>
-        </div>
-      </div>
-    </mat-tab>
-
+      </mat-tab>
+    }
   </mat-tab-group>
 </div>

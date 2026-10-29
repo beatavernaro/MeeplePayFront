@@ -15,9 +15,7 @@
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" type="email" placeholder="admin@luderia.com" autocomplete="username" />
             <lucide-icon matSuffix name="mail" />
-            @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-              <mat-error>{{ getErrorMessage('email') }}</mat-error>
-            }
+            <mat-error>{{ getErrorMessage('email') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
@@ -25,7 +23,7 @@
             <input
               matInput
               formControlName="password"
-              [type]="hidePassword ? 'password' : 'text'"
+              [type]="hidePassword() ? 'password' : 'text'"
               placeholder="Digite sua senha"
               autocomplete="current-password"
             />
@@ -33,15 +31,13 @@
               mat-icon-button
               matSuffix
               type="button"
-              [attr.aria-label]="hidePassword ? 'Mostrar senha' : 'Ocultar senha'"
-              [attr.aria-pressed]="!hidePassword"
-              (click)="hidePassword = !hidePassword"
+              [attr.aria-label]="hidePassword() ? 'Mostrar senha' : 'Ocultar senha'"
+              [attr.aria-pressed]="!hidePassword()"
+              (click)="hidePassword.set(!hidePassword())"
             >
-              <lucide-icon [name]="hidePassword ? 'eye-off' : 'eye'" />
+              <lucide-icon [name]="hidePassword() ? 'eye-off' : 'eye'" />
             </button>
-            @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-              <mat-error>{{ getErrorMessage('password') }}</mat-error>
-            }
+            <mat-error>{{ getErrorMessage('password') }}</mat-error>
           </mat-form-field>
         </form>
       </mat-card-content>
@@ -51,18 +47,14 @@
           mat-raised-button
           class="btn-block btn-lg login-button"
           (click)="onSubmit()"
-          [disabled]="loading"
+          [disabled]="loading()"
         >
-          @if (loading) {
-            <ng-container>
-              <lucide-icon class="spin" name="loader-circle" />
-              Entrando...
-            </ng-container>
+          @if (loading()) {
+            <lucide-icon class="spin" name="loader-circle" />
+            Entrando...
           } @else {
-            <ng-container>
-              <lucide-icon name="log-in" />
-              Entrar
-            </ng-container>
+            <lucide-icon name="log-in" />
+            Entrar
           }
         </button>
       </mat-card-actions>

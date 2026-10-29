@@ -1,160 +1,69 @@
-import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, catchError, tap, throwError, map, of, switchMap } from 'rxjs';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, catchError, tap, throwError, map, of, switchMap } from 'rxjs';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { LocalStorageService } from './local-storage.service';
 import {
-  Comanda as ApiComanda,
+  Comanda,
   ItemComanda,
   CreateItemComandaRequest,
   UpdateItemComandaRequest,
   CreateComandaRequest,
   CreateComandaResponse,
-  ComandaStatus
 } from '../../shared/models/api.interfaces';
-import { Comanda, ComandaResumo } from '../../shared/models/comanda.model';
 
+/**
+ * Chamadas da API de comandas e o estado da comanda do cliente (comanda atual e seus itens).
+ * Erros 401/403 são tratados no AuthInterceptor.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class ComandaService {
-  private comandaAtualSubject = new BehaviorSubject<Comanda | null>(null);
-  public comandaAtual$ = this.comandaAtualSubject.asObservable();
-
-  private itensComandaSubject = new BehaviorSubject<ItemComanda[]>([]);
-  public itensComanda$ = this.itensComandaSubject.asObservable();
-
+  private http = inject(HttpClient);
+  private localStorageService = inject(LocalStorageService);
+  private router = inject(Router);
   private baseUrl = environment.apiUrl;
 
-  constructor(
-    private http: HttpClient,
-    private localStorageService: LocalStorageService,
-    private router: Router
-  ) {
+  private readonly comandaAtualState = signal<Comanda | null>(null);
+  private readonly itensState = signal<ItemComanda[]>([]);
+
+  readonly comandaAtual = this.comandaAtualState.asReadonly();
+  readonly itens = this.itensState.asReadonly();
+  readonly totalItens = computed(() =>
+    this.itensState().reduce((total, item) => total + item.quantidade, 0),
+  );
+
+  constructor() {
     // Carregar comanda ativa na inicialização se existir
-    this.carregarComandaAtiva();
-  }
-
-  // === MÉTODOS PRIVADOS DE INICIALIZAÇÃO ===
-
-  /**
-   * Carregar comanda ativa se existir dados salvos
-   */
-  private carregarComandaAtiva(): void {
     const userData = this.localStorageService.getUserData();
-
-    if (userData && userData.comandaId && userData.accessToken) {
-      // Buscar comanda por ID para recarregar no estado
+    if (userData?.comandaId && userData.accessToken) {
       this.buscarComanda(userData.comandaId).subscribe({
-        next: (comanda) => {
-          // Comanda recarregada com sucesso
-        },
         error: (error) => {
           console.error('Erro ao recarregar comanda:', error);
-          // Se der erro, limpar dados inválidos
           this.localStorageService.clearUserData();
-        }
+        },
       });
     }
   }
 
-  // === MÉTODOS DE COMANDA ===
-
-  /**
-   * Lista todas as comandas (Admin) - Compatível com interface antiga
-   */
-  obterTodasComandas(filtros?: { status?: string, dataInicio?: string, dataFim?: string }): Observable<ComandaResumo[]> {
-    let queryParams = '';
-    const params = [];
-
-    if (filtros?.status) params.push(`status=${filtros.status}`);
-    if (filtros?.dataInicio) params.push(`dataInicio=${filtros.dataInicio}`);
-    if (filtros?.dataFim) params.push(`dataFim=${filtros.dataFim}`);
-
-    if (params.length > 0) {
-      queryParams = '?' + params.join('&');
-    }
-
-    return this.http.get<ApiComanda[]>(`${this.baseUrl}/comandas${queryParams}`).pipe(
-      map(comandas => comandas.map(this.convertToComandaResumo)),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Lista todas as comandas completas (para admin)
-   */
-  obterComandasCompletas(filtros?: { status?: string, dataInicio?: string, dataFim?: string }): Observable<Comanda[]> {
-    let queryParams = '';
-    const params = [];
-
-    if (filtros?.status) params.push(`status=${filtros.status}`);
-    if (filtros?.dataInicio) params.push(`dataInicio=${filtros.dataInicio}`);
-    if (filtros?.dataFim) params.push(`dataFim=${filtros.dataFim}`);
-
-    if (params.length > 0) {
-      queryParams = '?' + params.join('&');
-    }
-
-    return this.http.get<ApiComanda[]>(`${this.baseUrl}/comandas${queryParams}`).pipe(
-      map(comandas => comandas.map(this.convertToComanda)),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Buscar comanda aberta por celular
-   */
-  buscarComandaPorCelular(celular: string): Observable<Comanda | null> {
-    return this.http.get<ApiComanda>(`${this.baseUrl}/comandas/celular/${celular}`).pipe(
-      map(comanda => {
-        if (comanda) {
-          const comandaConvertida = this.convertToComanda(comanda);
-          this.comandaAtualSubject.next(comandaConvertida);
-          if (comanda.itens) {
-            this.itensComandaSubject.next(comanda.itens);
-          }
-          return comandaConvertida;
-        }
-        return null;
-      }),
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 404) {
-          // Comanda não encontrada é um caso normal
-          return of(null);
-        }
-        console.error('Erro ao buscar comanda por celular:', error);
-        return of(null);
-      })
-    );
-  }
+  // === COMANDA DO CLIENTE ===
 
   /**
    * Reconectar a uma comanda existente obtendo novo token
    */
   reconectarComanda(nomeCliente: string, celular: string): Observable<Comanda> {
-    const dados = {
+    const dados: CreateComandaRequest = {
       nomeCliente: nomeCliente.trim(),
-      celular: celular.trim()
+      celular: celular.trim(),
     };
 
     return this.http.post<CreateComandaResponse>(`${this.baseUrl}/comandas/reconectar`, dados).pipe(
-      tap(response => {
-        // Salvar o novo token JWT
+      map((response) => {
         this.localStorageService.saveAccessToken(response.accessToken);
-
-        // Atualizar comanda atual
-        const comandaConvertida = this.convertToComanda(response.comanda);
-        this.comandaAtualSubject.next(comandaConvertida);
-
-        // Carregar itens se existirem
-        if (response.comanda.itens) {
-          this.itensComandaSubject.next(response.comanda.itens);
-        }
+        return this.definirComandaAtual(response.comanda);
       }),
-      map(response => this.convertToComanda(response.comanda)),
-      catchError(this.handleError)
     );
   }
 
@@ -162,139 +71,39 @@ export class ComandaService {
    * Criar nova comanda com dados do usuário
    */
   criarNovaComanda(nomeCliente: string, celular: string): Observable<Comanda> {
-    const comandaData: CreateComandaRequest = {
+    const dados: CreateComandaRequest = {
       nomeCliente: nomeCliente.trim(),
-      celular: celular.trim()
+      celular: celular.trim(),
     };
 
-    return this.http.post<CreateComandaResponse>(`${this.baseUrl}/comandas`, comandaData).pipe(
-      tap(response => {
-        // Salvar o token JWT no localStorage
+    return this.http.post<CreateComandaResponse>(`${this.baseUrl}/comandas`, dados).pipe(
+      map((response) => {
         this.localStorageService.saveAccessToken(response.accessToken);
-
-        // Atualizar comanda atual
-        const comandaConvertida = this.convertToComanda(response.comanda);
-        this.comandaAtualSubject.next(comandaConvertida);
+        const comanda = normalizarComanda(response.comanda);
+        this.comandaAtualState.set(comanda);
+        return comanda;
       }),
-      map(response => this.convertToComanda(response.comanda)),
-      catchError(this.handleError)
     );
   }
 
   /**
-   * Buscar comanda por ID
+   * Buscar comanda por ID e carregá-la como comanda atual do cliente
    */
-  buscarComanda(id: number | string): Observable<Comanda> {
-    return this.http.get<ApiComanda>(`${this.baseUrl}/comandas/${id}`).pipe(
-      tap(comanda => {
-        const comandaConvertida = this.convertToComanda(comanda);
-        this.comandaAtualSubject.next(comandaConvertida);
-        // Sempre resetar os itens primeiro, depois carregar os novos
-        this.itensComandaSubject.next([]);
-        if (comanda.itens && comanda.itens.length > 0) {
-          this.itensComandaSubject.next(comanda.itens);
-        }
-      }),
-      map(this.convertToComanda),
-      catchError(this.handleError)
-    );
+  buscarComanda(id: string): Observable<Comanda> {
+    return this.obterComanda(id).pipe(tap((comanda) => this.definirComandaAtual(comanda)));
   }
-
-  /**
-   * Obter comanda atual - Compatível com interface antiga
-   */
-  obterComandaAtual(): Observable<Comanda | null> {
-    return this.comandaAtual$;
-  }
-
-  /**
-   * Sincronizar dados da comanda
-   */
-  sincronizarComanda(): Observable<Comanda> {
-    const comandaAtual = this.comandaAtualSubject.value;
-
-    if (!comandaAtual) {
-      return throwError(() => new Error('Nenhuma comanda ativa encontrada para sincronizar'));
-    }
-
-    // Recarregar a comanda pelo ID
-    return this.buscarComanda(comandaAtual.id);
-  }
-
-  /**
-   * Encerrar comanda
-   */
-
-  encerrarComanda(): Observable<void> {
-    return this.garantirComandaAtiva().pipe(
-      switchMap((comandaAtiva) => {
-        return this.http.put<void>(`${this.baseUrl}/comandas/${comandaAtiva.id}/encerrar`, {}).pipe(
-          tap(() => {
-            // Atualizar status local
-            const comandaEncerrada = { ...comandaAtiva, status: 'ENCERRADA' as ComandaStatus };
-            this.comandaAtualSubject.next(comandaEncerrada);
-
-            // NÃO limpar dados aqui - página de encerrada precisa deles
-            // A limpeza será feita quando usuário iniciar nova comanda
-          }),
-          catchError(this.handleError)
-        );
-      })
-    );
-  }
-
-  /**
-   * Limpa todos os dados da sessão após encerrar comanda
-   */
-  limparSessaoComanda(): void {
-    // Limpar dados do sessionStorage
-    this.localStorageService.clearUserData();
-
-    // Resetar subjects do serviço
-    this.comandaAtualSubject.next(null);
-    this.itensComandaSubject.next([]);
-  }
-
-  /**
-   * Obter itens de uma comanda específica (para admin)
-   */
-  obterItensComanda(comandaId: string): Observable<ItemComanda[]> {
-    return this.http.get<ItemComanda[]>(`${this.baseUrl}/comandas/${comandaId}/itens`).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Encerrar comanda específica (para admin)
-   */
-  encerrarComandaAdmin(comandaId: string): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/comandas/${comandaId}/encerrar`, {}).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  confirmarPagamentoAdmin(comandaId: string): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/comandas/${comandaId}/confirmarPagamento`, {}).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // === MÉTODOS DE ITENS ===
 
   /**
    * Garantir que há uma comanda ativa - recarrega se necessário
    */
   garantirComandaAtiva(): Observable<Comanda> {
-    const comandaAtual = this.comandaAtualSubject.value;
-
+    const comandaAtual = this.comandaAtualState();
     if (comandaAtual) {
       return of(comandaAtual);
     }
 
-    // Se não há comanda no estado, tentar recarregar dos dados salvos
     const userData = this.localStorageService.getUserData();
-
-    if (userData && userData.comandaId && userData.accessToken) {
+    if (userData?.comandaId && userData.accessToken) {
       return this.buscarComanda(userData.comandaId);
     }
 
@@ -302,265 +111,158 @@ export class ComandaService {
   }
 
   /**
-   * Adicionar item à comanda
+   * Limpa todos os dados da sessão após encerrar comanda
    */
-  adicionarItem(produtoId: string, quantidade: number, observacoes?: string): Observable<ItemComanda> {
+  limparSessaoComanda(): void {
+    this.localStorageService.clearUserData();
+    this.comandaAtualState.set(null);
+    this.itensState.set([]);
+  }
+
+  // === ITENS DA COMANDA DO CLIENTE ===
+
+  /**
+   * Adicionar item à comanda; se o produto já está nela, soma a quantidade
+   */
+  adicionarItem(produtoId: string, quantidade: number): Observable<ItemComanda> {
     return this.garantirComandaAtiva().pipe(
-      switchMap(comanda => {
-        // Verificar se já existe um item com o mesmo produtoId
-        const itensAtuais = this.itensComandaSubject.value;
-        const itemExistente = itensAtuais.find(item => item.produtoId === produtoId);
-
+      switchMap((comanda) => {
+        const itemExistente = this.itensState().find((item) => item.produtoId === produtoId);
         if (itemExistente) {
-          // Se existe, aumentar a quantidade do item existente
-          const novaQuantidade = itemExistente.quantidade + quantidade;
-          return this.atualizarQuantidadeItem(itemExistente.id, novaQuantidade);
-        } else {
-          // Se não existe, criar novo item
-          const itemData: CreateItemComandaRequest = {
-            comandaId: comanda.id.toString(),
-            produtoId: produtoId,
-            quantidade
-          };
-
-          return this.http.post<ItemComanda>(`${this.baseUrl}/itens-comanda`, itemData).pipe(
-            tap(novoItem => {
-              const itensAtuais = this.itensComandaSubject.value;
-              this.itensComandaSubject.next([...itensAtuais, novoItem]);
-              this.atualizarValorTotal();
-            })
-          );
+          return this.atualizarQuantidadeItem(itemExistente.id, itemExistente.quantidade + quantidade);
         }
+
+        const itemData: CreateItemComandaRequest = {
+          comandaId: comanda.id,
+          produtoId,
+          quantidade,
+        };
+        return this.http.post<ItemComanda>(`${this.baseUrl}/itens-comanda`, itemData).pipe(
+          tap((novoItem) => this.atualizarItens((itens) => [...itens, novoItem])),
+        );
       }),
-      catchError(this.handleErrorCliente)
+      catchError(this.handleErrorCliente),
     );
   }
 
-  /**
-   * Adicionar item a uma comanda específica (fluxo admin)
-   */
-  adicionarItemAdmin(comandaId: string, produtoId: string, quantidade: number): Observable<ItemComanda> {
-    const itemData: CreateItemComandaRequest = {
-      comandaId,
-      produtoId,
-      quantidade
-    };
-
-    return this.http.post<ItemComanda>(`${this.baseUrl}/itens-comanda`, itemData).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Atualizar quantidade de item em comanda específica (fluxo admin)
-   */
-  atualizarQuantidadeItemAdmin(itemId: string, novaQuantidade: number): Observable<ItemComanda> {
-    const updateData: UpdateItemComandaRequest = {
-      quantidade: novaQuantidade
-    };
-
-    return this.http.put<ItemComanda>(`${this.baseUrl}/itens-comanda/${itemId}`, updateData).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Remover item de comanda específica (fluxo admin)
-   */
-  removerItemAdmin(itemId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/itens-comanda/${itemId}`).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Aumentar quantidade de um item
-   */
   aumentarQuantidade(itemId: string): Observable<ItemComanda> {
-    const item = this.itensComandaSubject.value.find(i => i.id === itemId);
-
+    const item = this.itensState().find((i) => i.id === itemId);
     if (!item) {
       return throwError(() => new Error('Item não encontrado'));
     }
-
-    const novaQuantidade = item.quantidade + 1;
-
-    return this.atualizarQuantidadeItem(itemId, novaQuantidade);
+    return this.atualizarQuantidadeItem(itemId, item.quantidade + 1).pipe(
+      catchError(this.handleErrorCliente),
+    );
   }
 
   /**
-   * Diminuir quantidade de um item
+   * Diminuir quantidade de um item; abaixo de 1 o item é removido
    */
   diminuirQuantidade(itemId: string): Observable<ItemComanda> {
-    const item = this.itensComandaSubject.value.find(i => i.id === itemId);
-
+    const item = this.itensState().find((i) => i.id === itemId);
     if (!item) {
       return throwError(() => new Error('Item não encontrado'));
     }
 
     const novaQuantidade = item.quantidade - 1;
-
     if (novaQuantidade <= 0) {
-      return this.removerItem(itemId).pipe(
-        map(() => item) // Retorna o item removido
-      );
+      return this.removerItem(itemId).pipe(map(() => item));
     }
-
-    return this.atualizarQuantidadeItem(itemId, novaQuantidade);
-  }
-
-  /**
-   * Atualizar quantidade de um item
-   */
-  private atualizarQuantidadeItem(itemId: string, novaQuantidade: number): Observable<ItemComanda> {
-    return this.garantirComandaAtiva().pipe(
-      switchMap(comanda => {
-        const updateData: UpdateItemComandaRequest = {
-          quantidade: novaQuantidade
-        };
-
-        return this.http.put<ItemComanda>(`${this.baseUrl}/itens-comanda/${itemId}`, updateData).pipe(
-          tap(itemAtualizado => {
-            const itensAtuais = this.itensComandaSubject.value;
-            const indice = itensAtuais.findIndex(i => i.id === itemId);
-
-            if (indice !== -1) {
-              const novosItens = [...itensAtuais];
-              novosItens[indice] = itemAtualizado;
-              this.itensComandaSubject.next(novosItens);
-              this.atualizarValorTotal();
-            }
-          })
-        );
-      }),
-      catchError(this.handleErrorCliente)
+    return this.atualizarQuantidadeItem(itemId, novaQuantidade).pipe(
+      catchError(this.handleErrorCliente),
     );
   }
 
-  /**
-   * Remover item da comanda
-   */
   removerItem(itemId: string): Observable<void> {
     return this.garantirComandaAtiva().pipe(
-      switchMap(comanda => {
-        return this.http.delete<void>(`${this.baseUrl}/itens-comanda/${itemId}`).pipe(
-          tap(() => {
-            const itensAtuais = this.itensComandaSubject.value;
-            const novosItens = itensAtuais.filter(i => i.id !== itemId);
-            this.itensComandaSubject.next(novosItens);
-            this.atualizarValorTotal();
-          })
-        );
-      }),
-      catchError(this.handleErrorCliente)
+      switchMap(() => this.http.delete<void>(`${this.baseUrl}/itens-comanda/${itemId}`)),
+      tap(() => this.atualizarItens((itens) => itens.filter((i) => i.id !== itemId))),
+      catchError(this.handleErrorCliente),
     );
   }
 
-  // === MÉTODOS AUXILIARES ===
+  private atualizarQuantidadeItem(itemId: string, quantidade: number): Observable<ItemComanda> {
+    return this.garantirComandaAtiva().pipe(
+      switchMap(() => this.atualizarQuantidadeItemAdmin(itemId, quantidade)),
+      tap((itemAtualizado) =>
+        this.atualizarItens((itens) => itens.map((i) => (i.id === itemId ? itemAtualizado : i))),
+      ),
+    );
+  }
+
+  // === ADMIN ===
 
   /**
-   * Calcular valor total da comanda
+   * Lista todas as comandas, já com seus itens
    */
-  calcularValorTotal(): number {
-    const itens = this.itensComandaSubject.value;
-    return itens.reduce((total, item) => total + (item.valorUnitario * item.quantidade), 0);
+  obterComandasCompletas(): Observable<Comanda[]> {
+    return this.http
+      .get<Comanda[]>(`${this.baseUrl}/comandas`)
+      .pipe(map((comandas) => comandas.map(normalizarComanda)));
   }
 
   /**
-   * Verificar se a comanda pode ser modificada
+   * Buscar comanda por ID sem alterar o estado do cliente
    */
-  comandaPodeSerModificada(): boolean {
-    const comanda = this.comandaAtualSubject.value;
-    return comanda ? comanda.status === 'ABERTA' : false;
+  obterComanda(id: string): Observable<Comanda> {
+    return this.http.get<Comanda>(`${this.baseUrl}/comandas/${id}`).pipe(map(normalizarComanda));
+  }
+
+  obterItensComanda(comandaId: string): Observable<ItemComanda[]> {
+    return this.http.get<ItemComanda[]>(`${this.baseUrl}/comandas/${comandaId}/itens`);
+  }
+
+  encerrarComandaAdmin(comandaId: string): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/comandas/${comandaId}/encerrar`, {});
+  }
+
+  confirmarPagamentoAdmin(comandaId: string): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/comandas/${comandaId}/confirmarPagamento`, {});
+  }
+
+  adicionarItemAdmin(comandaId: string, produtoId: string, quantidade: number): Observable<ItemComanda> {
+    const itemData: CreateItemComandaRequest = { comandaId, produtoId, quantidade };
+    return this.http.post<ItemComanda>(`${this.baseUrl}/itens-comanda`, itemData);
+  }
+
+  atualizarQuantidadeItemAdmin(itemId: string, quantidade: number): Observable<ItemComanda> {
+    const updateData: UpdateItemComandaRequest = { quantidade };
+    return this.http.put<ItemComanda>(`${this.baseUrl}/itens-comanda/${itemId}`, updateData);
+  }
+
+  removerItemAdmin(itemId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/itens-comanda/${itemId}`);
+  }
+
+  // === AUXILIARES ===
+
+  private definirComandaAtual(apiComanda: Comanda): Comanda {
+    const comanda = normalizarComanda(apiComanda);
+    this.comandaAtualState.set(comanda);
+    this.itensState.set(comanda.itens ?? []);
+    return comanda;
   }
 
   /**
-   * Limpar dados da comanda atual
+   * Atualiza os itens e recalcula o valor total da comanda atual
    */
-  limparComanda(): void {
-    this.comandaAtualSubject.next(null);
-    this.itensComandaSubject.next([]);
-  }
+  private atualizarItens(atualizar: (itens: ItemComanda[]) => ItemComanda[]): void {
+    const itens = atualizar(this.itensState());
+    this.itensState.set(itens);
 
-  /**
-   * Obter comanda atual sincronamente
-   */
-  getComandaAtual(): Comanda | null {
-    return this.comandaAtualSubject.value;
-  }
-
-  /**
-   * Atualizar valor total da comanda
-   */
-  private atualizarValorTotal(): void {
-    const comandaAtual = this.comandaAtualSubject.value;
+    const comandaAtual = this.comandaAtualState();
     if (comandaAtual) {
-      const valorTotal = this.calcularValorTotal();
-      const comandaAtualizada = { ...comandaAtual, valorTotal };
-      this.comandaAtualSubject.next(comandaAtualizada);
+      const valorTotal = itens.reduce((total, i) => total + i.valorUnitario * i.quantidade, 0);
+      this.comandaAtualState.set({ ...comandaAtual, valorTotal });
     }
   }
 
   /**
-   * Converter ApiComanda para Comanda
-   */
-  private convertToComanda = (apiComanda: ApiComanda): Comanda => {
-    return {
-      id: apiComanda.id,
-      numeroComanda: apiComanda.numeroComanda,
-      nomeCliente: apiComanda.nomeCliente,
-      celular: apiComanda.celular,
-      status: apiComanda.status,
-      valorTotal: apiComanda.valorTotal || 0,
-      total: apiComanda.total || apiComanda.valorTotal || 0,
-      dataCriacao: apiComanda.dataCriacao,
-      dataEncerramento: apiComanda.dataEncerramento,
-      observacoes: apiComanda.observacoes,
-      itens: apiComanda.itens || []
-    };
-  }
-
-  /**
-   * Converter ApiComanda para ComandaResumo
-   */
-  private convertToComandaResumo = (apiComanda: ApiComanda): ComandaResumo => {
-    return {
-      id: apiComanda.id,
-      numeroComanda: apiComanda.numeroComanda,
-      nomeCliente: apiComanda.nomeCliente,
-      status: apiComanda.status,
-      valorTotal: apiComanda.valorTotal || 0,
-      quantidadeItens: apiComanda.itens?.length || 0,
-      dataCriacao: apiComanda.dataCriacao
-    };
-  }
-
-  /**
-   * Manipulador de erros
-   */
-  private handleError = (error: HttpErrorResponse) => {
-    console.error('Erro na requisição:', error);
-
-    if (error.status === 401) {
-      // Token expirado ou inválido
-      this.localStorageService.clearUserData();
-      this.router.navigate(['/start']);
-    } else if (error.status === 403) {
-      // Tentativa de modificar comanda de outro cliente
-      console.warn('Tentativa de acessar comanda de outro cliente');
-      this.localStorageService.clearUserData();
-      this.router.navigate(['/start']);
-    }
-
-    return throwError(() => error);
-  }
-
-  /**
-   * Manipulador de erros das ações do cliente nos itens: se a comanda foi encerrada
-   * ou paga pelo caixa enquanto o cliente usava o app, redireciona para o aviso
+   * Erros das ações do cliente nos itens: se a comanda foi encerrada ou paga pelo caixa
+   * enquanto o cliente usava o app, redireciona para o aviso
    */
   private handleErrorCliente = (error: HttpErrorResponse) => {
-    const comandaAtual = this.comandaAtualSubject.value;
+    const comandaAtual = this.comandaAtualState();
 
     if (error.status === 400 && comandaAtual) {
       this.buscarComanda(comandaAtual.id).subscribe({
@@ -569,10 +271,26 @@ export class ComandaService {
             this.router.navigate(['/encerrada']);
           }
         },
-        error: () => { },
+        error: () => {},
       });
     }
 
-    return this.handleError(error);
-  }
+    return throwError(() => error);
+  };
+}
+
+function normalizarComanda(apiComanda: Comanda): Comanda {
+  return {
+    id: apiComanda.id,
+    numeroComanda: apiComanda.numeroComanda,
+    nomeCliente: apiComanda.nomeCliente,
+    celular: apiComanda.celular,
+    status: apiComanda.status,
+    valorTotal: apiComanda.valorTotal || 0,
+    total: apiComanda.total || apiComanda.valorTotal || 0,
+    dataCriacao: apiComanda.dataCriacao,
+    dataEncerramento: apiComanda.dataEncerramento,
+    observacoes: apiComanda.observacoes,
+    itens: apiComanda.itens || [],
+  };
 }

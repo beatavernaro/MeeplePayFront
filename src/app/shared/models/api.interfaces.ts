@@ -7,7 +7,7 @@ export interface Comanda {
   numeroComanda: number;
   nomeCliente: string;
   celular: string;
-  status: string;
+  status: ComandaStatus;
   valorTotal: number;
   total: number;
   dataCriacao: string;
@@ -83,20 +83,4 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   token: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  nome: string;
-}
-
-export interface RegisterResponse {
-  success: boolean;
-  message: string;
-}
-
-export interface ApiError {
-  message: string;
-  errors?: { [key: string]: string[] };
 }

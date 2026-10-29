@@ -3,59 +3,49 @@ import { Injectable } from '@angular/core';
 export interface UserData {
   nomeCliente: string;
   celular: string;
-  comandaId?: number | string;
+  comandaId?: string;
   lastActivity?: string;
   accessToken?: string;
   tokenExpiration?: string;
 }
 
+const HORA_EM_MS = 60 * 60 * 1000;
+
+/**
+ * Sessão do cliente (nome, celular, comanda e token), guardada no sessionStorage.
+ * Expira após 24h sem atividade; o token também expira 24h depois de emitido.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class LocalStorageService {
   private readonly USER_DATA_KEY = 'comanda_virtual_user_data';
 
-  constructor() {}
-
   /**
-   * Salva dados do usuário no sessionStorage
+   * Salva dados do usuário, renovando a última atividade
    */
   saveUserData(userData: UserData): void {
-    const dataToSave: UserData = {
-      ...userData,
-      lastActivity: new Date().toISOString()
-    };
-    
-    try {
-      sessionStorage.setItem(this.USER_DATA_KEY, JSON.stringify(dataToSave));
-    } catch (error) {
-      console.error('Erro ao salvar dados do usuário:', error);
-    }
+    this.gravar({ ...userData, lastActivity: new Date().toISOString() });
   }
 
   /**
-   * Recupera dados do usuário do sessionStorage
+   * Recupera dados do usuário; dados expirados são apagados e retornam null
    */
   getUserData(): UserData | null {
     try {
       const data = sessionStorage.getItem(this.USER_DATA_KEY);
       if (!data) return null;
-      
-      const userData = JSON.parse(data);
-      
-      // Verificar se os dados não expiraram (24 horas)
+
+      const userData: UserData = JSON.parse(data);
+
       if (userData.lastActivity) {
-        const lastActivity = new Date(userData.lastActivity);
-        const now = new Date();
-        const diffHours = (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
-        
-        if (diffHours > 24) {
-          // Dados expirados - limpar
+        const inativoHa = Date.now() - new Date(userData.lastActivity).getTime();
+        if (inativoHa > 24 * HORA_EM_MS) {
           this.clearUserData();
           return null;
         }
       }
-      
+
       return userData;
     } catch (error) {
       console.error('Erro ao recuperar dados do usuário:', error);
@@ -63,28 +53,11 @@ export class LocalStorageService {
     }
   }
 
-  /**
-   * Verifica se há dados válidos salvos
-   */
   hasValidUserData(): boolean {
     const userData = this.getUserData();
     return userData !== null && !!userData.nomeCliente && !!userData.celular;
   }
 
-  /**
-   * Atualiza o ID da comanda nos dados salvos
-   */
-  updateComandaId(comandaId: number | string): void {
-    const userData = this.getUserData();
-    if (userData) {
-      userData.comandaId = comandaId;
-      this.saveUserData(userData);
-    }
-  }
-
-  /**
-   * Limpa todos os dados salvos
-   */
   clearUserData(): void {
     try {
       sessionStorage.removeItem(this.USER_DATA_KEY);
@@ -93,9 +66,6 @@ export class LocalStorageService {
     }
   }
 
-  /**
-   * Atualiza timestamp da última atividade
-   */
   updateLastActivity(): void {
     const userData = this.getUserData();
     if (userData) {
@@ -104,41 +74,27 @@ export class LocalStorageService {
   }
 
   /**
-   * Salvar token de acesso
+   * Salva o token de acesso, válido por 24h
    */
   saveAccessToken(token: string): void {
     const userData = this.getUserData();
-    const expirationTime = new Date();
-    expirationTime.setHours(expirationTime.getHours() + 24); // Token expira em 24h
-    
-    const updatedData: UserData = {
-      ...(userData || {}), // Se userData for null, usar objeto vazio
+    this.gravar({
+      ...(userData ?? ({} as UserData)),
       accessToken: token,
-      tokenExpiration: expirationTime.toISOString()
-    } as UserData;
-    
-    try {
-      sessionStorage.setItem(this.USER_DATA_KEY, JSON.stringify(updatedData));
-    } catch (error) {
-      console.error('Erro ao salvar token:', error);
-    }
+      tokenExpiration: new Date(Date.now() + 24 * HORA_EM_MS).toISOString(),
+    });
   }
 
   /**
-   * Obter token de acesso válido
+   * Token de acesso válido; se expirou, apaga a sessão e retorna null
    */
   getAccessToken(): string | null {
     const userData = this.getUserData();
-    if (!userData || !userData.accessToken || !userData.tokenExpiration) {
+    if (!userData?.accessToken || !userData.tokenExpiration) {
       return null;
     }
 
-    // Verificar se o token expirou
-    const now = new Date();
-    const expiration = new Date(userData.tokenExpiration);
-    
-    if (now >= expiration) {
-      // Token expirado, limpar dados
+    if (Date.now() >= new Date(userData.tokenExpiration).getTime()) {
       this.clearUserData();
       return null;
     }
@@ -146,21 +102,11 @@ export class LocalStorageService {
     return userData.accessToken;
   }
 
-  /**
-   * Verificar se o token é válido
-   */
-  hasValidToken(): boolean {
-    return this.getAccessToken() !== null;
-  }
-
-  /**
-   * Limpar token expirado
-   */
-  clearExpiredToken(): void {
-    const userData = this.getUserData();
-    if (userData) {
-      const { accessToken, tokenExpiration, ...dataWithoutToken } = userData;
-      this.saveUserData(dataWithoutToken as UserData);
+  private gravar(userData: UserData): void {
+    try {
+      sessionStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
+    } catch (error) {
+      console.error('Erro ao salvar dados do usuário:', error);
     }
   }
 }

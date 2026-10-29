@@ -1,44 +1,26 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
+import { Component, computed, inject, signal } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { Router, NavigationEnd } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map, catchError, shareReplay, filter } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { Produto } from '../../../shared/models/produto.model';
-import { ProdutoService } from '../../../core/services/produto.service';
-import {
-  ConfirmDialogComponent,
-  ConfirmDialogData,
-} from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
+import { Produto } from '../../../shared/models/api.interfaces';
+import { ProdutoService } from '../../../core/services/produto.service';
+import { NotificacaoService } from '../../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-admin-produtos',
-  standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
+    CurrencyPipe,
     MatButtonModule,
-    MatIconModule,
-    LucideAngularModule,
     MatTableModule,
     MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
     MatInputModule,
     MatFormFieldModule,
+    LucideAngularModule,
   ],
   template: `
     <div class="page produtos-page">
@@ -63,8 +45,8 @@ import { LucideAngularModule } from 'lucide-angular';
         <input
           matInput
           type="search"
-          [(ngModel)]="termoBusca"
-          (ngModelChange)="filtrarProdutos()"
+          [value]="termoBusca()"
+          (input)="termoBusca.set($any($event.target).value)"
           placeholder="Digite o nome do produto..."
         />
         <lucide-icon matSuffix name="search" />
@@ -73,18 +55,22 @@ import { LucideAngularModule } from 'lucide-angular';
       <!-- Tabela de produtos -->
       <div class="surface-card table-surface">
         <div class="table-scroll">
-          <table mat-table [dataSource]="(produtosFiltrados$ | async) || []">
+          <table mat-table [dataSource]="produtosFiltrados() ?? []">
             <!-- Coluna Nome -->
             <ng-container matColumnDef="nome">
               <th mat-header-cell *matHeaderCellDef>Nome do Produto</th>
               <td mat-cell *matCellDef="let produto">
                 <div class="produto-cell">
                   <span class="produto-cell__name">{{ produto.nome }}</span>
-                  <span *ngIf="produto.estoque <= 0" class="status-badge status-badge--warning">
-                    <lucide-icon name="triangle-alert" />
-                    Sem estoque
-                  </span>
-                  <span *ngIf="!produto.ativo" class="status-badge status-badge--danger">Inativo</span>
+                  @if (produto.estoque <= 0) {
+                    <span class="status-badge status-badge--warning">
+                      <lucide-icon name="triangle-alert" />
+                      Sem estoque
+                    </span>
+                  }
+                  @if (!produto.ativo) {
+                    <span class="status-badge status-badge--danger">Inativo</span>
+                  }
                 </div>
               </td>
             </ng-container>
@@ -93,7 +79,7 @@ import { LucideAngularModule } from 'lucide-angular';
             <ng-container matColumnDef="preco">
               <th mat-header-cell *matHeaderCellDef>Valor Unitário</th>
               <td mat-cell *matCellDef="let produto">
-                <span class="money produto-preco">R$ {{ formatarMoeda(produto.preco) }}</span>
+                <span class="money produto-preco">{{ produto.preco | currency }}</span>
               </td>
             </ng-container>
 
@@ -118,6 +104,7 @@ import { LucideAngularModule } from 'lucide-angular';
                     matTooltip="Editar produto"
                     matTooltipPosition="above"
                     matTooltipShowDelay="300"
+                    matTooltipClass="produtos-tooltip"
                     aria-label="Editar produto"
                     (click)="editarProduto(produto)"
                   >
@@ -129,8 +116,9 @@ import { LucideAngularModule } from 'lucide-angular';
                     matTooltip="Detalhes do produto"
                     matTooltipPosition="above"
                     matTooltipShowDelay="300"
+                    matTooltipClass="produtos-tooltip"
                     aria-label="Detalhes do produto"
-                    (click)="verDetalhes(produto.id!)"
+                    (click)="verDetalhes(produto.id)"
                   >
                     <lucide-icon name="eye" />
                   </button>
@@ -139,8 +127,9 @@ import { LucideAngularModule } from 'lucide-angular';
                     class="row-action"
                     [class.row-action--danger]="produto.ativo"
                     [class.row-action--success]="!produto.ativo"
-                    matTooltip="{{ produto.ativo ? 'Desativar produto' : 'Ativar produto' }}"
+                    [matTooltip]="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
                     matTooltipPosition="above"
+                    matTooltipClass="produtos-tooltip"
                     [attr.aria-label]="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
                     (click)="toggleStatusProduto(produto)"
                   >
@@ -156,31 +145,30 @@ import { LucideAngularModule } from 'lucide-angular';
         </div>
 
         <!-- Mensagem quando não há produtos -->
-        <div *ngIf="(produtosFiltrados$ | async) as produtosFiltrados; else semProdutos">
-          <div *ngIf="produtosFiltrados.length === 0" class="empty-state">
-            <lucide-icon name="package" />
-            <h3>
-              {{
-                (produtos$ | async)?.length === 0
-                  ? 'Nenhum produto cadastrado'
-                  : 'Nenhum produto encontrado para "' + termoBusca + '"'
-              }}
-            </h3>
-            <button
-              *ngIf="(produtos$ | async)?.length === 0"
-              mat-raised-button
-              (click)="criarNovoProduto()"
-            >
-              <lucide-icon name="plus" />
-              Cadastrar Primeiro Produto
-            </button>
-          </div>
-        </div>
-        <ng-template #semProdutos>
+        @if (produtosFiltrados(); as produtosFiltrados) {
+          @if (produtosFiltrados.length === 0) {
+            <div class="empty-state">
+              <lucide-icon name="package" />
+              <h3>
+                {{
+                  produtos()?.length === 0
+                    ? 'Nenhum produto cadastrado'
+                    : 'Nenhum produto encontrado para "' + termoBusca() + '"'
+                }}
+              </h3>
+              @if (produtos()?.length === 0) {
+                <button mat-raised-button (click)="criarNovoProduto()">
+                  <lucide-icon name="plus" />
+                  Cadastrar Primeiro Produto
+                </button>
+              }
+            </div>
+          }
+        } @else {
           <div class="empty-state" role="status">
             <p>Carregando produtos...</p>
           </div>
-        </ng-template>
+        }
       </div>
     </div>
   `,
@@ -243,10 +231,6 @@ import { LucideAngularModule } from 'lucide-angular';
         color: var(--color-success);
       }
 
-      .mat-mdc-tooltip {
-        transform: translateY(14px) !important;
-      }
-
       @media (max-width: 768px) {
         .produtos-page .produtos-busca {
           max-width: none;
@@ -254,71 +238,25 @@ import { LucideAngularModule } from 'lucide-angular';
       }
     `,
   ],
-  encapsulation: ViewEncapsulation.None,
 })
-export class AdminProdutosComponent implements OnInit, OnDestroy {
-  termoBusca: string = '';
-  displayedColumns: string[] = ['nome', 'preco', 'estoque', 'acoes'];
-  private routeSubscription?: Subscription;
-  
-  // Observable com todos os produtos
-  produtos$!: Observable<Produto[]>;
-  // Observable filtrado baseado no termo de busca
-  produtosFiltrados$!: Observable<Produto[]>;
+export class AdminProdutosComponent {
+  private produtoService = inject(ProdutoService);
+  private notificacao = inject(NotificacaoService);
+  private router = inject(Router);
 
-  constructor(
-    private produtoService: ProdutoService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private router: Router,
-  ) {}
+  readonly displayedColumns = ['nome', 'preco', 'estoque', 'acoes'];
+  readonly termoBusca = signal('');
 
-  ngOnInit(): void {
-    this.carregarProdutos();
+  // undefined enquanto carrega
+  readonly produtos = signal<Produto[] | undefined>(undefined);
+  readonly produtosFiltrados = computed(() => {
+    const produtos = this.produtos();
+    const termo = this.termoBusca();
+    if (!produtos || !termo.trim()) return produtos;
+    return produtos.filter((p) => p.nome.toLowerCase().includes(termo.toLowerCase()));
+  });
 
-    // Recarregar produtos quando voltar para a página
-    this.routeSubscription = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        if (event.url === '/admin/produtos') {
-          this.carregarProdutos();
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    if (this.routeSubscription) {
-      this.routeSubscription.unsubscribe();
-    }
-  }
-
-  private carregarProdutos(): void {
-    this.produtos$ = this.produtoService.obterTodosProdutos().pipe(
-      catchError((error) => {
-        console.error('Erro ao carregar produtos:', error);
-        this.snackBar.open('Erro ao carregar produtos', 'Fechar', { 
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-        return of([]);
-      }),
-      shareReplay(1),
-    );
-
-    this.produtosFiltrados$ = this.produtos$.pipe(
-      map((produtos) => 
-        !this.termoBusca.trim()
-          ? produtos
-          : produtos.filter((produto) =>
-              produto.nome.toLowerCase().includes(this.termoBusca.toLowerCase()),
-            ),
-      ),
-      shareReplay(1),
-    );
-  }
-
-  filtrarProdutos(): void {
-    // Recarregar observables com novo termo de busca
+  constructor() {
     this.carregarProdutos();
   }
 
@@ -331,52 +269,48 @@ export class AdminProdutosComponent implements OnInit, OnDestroy {
   }
 
   verDetalhes(produtoId: string): void {
-    // Navegar para página de detalhes (implementar futuramente)
     this.router.navigate(['/admin/produtos', produtoId]);
-  }
-
-  formatarMoeda(valor: number): string {
-    return valor.toFixed(2).replace('.', ',');
   }
 
   toggleStatusProduto(produto: Produto): void {
     const acao = produto.ativo ? 'desativar' : 'ativar';
-    const dialogData: ConfirmDialogData = {
-      title: `${acao.charAt(0).toUpperCase() + acao.slice(1)} Produto`,
-      message: `Tem certeza que deseja ${acao} o produto "${produto.nome}"?`,
-      confirmText: acao.charAt(0).toUpperCase() + acao.slice(1),
-      cancelText: 'Cancelar',
-    };
+    const acaoCapitalizada = acao.charAt(0).toUpperCase() + acao.slice(1);
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: dialogData,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.produtoService.atualizarProduto(produto.id!, { ativo: !produto.ativo }).subscribe({
+    this.notificacao
+      .confirmar(
+        {
+          title: `${acaoCapitalizada} Produto`,
+          message: `Tem certeza que deseja ${acao} o produto "${produto.nome}"?`,
+          confirmText: acaoCapitalizada,
+          cancelText: 'Cancelar',
+        },
+        '400px',
+      )
+      .subscribe((confirmado) => {
+        if (!confirmado) return;
+        this.produtoService.atualizarProduto(produto.id, { ativo: !produto.ativo }).subscribe({
           next: () => {
-            this.snackBar.open(
+            this.notificacao.sucesso(
               `Produto ${!produto.ativo ? 'ativado' : 'desativado'} com sucesso`,
-              'Fechar',
-              { 
-                duration: 3000,
-                panelClass: ['success-snackbar']
-              },
             );
-            // Recarregar produtos para manter sincronizado
             this.carregarProdutos();
           },
           error: (error) => {
             console.error(`Erro ao ${acao} produto:`, error);
-            this.snackBar.open(`Erro ao ${acao} produto`, 'Fechar', { 
-              duration: 3000,
-              panelClass: ['error-snackbar']
-            });
+            this.notificacao.erro(`Erro ao ${acao} produto`);
           },
         });
-      }
+      });
+  }
+
+  private carregarProdutos(): void {
+    this.produtoService.obterTodosProdutos().subscribe({
+      next: (produtos) => this.produtos.set(produtos),
+      error: (error) => {
+        console.error('Erro ao carregar produtos:', error);
+        this.notificacao.erro('Erro ao carregar produtos');
+        this.produtos.set([]);
+      },
     });
   }
 }

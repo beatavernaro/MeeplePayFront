@@ -1,92 +1,84 @@
 <app-header
   titulo="Itens da Comanda"
-  [numeroComanda]="(comandaAtual$ | async)?.numeroComanda"
+  [numeroComanda]="comandaAtual()?.numeroComanda"
   [showSearchField]="false"
->
-</app-header>
+/>
 
-<app-footer-nav
-  currentRoute="carrinho"
-  [totalItens]="totalItens"
-  (navClick)="onNavClick($event)"
->
-</app-footer-nav>
+<app-footer-nav currentRoute="carrinho" [totalItens]="totalItens()" (navClick)="onNavClick($event)" />
 
 <main class="carrinho-container">
-  @if (itensComanda$ | async; as itens) {
-    @if (itens.length === 0) {
-      <div class="surface-card empty-state empty-cart">
-        <lucide-icon name="shopping-bag" />
-        <h3>Sua comanda está vazia</h3>
-        <p>Adicione itens do cardápio para continuar</p>
-        <button mat-raised-button (click)="voltarCardapio()">
-          <lucide-icon name="book-open" />
-          Ver Cardápio
-        </button>
-      </div>
-    } @else {
-      <section class="surface-card itens-card" aria-labelledby="itens-title">
-        <header class="itens-card__header">
-          <h2 id="itens-title">Itens da Comanda</h2>
-          <span class="itens-card__count">{{ itens.length }} {{ itens.length === 1 ? 'item' : 'itens' }}</span>
-        </header>
+  @if (itens().length === 0) {
+    <div class="surface-card empty-state empty-cart">
+      <lucide-icon name="shopping-bag" />
+      <h3>Sua comanda está vazia</h3>
+      <p>Adicione itens do cardápio para continuar</p>
+      <button mat-raised-button (click)="voltarCardapio()">
+        <lucide-icon name="book-open" />
+        Ver Cardápio
+      </button>
+    </div>
+  } @else {
+    <section class="surface-card itens-card" aria-labelledby="itens-title">
+      <header class="itens-card__header">
+        <h2 id="itens-title">Itens da Comanda</h2>
+        <span class="itens-card__count">{{ itens().length }} {{ itens().length === 1 ? 'item' : 'itens' }}</span>
+      </header>
 
-        <ul class="item-list">
-          @for (item of itens; track item.id) {
-            <li class="item-line">
-              <div class="item-header">
-                <span class="item-nome">{{ item.nome }}</span>
-                <span class="item-preco-unitario">{{ formatarPreco(item.valorUnitario) }} un.</span>
+      <ul class="item-list">
+        @for (item of itens(); track item.id) {
+          <li class="item-line">
+            <div class="item-header">
+              <span class="item-nome">{{ item.nome }}</span>
+              <span class="item-preco-unitario">{{ item.valorUnitario | currency }} un.</span>
+            </div>
+
+            <div class="item-footer">
+              <div class="stepper" role="group" [attr.aria-label]="'Quantidade de ' + item.nome">
+                <button
+                  mat-icon-button
+                  class="decrease"
+                  aria-label="Diminuir quantidade"
+                  (click)="diminuirQuantidade(item)"
+                >
+                  <lucide-icon name="minus" />
+                </button>
+
+                <span class="stepper__value" aria-live="polite">{{ item.quantidade }}</span>
+
+                <button
+                  mat-icon-button
+                  class="increase"
+                  aria-label="Aumentar quantidade"
+                  (click)="aumentarQuantidade(item)"
+                >
+                  <lucide-icon name="plus" />
+                </button>
               </div>
 
-              <div class="item-footer">
-                <div class="stepper" role="group" [attr.aria-label]="'Quantidade de ' + item.nome">
-                  <button
-                    mat-icon-button
-                    class="decrease"
-                    aria-label="Diminuir quantidade"
-                    (click)="diminuirQuantidade(item)"
-                  >
-                    <lucide-icon name="minus" />
-                  </button>
+              <span class="item-total money">{{ item.valorUnitario * item.quantidade | currency }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
 
-                  <span class="stepper__value" aria-live="polite">{{ item.quantidade }}</span>
-
-                  <button
-                    mat-icon-button
-                    class="increase"
-                    aria-label="Aumentar quantidade"
-                    (click)="aumentarQuantidade(item)"
-                  >
-                    <lucide-icon name="plus" />
-                  </button>
-                </div>
-
-                <span class="item-total money">{{ formatarPreco(calcularSubtotal(item)) }}</span>
-              </div>
-            </li>
-          }
-        </ul>
+    @if (comandaAtual(); as comanda) {
+      <section class="total-card" aria-label="Total da comanda">
+        <span class="total-label">Total da Comanda</span>
+        <span class="total-value money">{{ comanda.valorTotal | currency }}</span>
       </section>
-
-      @if (comandaAtual$ | async; as comanda) {
-        <section class="total-card" aria-label="Total da comanda">
-          <span class="total-label">Total da Comanda</span>
-          <span class="total-value money">{{ formatarPreco(comanda.valorTotal) }}</span>
-        </section>
-      }
-
-      <div class="actions">
-        <button mat-stroked-button class="btn-lg" (click)="voltarCardapio()">
-          <lucide-icon name="plus" />
-          Adicionar Mais Itens
-        </button>
-
-        <button mat-raised-button class="btn-lg finalizar-button" (click)="encerrarComanda()">
-          <lucide-icon name="check" />
-          Finalizar Comanda
-        </button>
-      </div>
     }
+
+    <div class="actions">
+      <button mat-stroked-button class="btn-lg" (click)="voltarCardapio()">
+        <lucide-icon name="plus" />
+        Adicionar Mais Itens
+      </button>
+
+      <button mat-raised-button class="btn-lg finalizar-button" (click)="encerrarComanda()">
+        <lucide-icon name="check" />
+        Finalizar Comanda
+      </button>
+    </div>
   }
 </main>
