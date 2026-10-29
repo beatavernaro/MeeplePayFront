@@ -3,6 +3,7 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { AuthInterceptor } from './auth.interceptor';
+import { SessaoClienteService } from '../services/sessao-cliente.service';
 
 const API = 'https://api.test/api';
 const ADMIN_TOKEN = 'admin-token';
@@ -13,21 +14,11 @@ describe('AuthInterceptor', () => {
   let httpTesting: HttpTestingController;
   let router: { url: string; navigate: ReturnType<typeof vi.fn> };
 
+  let sessao: SessaoClienteService;
+
   beforeEach(() => {
     localStorage.clear();
-    sessionStorage.clear();
     localStorage.setItem('adminToken', ADMIN_TOKEN);
-    sessionStorage.setItem(
-      'comanda_virtual_user_data',
-      JSON.stringify({
-        nomeCliente: 'Ana',
-        celular: '11999998888',
-        comandaId: 'c1',
-        accessToken: USER_TOKEN,
-        tokenExpiration: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        lastActivity: new Date().toISOString(),
-      }),
-    );
 
     router = { url: '/cardapio', navigate: vi.fn() };
 
@@ -41,6 +32,8 @@ describe('AuthInterceptor', () => {
 
     http = TestBed.inject(HttpClient);
     httpTesting = TestBed.inject(HttpTestingController);
+    sessao = TestBed.inject(SessaoClienteService);
+    sessao.definirToken(USER_TOKEN);
   });
 
   afterEach(() => httpTesting.verify());
@@ -89,7 +82,7 @@ describe('AuthInterceptor', () => {
 
   it('não anexa token quando não há token salvo', () => {
     localStorage.clear();
-    sessionStorage.clear();
+    sessao.limpar();
     expect(authHeaderFor('GET', `${API}/produtos/ativos`)).toBeNull();
     expect(authHeaderFor('POST', `${API}/auth/login`)).toBeNull();
   });
@@ -110,14 +103,14 @@ describe('AuthInterceptor', () => {
 
     it('401 fora do admin limpa a sessão do cliente e vai para /start', () => {
       falhar(`${API}/produtos/ativos`, 401);
-      expect(sessionStorage.getItem('comanda_virtual_user_data')).toBeNull();
+      expect(sessao.getAccessToken()).toBeNull();
       expect(router.navigate).toHaveBeenCalledTimes(1);
       expect(router.navigate).toHaveBeenCalledWith(['/start']);
     });
 
     it('403 limpa a sessão do cliente e vai para /start', () => {
       falhar(`${API}/itens-comanda`, 403);
-      expect(sessionStorage.getItem('comanda_virtual_user_data')).toBeNull();
+      expect(sessao.getAccessToken()).toBeNull();
       expect(router.navigate).toHaveBeenCalledWith(['/start']);
     });
 

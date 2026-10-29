@@ -99,7 +99,7 @@ App (Root)
 │   │   ├── ComandaService
 │   │   ├── ProdutoService
 │   │   ├── AdminAuthService
-│   │   └── LocalStorageService
+│   │   └── SessaoClienteService
 │   ├── Guards
 │   │   ├── AdminAuthGuard
 │   │   └── SessionGuard
@@ -186,7 +186,7 @@ src/
 │   │   └── services/
 │   │       ├── admin-auth.service.ts   # Autenticação admin
 │   │       ├── comanda.service.ts      # Operações com comandas
-│   │       ├── local-storage.service.ts # Gerenciamento de dados locais
+│   │       ├── sessao-cliente.service.ts # Token do cliente, só em memória
 │   │       └── produto.service.ts      # Operações com produtos
 │   │
 │   ├── public/                         # Módulo público (clientes)
@@ -474,34 +474,24 @@ public/                                 # Arquivos estáticos servidos
 
 ---
 
-### 4. **LocalStorageService**
-**Localização**: `core/services/local-storage.service.ts`
+### 4. **SessaoClienteService**
+**Localização**: `core/services/sessao-cliente.service.ts`
 
 **Responsabilidades**:
-- Gerenciar dados da sessão do cliente
-- Persistência de dados locais
-- Validação de expiração de dados
+- Guardar o token JWT da comanda do cliente enquanto a página está aberta
 
-**Métodos Principais**:
+**Métodos**:
 
 | Método | Parâmetros | Retorno | Descrição |
 |--------|-----------|----------|-----------|
-| `saveUserData()` | `userData: UserData` | `void` | Salva dados do usuário |
-| `getUserData()` | - | `UserData \| null` | Recupera dados do usuário |
-| `hasValidUserData()` | - | `boolean` | Verifica se có dados válidos |
-| `updateComandaId()` | `comandaId` | `void` | Atualiza ID da comanda |
-| `clearUserData()` | - | `void` | Limpa sessão |
-| `updateLastActivity()` | - | `void` | Atualiza timestamp da última atividade |
-| `getAccessToken()` | - | `string \| null` | Obtém token JWT do usuário |
-| `saveAccessToken()` | `token: string` | `void` | Salva token JWT |
+| `getAccessToken()` | - | `string \| null` | Token atual do cliente |
+| `definirToken()` | `token: string` | `void` | Guarda o token recebido da API |
+| `limpar()` | - | `void` | Remove o token |
 
 **Armazenamento**:
-- Utiliza `sessionStorage` (não persiste entre abas/fechamento)
-- Chave padrão: `comanda_virtual_user_data`
-
-**Expiração**:
-- Dados expiram automaticamente após 24 horas
-- Validação automática na recuperação de dados
+- Somente em memória: nada do cliente é salvo no navegador
+- Ao recarregar a página, o cliente informa o celular de novo e a comanda aberta é recuperada pelo backend
+- A expiração do token (24h) é validada pela API; um 401 leva o cliente de volta para `/start`
 
 **Dados Armazenados** (UserData):
 ```typescript
@@ -678,13 +668,13 @@ O sistema implementa dois níveis distintos de autenticação:
 
 #### 1. **Autenticação de Cliente (Session)**
 - **Tipo**: JWT (JSON Web Token)
-- **Armazenamento**: `sessionStorage` (LocalStorageService)
-- **Duração**: Sessão do navegador (até 24 horas)
+- **Armazenamento**: somente em memória (SessaoClienteService)
+- **Duração**: enquanto a página estiver aberta (o token expira em 24 horas na API)
 - **Fluxo**:
-  1. Cliente insere nome e celular na tela de start
-  2. Sistema cria/busca comanda na API
-  3. API retorna JWT único para essa comanda
-  4. Token salvo localmente
+  1. Cliente insere nome e celular na tela de start ("Acessar Comanda")
+  2. `POST /api/comandas/reconectar`: se houver comanda aberta para o celular, ela é recuperada (com o nome salvo nela)
+  3. Se a API responder 404, `POST /api/comandas` cria uma nova
+  4. A API retorna um JWT único para essa comanda, guardado em memória
   5. Usado em requisições para produtos, itens, etc.
 
 #### 2. **Autenticação Admin (Admin JWT)**
@@ -761,27 +751,27 @@ Interceptor HTTP que:
 
 ## Fluxo de Dados
 
-### Fluxo de Criação de Comanda (Cliente)
+### Fluxo de Acesso à Comanda (Cliente)
 
 ```
 Start Component
     ↓ (input: nome, celular)
-ComandaService.criarComanda()
+ComandaService.acessarComanda()
     ↓
-AuthInterceptor (injeta token público)
+API Backend POST /api/comandas/reconectar
+    ↓ 200: comanda aberta do celular   ↓ 404: nenhuma comanda aberta
+    ↓                                  API Backend POST /api/comandas
     ↓
-API Backend POST /api/comandas
-    ↓
-Retorna: { comanda, accessToken, message }
+Retorna: { comanda, accessToken }
     ↓
 ComandaService:
-  - Salva comanda em BehaviorSubject
-  - LocalStorageService.saveAccessToken()
-  - LocalStorageService.saveUserData()
+  - Guarda a comanda no estado (signal)
+  - SessaoClienteService.definirToken()
     ↓
 Start Component:
+  - Mostra "Comanda #N recuperada/criada"
   - Navega para /cardapio
-  - SessionGuard valida dados locais
+  - SessionGuard exige comanda carregada e consulta o status na API
     ↓
 Cardápio Component carrega produtos
 ```
@@ -986,11 +976,9 @@ Erro → Exibe mensagem de erro
 
 #### A. Validação de Sessão
 - SessionGuard verifica:
-  - Existência de dados do usuário
-  - Validade dos dados (até 24h)
-  - Token JWT presente
-- LocalStorageService atualiza timestamp automaticamente
-- Sessão expira automaticamente
+  - Comanda carregada nesta página e token JWT presente (senão, volta para /start)
+  - Status atual da comanda na API (encerrada ou paga vai para /encerrada)
+- Nada do cliente fica salvo no navegador
 
 #### B. Tratamento de Erros
 - Erros HTTP tratados globalmente pelo interceptor
@@ -1011,26 +999,10 @@ Erro → Exibe mensagem de erro
 
 ## Armazenamento de Dados
 
-### SessionStorage (Dados do Cliente)
-**Chave**: `comanda_virtual_user_data`
-
-**Dados Armazenados**:
-```json
-{
-  "nomeCliente": "João Silva",
-  "celular": "11999999999",
-  "comandaId": "abc123",
-  "accessToken": "eyJhbGc...",
-  "tokenExpiration": "2026-03-03T14:30:00Z",
-  "lastActivity": "2026-03-02T14:30:00Z"
-}
-```
-
-**Características**:
-- Limpo ao fechar navegador/aba
-- Válido por 24 horas
-- Atualiza timestamp em qualquer atividade
-- Necessário para acessar cardápio e carrinho
+### Dados do Cliente
+Nada é salvo no navegador. A comanda e o token ficam só em memória
+(`ComandaService` e `SessaoClienteService`). Ao recarregar a página, o cliente
+informa o celular de novo e a comanda aberta é recuperada pela API.
 
 ### LocalStorage (Dados do Admin)
 **Chave**: `adminToken`
@@ -1234,7 +1206,7 @@ describe('App Component', () => {
 - JWT para autenticação
 - HTTPS obrigatório em produção
 - CORS configurado no backend
-- SessionStorage para dados sensíveis (não persiste)
+- Token do cliente só em memória (nada salvo no navegador)
 - Tokens expiram automaticamente
 
 ### Escalabilidade
@@ -1282,11 +1254,11 @@ describe('App Component', () => {
 │  │  └─────────────────┘  └─────────────────────────┘   │    │
 │  │                                                       │    │
 │  │  ┌──────────────────────┐  ┌──────────────────────┐ │    │
-│  │  │ AdminAuthService     │  │ LocalStorageService  │ │    │
+│  │  │ AdminAuthService     │  │ SessaoClienteService │ │    │
 │  │  ├──────────────────────┤  ├──────────────────────┤ │    │
-│  │  │ - login              │  │ - saveUserData       │ │    │
-│  │  │ - logout             │  │ - getUserData        │ │    │
-│  │  │ - isAuthenticated    │  │ - clearUserData      │ │    │
+│  │  │ - login              │  │ - definirToken       │ │    │
+│  │  │ - logout             │  │ - getAccessToken     │ │    │
+│  │  │ - isAuthenticated    │  │ - limpar             │ │    │
 │  │  └──────────────────────┘  └──────────────────────┘ │    │
 │  └─────────────────────────────────────────────────────┘    │
 │          ▲                                                    │
@@ -1322,7 +1294,7 @@ O **Comanda Virtual** é uma aplicação web moderna desenvolvida em **Angular 2
 ✅ **Reatividade completa** utilizando RxJS Observables
 ✅ **Lazy loading** de rotas para performance otimizada
 ✅ **Tratamento robusto** de erros e edge cases
-✅ **Armazenamento inteligente** com SessionStorage e LocalStorage
+✅ **Sessão do cliente só em memória**; token do admin em LocalStorage
 ✅ **Experiência mobile-first** com Material Design
 
 A plataforma está pronta para produção e integrada com API backend robusta, oferecendo uma solução completa para modernizar a experiência de atendimento.

@@ -5,24 +5,11 @@
         <img src="assets/AngatuLogo.png" alt="" class="logo-icon" width="48" height="48" />
         Angatu Jogos
       </mat-card-title>
-      <mat-card-subtitle>
-        @if (hasActiveSession()) {
-          Bem-vindo de volta, {{ userData()?.nomeCliente }}!
-        } @else {
-          Inicie sua comanda digital
-        }
-      </mat-card-subtitle>
+      <mat-card-subtitle>Informe seu nome e celular para acessar sua comanda</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-      @if (hasActiveSession()) {
-        <div class="session-info">
-          <lucide-icon name="circle-check" />
-          <span>Você tem uma comanda ativa</span>
-        </div>
-      }
-
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" id="acesso-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Seu nome</mat-label>
           <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" autocomplete="name" />
@@ -39,48 +26,18 @@
       </form>
     </mat-card-content>
 
-    @if (hasActiveSession()) {
-      <mat-card-actions class="session-actions">
-        <button mat-raised-button class="action-button btn-lg" (click)="onSubmit()" [disabled]="loading()">
-          @if (loading()) {
-            <lucide-icon class="spin" name="loader-circle" />
-            Continuando...
-          } @else {
-            <lucide-icon name="arrow-right" />
-            Continuar Comanda
-          }
-        </button>
+    <mat-card-actions class="start-actions">
+      <button mat-raised-button type="submit" form="acesso-form" class="btn-block btn-lg start-button" [disabled]="loading()">
+        @if (loading()) {
+          <lucide-icon class="spin" name="loader-circle" />
+          Acessando...
+        } @else {
+          <lucide-icon name="arrow-right" />
+          Acessar Comanda
+        }
+      </button>
 
-        <button mat-button class="action-button btn-danger-text" (click)="onClearSession()" [disabled]="loading()">
-          <lucide-icon name="plus" />
-          Nova Comanda
-        </button>
-      </mat-card-actions>
-    } @else {
-      <mat-card-actions class="new-session-actions">
-        <button mat-raised-button class="btn-block btn-lg start-button" (click)="onSubmit()" [disabled]="loading()">
-          @if (loading()) {
-            <lucide-icon class="spin" name="loader-circle" />
-            Criando comanda...
-          } @else {
-            <lucide-icon name="arrow-right" />
-            Iniciar Comanda
-          }
-        </button>
-
-        <div class="recovery-section">
-          <span class="recovery-text">Já tem uma comanda?</span>
-          <button
-            mat-button
-            class="recovery-button"
-            (click)="onRecoverComanda()"
-            [disabled]="loading() || form.controls.celular.invalid"
-          >
-            <lucide-icon name="rotate-ccw" />
-            Recuperar Comanda
-          </button>
-        </div>
-      </mat-card-actions>
-    }
+      <p class="start-hint">Se já houver uma comanda aberta para este celular, ela será recuperada.</p>
+    </mat-card-actions>
   </mat-card>
 </main>

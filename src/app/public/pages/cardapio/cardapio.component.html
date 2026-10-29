@@ -1,5 +1,5 @@
 <app-header
-  [nomeCliente]="nomeUsuario"
+  [nomeCliente]="nomeUsuario()"
   [numeroComanda]="comandaAtual()?.numeroComanda"
   [showSearchField]="true"
   (searchChange)="busca.set($event)"

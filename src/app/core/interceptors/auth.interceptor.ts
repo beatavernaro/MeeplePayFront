@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AdminAuthService } from '../services/admin-auth.service';
-import { LocalStorageService } from '../services/local-storage.service';
+import { SessaoClienteService } from '../services/sessao-cliente.service';
 
 // Endpoints que sempre usam o token do admin
 const ADMIN_ENDPOINTS = ['/api/admin', '/api/auth'];
@@ -17,7 +17,7 @@ const ADMIN_ENDPOINTS = ['/api/admin', '/api/auth'];
  */
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const adminAuthService = inject(AdminAuthService);
-  const localStorageService = inject(LocalStorageService);
+  const sessaoCliente = inject(SessaoClienteService);
   const router = inject(Router);
 
   const isAdminRoute = router.url.includes('/admin');
@@ -27,7 +27,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   if (usaTokenAdmin) {
     token = adminAuthService.getToken();
   } else if (!ehEndpointPublico(req)) {
-    token = localStorageService.getAccessToken();
+    token = sessaoCliente.getAccessToken();
   }
 
   const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
@@ -40,7 +40,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/admin/login']);
       } else if (error.status === 401 || error.status === 403) {
         // Token do cliente expirado, ou tentativa de modificar comanda de outro cliente
-        localStorageService.clearUserData();
+        sessaoCliente.limpar();
         router.navigate(['/start']);
       }
       return throwError(() => error);

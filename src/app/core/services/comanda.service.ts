@@ -3,7 +3,7 @@ import { Observable, catchError, tap, throwError, map, of, switchMap } from 'rxj
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { LocalStorageService } from './local-storage.service';
+import { SessaoClienteService } from './sessao-cliente.service';
 import {
   Comanda,
   ItemComanda,
@@ -13,16 +13,22 @@ import {
   CreateComandaResponse,
 } from '../../shared/models/api.interfaces';
 
+export interface AcessoComanda {
+  comanda: Comanda;
+  // false quando uma comanda aberta para o celular foi recuperada
+  criada: boolean;
+}
+
 /**
  * Chamadas da API de comandas e o estado da comanda do cliente (comanda atual e seus itens).
- * Erros 401/403 são tratados no AuthInterceptor.
+ * O estado fica só em memória; erros 401/403 são tratados no AuthInterceptor.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class ComandaService {
   private http = inject(HttpClient);
-  private localStorageService = inject(LocalStorageService);
+  private sessaoCliente = inject(SessaoClienteService);
   private router = inject(Router);
   private baseUrl = environment.apiUrl;
 
@@ -35,55 +41,33 @@ export class ComandaService {
     this.itensState().reduce((total, item) => total + item.quantidade, 0),
   );
 
-  constructor() {
-    // Carregar comanda ativa na inicialização se existir
-    const userData = this.localStorageService.getUserData();
-    if (userData?.comandaId && userData.accessToken) {
-      this.buscarComanda(userData.comandaId).subscribe({
-        error: (error) => {
-          console.error('Erro ao recarregar comanda:', error);
-          this.localStorageService.clearUserData();
-        },
-      });
-    }
-  }
-
   // === COMANDA DO CLIENTE ===
 
   /**
-   * Reconectar a uma comanda existente obtendo novo token
+   * Entra na comanda aberta deste celular; se não houver nenhuma (404), cria uma nova.
+   * Na comanda recuperada vale o nome salvo nela, não o digitado.
    */
-  reconectarComanda(nomeCliente: string, celular: string): Observable<Comanda> {
+  acessarComanda(nomeCliente: string, celular: string): Observable<AcessoComanda> {
+    this.limparSessaoComanda();
+
     const dados: CreateComandaRequest = {
       nomeCliente: nomeCliente.trim(),
       celular: celular.trim(),
     };
 
-    return this.http.post<CreateComandaResponse>(`${this.baseUrl}/comandas/reconectar`, dados).pipe(
-      map((response) => {
-        this.localStorageService.saveAccessToken(response.accessToken);
-        return this.definirComandaAtual(response.comanda);
-      }),
-    );
-  }
-
-  /**
-   * Criar nova comanda com dados do usuário
-   */
-  criarNovaComanda(nomeCliente: string, celular: string): Observable<Comanda> {
-    const dados: CreateComandaRequest = {
-      nomeCliente: nomeCliente.trim(),
-      celular: celular.trim(),
-    };
-
-    return this.http.post<CreateComandaResponse>(`${this.baseUrl}/comandas`, dados).pipe(
-      map((response) => {
-        this.localStorageService.saveAccessToken(response.accessToken);
-        const comanda = normalizarComanda(response.comanda);
-        this.comandaAtualState.set(comanda);
-        return comanda;
-      }),
-    );
+    return this.http
+      .post<CreateComandaResponse>(`${this.baseUrl}/comandas/reconectar`, { celular: dados.celular })
+      .pipe(
+        map((response) => ({ comanda: this.iniciarSessao(response), criada: false })),
+        catchError((error: HttpErrorResponse) => {
+          if (error.status !== 404) {
+            return throwError(() => error);
+          }
+          return this.http
+            .post<CreateComandaResponse>(`${this.baseUrl}/comandas`, dados)
+            .pipe(map((response) => ({ comanda: this.iniciarSessao(response), criada: true })));
+        }),
+      );
   }
 
   /**
@@ -94,7 +78,7 @@ export class ComandaService {
   }
 
   /**
-   * Garantir que há uma comanda ativa - recarrega se necessário
+   * Comanda do cliente já carregada; sem ela o cliente precisa entrar pelo celular de novo
    */
   garantirComandaAtiva(): Observable<Comanda> {
     const comandaAtual = this.comandaAtualState();
@@ -102,19 +86,14 @@ export class ComandaService {
       return of(comandaAtual);
     }
 
-    const userData = this.localStorageService.getUserData();
-    if (userData?.comandaId && userData.accessToken) {
-      return this.buscarComanda(userData.comandaId);
-    }
-
     return throwError(() => new Error('Nenhuma comanda ativa encontrada'));
   }
 
   /**
-   * Limpa todos os dados da sessão após encerrar comanda
+   * Limpa a comanda e o token do cliente
    */
   limparSessaoComanda(): void {
-    this.localStorageService.clearUserData();
+    this.sessaoCliente.limpar();
     this.comandaAtualState.set(null);
     this.itensState.set([]);
   }
@@ -250,6 +229,11 @@ export class ComandaService {
   }
 
   // === AUXILIARES ===
+
+  private iniciarSessao(response: CreateComandaResponse): Comanda {
+    this.sessaoCliente.definirToken(response.accessToken);
+    return this.definirComandaAtual(response.comanda);
+  }
 
   private definirComandaAtual(apiComanda: Comanda): Comanda {
     const comanda = normalizarComanda(apiComanda);

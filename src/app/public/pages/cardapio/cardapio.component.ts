@@ -9,7 +9,6 @@ import { LucideAngularModule } from 'lucide-angular';
 import { Produto } from '../../../shared/models/api.interfaces';
 import { ProdutoService } from '../../../core/services/produto.service';
 import { ComandaService } from '../../../core/services/comanda.service';
-import { LocalStorageService } from '../../../core/services/local-storage.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterNavComponent } from '../../../shared/components/footer-nav/footer-nav.component';
@@ -28,8 +27,8 @@ export class CardapioComponent {
   private notificacao = inject(NotificacaoService);
   private router = inject(Router);
 
-  readonly nomeUsuario = inject(LocalStorageService).getUserData()?.nomeCliente || 'Cliente';
   readonly comandaAtual = this.comandaService.comandaAtual;
+  readonly nomeUsuario = computed(() => this.comandaAtual()?.nomeCliente || 'Cliente');
   readonly totalItens = this.comandaService.totalItens;
 
   readonly busca = signal('');

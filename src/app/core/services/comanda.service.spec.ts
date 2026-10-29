@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ComandaService } from './comanda.service';
+import { SessaoClienteService } from './sessao-cliente.service';
 import { Comanda, ItemComanda } from '../../shared/models/api.interfaces';
 
 const API = environment.apiUrl;
@@ -44,7 +45,6 @@ describe('ComandaService', () => {
   let navigate: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
-    sessionStorage.clear();
     navigate = vi.fn();
     TestBed.configureTestingModule({
       providers: [
@@ -115,11 +115,62 @@ describe('ComandaService', () => {
     expect(navigate).toHaveBeenCalledWith(['/encerrada']);
   });
 
-  it('limparSessaoComanda zera o estado e os dados salvos', () => {
-    sessionStorage.setItem('comanda_virtual_user_data', '{}');
+  it('limparSessaoComanda zera o estado e o token', () => {
+    const sessao = TestBed.inject(SessaoClienteService);
+    sessao.definirToken('tok');
     service.limparSessaoComanda();
     expect(service.comandaAtual()).toBeNull();
     expect(service.itens()).toEqual([]);
-    expect(sessionStorage.getItem('comanda_virtual_user_data')).toBeNull();
+    expect(sessao.getAccessToken()).toBeNull();
+  });
+
+  describe('acessarComanda', () => {
+    it('recupera a comanda aberta do celular, com o nome salvo nela', async () => {
+      const acesso = firstValueFrom(service.acessarComanda(' Outro Nome ', '11911112222'));
+      const req = httpTesting.expectOne(`${API}/comandas/reconectar`);
+      expect(req.request.body).toEqual({ celular: '11911112222' });
+      req.flush({ accessToken: 'tok-104', comanda: comanda({ id: 'c104', numeroComanda: 104 }) });
+
+      const { comanda: recuperada, criada } = await acesso;
+      expect(criada).toBe(false);
+      expect(recuperada.numeroComanda).toBe(104);
+      expect(service.comandaAtual()?.id).toBe('c104');
+      expect(service.comandaAtual()?.nomeCliente).toBe('Ana');
+      expect(TestBed.inject(SessaoClienteService).getAccessToken()).toBe('tok-104');
+    });
+
+    it('sem comanda aberta (404) cria uma nova', async () => {
+      const acesso = firstValueFrom(service.acessarComanda('Bia', '11933334444'));
+      httpTesting
+        .expectOne(`${API}/comandas/reconectar`)
+        .flush({}, { status: 404, statusText: 'Not Found' });
+      const req = httpTesting.expectOne(`${API}/comandas`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ nomeCliente: 'Bia', celular: '11933334444' });
+      req.flush({
+        accessToken: 'tok-nova',
+        message: '',
+        comanda: comanda({ id: 'c200', numeroComanda: 200, nomeCliente: 'Bia', itens: [] }),
+      });
+
+      const { criada } = await acesso;
+      expect(criada).toBe(true);
+      expect(service.comandaAtual()?.id).toBe('c200');
+      expect(service.itens()).toEqual([]);
+      expect(TestBed.inject(SessaoClienteService).getAccessToken()).toBe('tok-nova');
+    });
+
+    it('outros erros não criam comanda', async () => {
+      const acesso = firstValueFrom(service.acessarComanda('Bia', '11933334444')).catch(
+        (e) => e.status,
+      );
+      httpTesting
+        .expectOne(`${API}/comandas/reconectar`)
+        .flush({}, { status: 500, statusText: 'Erro' });
+
+      expect(await acesso).toBe(500);
+      httpTesting.expectNone(`${API}/comandas`);
+      expect(service.comandaAtual()).toBeNull();
+    });
   });
 });
