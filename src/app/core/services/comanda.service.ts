@@ -202,6 +202,21 @@ export class ComandaService {
   }
 
   /**
+   * Abre uma comanda pelo painel; não gera token nem altera o estado do cliente.
+   * O cliente entra nela depois pelo celular (reconectar).
+   */
+  criarComandaAdmin(nomeCliente: string, celular: string): Observable<Comanda> {
+    const dados: CreateComandaRequest = {
+      nomeCliente: nomeCliente.trim(),
+      celular: celular.trim(),
+    };
+
+    return this.http
+      .post<Comanda>(`${this.baseUrl}/comandas/admin`, dados)
+      .pipe(map(normalizarComanda));
+  }
+
+  /**
    * Buscar comanda por ID sem alterar o estado do cliente
    */
   obterComanda(id: string): Observable<Comanda> {

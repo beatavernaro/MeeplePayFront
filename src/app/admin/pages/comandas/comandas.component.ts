@@ -7,10 +7,15 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
 import { LucideAngularModule } from 'lucide-angular';
 import { Comanda, ComandaStatus } from '../../../shared/models/api.interfaces';
 import { ComandaService } from '../../../core/services/comanda.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
+import {
+  NovaComandaDialogComponent,
+  NovaComandaResultado,
+} from './nova-comanda-dialog/nova-comanda-dialog.component';
 
 interface Aba {
   status: ComandaStatus;
@@ -83,6 +88,7 @@ const ABAS: Aba[] = [
 export class AdminComandasComponent {
   private comandaService = inject(ComandaService);
   private notificacao = inject(NotificacaoService);
+  private dialog = inject(MatDialog);
   private router = inject(Router);
 
   private readonly comandas = signal<Comanda[]>([]);
@@ -109,6 +115,23 @@ export class AdminComandasComponent {
   onFiltroBuscaChange(event: Event): void {
     const valor = (event.target as HTMLInputElement).value;
     this.filtroBusca.set(valor.replace(/\D/g, ''));
+  }
+
+  novaComanda(): void {
+    this.dialog
+      .open<NovaComandaDialogComponent, void, NovaComandaResultado>(NovaComandaDialogComponent, {
+        width: '440px',
+        maxWidth: 'calc(100vw - 32px)',
+      })
+      .afterClosed()
+      .subscribe((resultado) => {
+        if (!resultado) return;
+        if (resultado.verDetalhes) {
+          this.visualizarComanda(resultado.comanda.id);
+          return;
+        }
+        this.carregarComandas();
+      });
   }
 
   visualizarComanda(id: string): void {
