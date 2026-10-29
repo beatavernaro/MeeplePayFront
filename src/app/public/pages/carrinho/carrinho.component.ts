@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CurrencyPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,6 +21,7 @@ export class CarrinhoComponent {
   private notificacao = inject(NotificacaoService);
   private router = inject(Router);
 
+  readonly encerrando = signal(false);
   readonly itens = this.comandaService.itens;
   readonly comandaAtual = this.comandaService.comandaAtual;
   readonly totalItens = this.comandaService.totalItens;
@@ -29,13 +31,31 @@ export class CarrinhoComponent {
   }
 
   encerrarComanda(): void {
-    // A comanda é encerrada pelo caixa; aqui o cliente só é orientado e volta para a comanda
-    this.notificacao.confirmar({
-      title: 'Encerrar Comanda',
-      message: 'Para finalizar sua comanda dirija-se ao caixa.',
-      confirmText: 'Entendi',
-      informativo: true,
-    });
+    this.notificacao
+      .confirmar({
+        title: 'Encerrar Comanda',
+        message:
+          'Depois de encerrada, não será possível adicionar novos itens. Deseja continuar?',
+        confirmText: 'Encerrar',
+        cancelText: 'Voltar',
+      })
+      .subscribe((confirmado) => {
+        if (!confirmado || this.encerrando()) return;
+        this.encerrando.set(true);
+        this.comandaService.encerrarComanda().subscribe({
+          next: () => this.router.navigate(['/encerrada']),
+          error: (error: HttpErrorResponse) => {
+            console.error('Erro ao encerrar comanda:', error);
+            this.encerrando.set(false);
+            // Regras do backend (ex.: comanda já encerrada pelo caixa) vêm em { message }
+            const mensagem =
+              error.status === 400 && typeof error.error?.message === 'string'
+                ? error.error.message
+                : 'Erro ao encerrar a comanda. Tente novamente.';
+            this.notificacao.erro(mensagem, { duracao: 5000 });
+          },
+        });
+      });
   }
 
   aumentarQuantidade(item: ItemComanda): void {

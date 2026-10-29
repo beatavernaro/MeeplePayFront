@@ -115,6 +115,17 @@ describe('ComandaService', () => {
     expect(navigate).toHaveBeenCalledWith(['/encerrada']);
   });
 
+  it('encerrarComanda encerra a comanda atual e recarrega status e total', async () => {
+    const resultado = firstValueFrom(service.encerrarComanda());
+    const req = httpTesting.expectOne(`${API}/comandas/c1/encerrar`);
+    expect(req.request.method).toBe('PUT');
+    req.flush(null);
+    httpTesting.expectOne(`${API}/comandas/c1`).flush(comanda({ status: 'ENCERRADA', valorTotal: 10 }));
+
+    expect((await resultado).status).toBe('ENCERRADA');
+    expect(service.comandaAtual()?.status).toBe('ENCERRADA');
+  });
+
   it('limparSessaoComanda zera o estado e o token', () => {
     const sessao = TestBed.inject(SessaoClienteService);
     sessao.definirToken('tok');

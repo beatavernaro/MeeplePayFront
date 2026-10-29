@@ -6,16 +6,62 @@
           <lucide-icon [name]="comanda.status === 'PAGA' ? 'circle-check' : 'lock'" [size]="28" />
         </span>
         <h1>{{ comanda.status === 'PAGA' ? 'Comanda Paga' : 'Comanda Encerrada' }}</h1>
-        <p>Obrigado por utilizar nosso serviço</p>
-      </div>
-
-      <div class="closed-notice" role="status">
-        <lucide-icon name="headset" />
         <p>
-          Esta comanda foi {{ comanda.status === 'PAGA' ? 'paga' : 'encerrada' }} e não aceita mais pedidos.
-          <strong>Entre em contato com o caixa.</strong>
+          {{ comanda.status === 'PAGA' ? 'Obrigado por utilizar nosso serviço' : 'Agora é só fazer o pagamento' }}
         </p>
       </div>
+
+      @if (comanda.status === 'PAGA') {
+        <div class="closed-notice" role="status">
+          <lucide-icon name="headset" />
+          <p>
+            Esta comanda foi paga e não aceita mais pedidos.
+            <strong>Entre em contato com o caixa.</strong>
+          </p>
+        </div>
+      } @else {
+        <section class="surface-card pix-card" aria-labelledby="pix-title">
+          <h2 id="pix-title">Pagamento via Pix</h2>
+
+          <div class="pix-valor">
+            <span class="pix-valor__label">Valor a pagar</span>
+            <span class="pix-valor__total money">{{ comanda.valorTotal | currency }}</span>
+          </div>
+
+          @if (pix.chave) {
+            <div class="pix-chave">
+              <span class="pix-chave__label">Chave Pix</span>
+              <div class="pix-chave__linha">
+                <code class="pix-chave__valor">{{ pix.chave }}</code>
+                <button mat-stroked-button (click)="copiarChavePix()">
+                  <lucide-icon [name]="chaveCopiada() ? 'check' : 'copy'" />
+                  {{ chaveCopiada() ? 'Copiada' : 'Copiar' }}
+                </button>
+              </div>
+              @if (pix.favorecido) {
+                <span class="pix-chave__favorecido">Favorecido: {{ pix.favorecido }}</span>
+              }
+            </div>
+          }
+
+          <ol class="pix-passos">
+            @if (pix.chave) {
+              <li>Faça um Pix com o valor total para a chave acima.</li>
+            } @else {
+              <li>Peça a chave Pix no caixa e faça o pagamento do valor total.</li>
+            }
+            <li><strong>Apresente o comprovante no caixa</strong> para liberar sua comanda.</li>
+          </ol>
+        </section>
+
+        <div class="closed-notice" role="note">
+          <lucide-icon name="credit-card" />
+          <p>
+            Prefere pagar com cartão?
+            <strong>Dirija-se ao caixa.</strong>
+          </p>
+        </div>
+      }
 
       <mat-card class="resumo-card">
         <mat-card-header>

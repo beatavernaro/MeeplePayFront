@@ -90,6 +90,19 @@ export class ComandaService {
   }
 
   /**
+   * O cliente encerra a própria comanda; recarrega para trazer o status e o total finais
+   */
+  encerrarComanda(): Observable<Comanda> {
+    return this.garantirComandaAtiva().pipe(
+      switchMap((comanda) =>
+        this.http
+          .put<void>(`${this.baseUrl}/comandas/${comanda.id}/encerrar`, {})
+          .pipe(switchMap(() => this.buscarComanda(comanda.id))),
+      ),
+    );
+  }
+
+  /**
    * Limpa a comanda e o token do cliente
    */
   limparSessaoComanda(): void {

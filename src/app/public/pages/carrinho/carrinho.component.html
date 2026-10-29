@@ -75,9 +75,14 @@
         Adicionar Mais Itens
       </button>
 
-      <button mat-raised-button class="btn-lg finalizar-button" (click)="encerrarComanda()">
-        <lucide-icon name="check" />
-        Finalizar Comanda
+      <button mat-raised-button class="btn-lg finalizar-button" (click)="encerrarComanda()" [disabled]="encerrando()">
+        @if (encerrando()) {
+          <lucide-icon class="spin" name="loader-circle" />
+          Encerrando...
+        } @else {
+          <lucide-icon name="check" />
+          Encerrar Comanda
+        }
       </button>
     </div>
   }
