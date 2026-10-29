@@ -108,6 +108,14 @@ describe('AuthInterceptor', () => {
       expect(sessao.getAccessToken()).toBe(USER_TOKEN);
     });
 
+    it('401 na verificação de sessão do admin (F5, antes da URL do admin) vai para o login do admin', () => {
+      router.url = '/';
+      falhar(`${API}/auth/sessao`, 401);
+      expect(localStorage.getItem('adminToken')).toBeNull();
+      expect(sessao.getAccessToken()).toBe(USER_TOKEN);
+      expect(router.navigate).toHaveBeenCalledWith(['/admin/login']);
+    });
+
     it('401 fora do admin limpa a sessão do cliente e vai para /start', () => {
       falhar(`${API}/produtos/ativos`, 401);
       expect(sessao.getAccessToken()).toBeNull();
