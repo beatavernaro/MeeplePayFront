@@ -1,12 +1,12 @@
-<div class="page-container">
-  <div class="header-section">
-    <button mat-icon-button (click)="voltar()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
-    </button>
-    <h1 class="page-title">
-      <mat-icon>receipt</mat-icon>
-      Detalhes da Comanda
-    </h1>
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button (click)="voltar()" class="back-button" aria-label="Voltar para comandas">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>receipt_long</mat-icon></span>
+      <h1>Detalhes da Comanda</h1>
+    </div>
   </div>
 
   <div *ngIf="!(comanda$ | async); else content" class="loading-container">
@@ -22,19 +22,18 @@
           <mat-card class="status-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon>info</mat-icon>
+                <mat-icon aria-hidden="true">info</mat-icon>
                 Status da Comanda #{{ comanda.numeroComanda }}
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <div class="status-info">
-                <mat-chip-set>
-                  <mat-chip [color]="comanda.status === 'ABERTA' ? 'accent' : 'primary'" selected>
-                    {{ comanda.status }}
-                  </mat-chip>
-                </mat-chip-set>
+                <span class="status-pill" [ngClass]="'status-pill--' + (comanda.status | lowercase)">
+                  {{ comanda.status }}
+                </span>
                 <div class="total-value">
-                  <strong>Total: R$ {{ comanda.valorTotal | number: '1.2-2' }}</strong>
+                  <span class="total-value__label">Total</span>
+                  <strong class="money">R$ {{ comanda.valorTotal | number: '1.2-2' }}</strong>
                 </div>
               </div>
               <div class="dates-info">
@@ -49,14 +48,14 @@
               </div>
             </mat-card-content>
             <mat-card-actions *ngIf="comanda.status === 'ABERTA'">
-              <button mat-stroked-button (click)="encerrarComanda()">
-                <mat-icon>lock</mat-icon>
+              <button mat-raised-button (click)="encerrarComanda()">
+                <mat-icon aria-hidden="true">lock</mat-icon>
                 Encerrar Comanda
               </button>
             </mat-card-actions>
             <mat-card-actions *ngIf="comanda.status === 'ENCERRADA'">
-              <button mat-stroked-button (click)="confirmarPagamento()">
-                <mat-icon>check_box</mat-icon>
+              <button mat-raised-button class="btn-success" (click)="confirmarPagamento()">
+                <mat-icon aria-hidden="true">check_circle</mat-icon>
                 Confirmar Pagamento
               </button>
             </mat-card-actions>
@@ -65,7 +64,7 @@
           <mat-card class="info-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon>person</mat-icon>
+                <mat-icon aria-hidden="true">person</mat-icon>
                 Informações do Cliente
               </mat-card-title>
             </mat-card-header>
@@ -96,7 +95,7 @@
                   (input)="onProdutoDigitado()"
                   placeholder="Digite para buscar e selecionar"
                 />
-                <mat-icon matSuffix>search</mat-icon>
+                <mat-icon matSuffix aria-hidden="true">search</mat-icon>
                 <mat-autocomplete
                   #produtosAuto="matAutocomplete"
                   class="produtos-autocomplete-panel"
@@ -106,7 +105,7 @@
                   <mat-option *ngFor="let produto of produtosFiltrados$ | async" [value]="produto">
                     <div class="produto-option">
                       <span>{{ produto.nome }}</span>
-                      <strong>R$ {{ produto.preco | number: '1.2-2' }}</strong>
+                      <strong class="money">R$ {{ produto.preco | number: '1.2-2' }}</strong>
                     </div>
                   </mat-option>
                   <mat-option *ngIf="(produtosFiltrados$ | async)?.length === 0" disabled>
@@ -121,7 +120,7 @@
                 (click)="adicionarProdutoSelecionado(comanda.id)"
                 [disabled]="adicionandoProduto || !produtoSelecionado"
               >
-                <mat-icon>add</mat-icon>
+                <mat-icon aria-hidden="true">add</mat-icon>
                 Adicionar
               </button>
             </div>
@@ -129,28 +128,28 @@
 
           <ng-container *ngIf="itens$ | async as itens">
             <h2 class="section-title">
-              <mat-icon>shopping_cart</mat-icon>
+              <mat-icon aria-hidden="true">shopping_cart</mat-icon>
               Itens da Comanda ({{ itens.length }})
             </h2>
 
-            <div *ngIf="itens.length === 0" class="no-items">
-              <mat-icon>shopping_cart_off</mat-icon>
+            <div *ngIf="itens.length === 0" class="surface-card empty-state">
+              <mat-icon aria-hidden="true">shopping_cart_off</mat-icon>
               <p>Nenhum item adicionado à comanda</p>
             </div>
 
-            <div *ngIf="itens.length > 0" class="itens-table-container">
+            <div *ngIf="itens.length > 0" class="surface-card table-surface"><div class="table-scroll">
               <table mat-table [dataSource]="itens" class="itens-table">
                 <ng-container matColumnDef="quantidade">
                   <th mat-header-cell *matHeaderCellDef>Quantidade</th>
                   <td mat-cell *matCellDef="let item">
-                    <div class="quantity-controls">
+                    <div class="stepper">
                       <button *ngIf="comanda.status === 'ABERTA'" mat-icon-button (click)="diminuirQuantidade(item)"
-                        class="quantity-btn decrease" matTooltip="Diminuir quantidade">
+                        class="decrease" matTooltip="Diminuir quantidade" aria-label="Diminuir quantidade">
                         <mat-icon>remove</mat-icon>
                       </button>
-                      <span class="quantity-display">{{ item.quantidade }}</span>
+                      <span class="stepper__value">{{ item.quantidade }}</span>
                       <button *ngIf="comanda.status === 'ABERTA'" mat-icon-button (click)="aumentarQuantidade(item)"
-                        class="quantity-btn increase" matTooltip="Aumentar quantidade">
+                        class="increase" matTooltip="Aumentar quantidade" aria-label="Aumentar quantidade">
                         <mat-icon>add</mat-icon>
                       </button>
                     </div>
@@ -167,21 +166,21 @@
                 <ng-container matColumnDef="valorUnitario">
                   <th mat-header-cell *matHeaderCellDef>Valor Unitário</th>
                   <td mat-cell *matCellDef="let item">
-                    <span class="valor-unitario">R$ {{ item.valorUnitario | number: '1.2-2' }}</span>
+                    <span class="valor-unitario money">R$ {{ item.valorUnitario | number: '1.2-2' }}</span>
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="valorTotal">
                   <th mat-header-cell *matHeaderCellDef>Valor Total</th>
                   <td mat-cell *matCellDef="let item">
-                    <span class="valor-total">R$ {{ item.quantidade * item.valorUnitario | number: '1.2-2' }}</span>
+                    <span class="valor-total money">R$ {{ item.quantidade * item.valorUnitario | number: '1.2-2' }}</span>
                   </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns" class="item-row"></tr>
               </table>
-            </div>
+            </div></div>
           </ng-container>
         </div>
       </div>
@@ -190,12 +189,12 @@
 
   <div *ngIf="(comanda$ | async) === null" class="error-container">
     <mat-card class="error-card">
-      <mat-card-content>
-        <mat-icon>error</mat-icon>
+      <mat-card-content class="empty-state">
+        <span class="icon-tile icon-tile--red icon-tile--lg" aria-hidden="true"><mat-icon>error</mat-icon></span>
         <h3>Comanda não encontrada</h3>
         <p>A comanda solicitada não foi encontrada ou não existe.</p>
-        <button mat-raised-button color="primary" (click)="voltar()">
-          <mat-icon>arrow_back</mat-icon>
+        <button mat-raised-button (click)="voltar()">
+          <mat-icon aria-hidden="true">arrow_back</mat-icon>
           Voltar para Comandas
         </button>
       </mat-card-content>

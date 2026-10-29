@@ -1,352 +1,197 @@
-// Admin dashboard layout
-.admin-container {
-  height: 100vh;
-  background-color: var(--gray-50);
-}
-
-.admin-sidenav {
-  width: 280px;
-  background-color: var(--white);
-  border-right: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-
-  .sidenav-header {
-    padding: var(--space-6) var(--space-4);
-    background-color: var(--primary-green);
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    border-bottom: var(--border-width) solid var(--primary-green-dark);
-
-    .logo-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      color: var(--white);
-    }
-
-    h3 {
-      margin: 0;
-      font-size: var(--text-xl);
-      font-weight: 600;
-      color: var(--white);
-    }
-  }
-
-  mat-nav-list {
-    padding: var(--space-2) 0 0 0;
-
-    .menu-item {
-      margin: var(--space-1) var(--space-2);
-      cursor: pointer;
-      transition: all 0.15s ease;
-
-      &:hover {
-        background-color: var(--gray-100);
-      }
-
-      &.logout-item {
-        color: var(--primary-green);
-        margin-top: var(--space-2);
-
-        &:hover {
-          background-color: var(--primary-green-light);
-        }
-
-        mat-icon {
-          color: var(--primary-green);
-        }
-      }
-    }
-  }
-}
-
-// Main content area
-.admin-content {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--gray-50);
-}
-
-.admin-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: var(--white);
-  border-bottom: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-}
-
-.dashboard-container {
-  padding: var(--space-8);
-  flex: 1;
-  overflow: auto;
-}
-
-// Statistics grid
+// Stat cards
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(200px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-8);
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(3, minmax(180px, 1fr));
-    gap: var(--space-3);
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-  }
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
 }
 
 .stat-card {
-  background-color: var(--white);
-  border: var(--border-width) solid var(--border-color);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  transition:
+    box-shadow var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-out);
 
   &:hover {
-    box-shadow:
-      0 4px 6px rgba(0, 0, 0, 0.1),
-      0 2px 4px rgba(0, 0, 0, 0.06);
-    border-color: var(--gray-300);
-    transform: translateY(-1px);
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-2px);
   }
 
   mat-card-content {
-    padding: var(--space-6);
-
-    .stat-content {
-      display: flex;
-      align-items: center;
-      gap: var(--space-4);
-
-      .stat-icon {
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-
-        mat-icon {
-          font-size: 28px;
-          width: 28px;
-          height: 28px;
-          color: var(--primary-green);
-        }
-
-        &.completed {
-          background-color: #ffffff;
-
-          mat-icon {
-            color: #16a34a;
-          }
-        }
-
-        &.revenue {
-          background-color: #ffffff;
-
-          mat-icon {
-            color: #ca8a04;
-          }
-        }
-
-        &.pending {
-          background-color: #ffffff;
-
-          mat-icon {
-            color: #d97706;
-          }
-        }
-      }
-
-      .stat-info {
-        flex: 1;
-
-        h3 {
-          margin: 0 0 var(--space-1) 0;
-          font-size: var(--text-3xl);
-          font-weight: 700;
-          color: var(--gray-900);
-        }
-
-        p {
-          margin: 0;
-          color: var(--gray-600);
-          font-size: var(--text-sm);
-          font-weight: 500;
-        }
-      }
-    }
+    padding: var(--space-5) !important;
   }
 }
 
-// Tables section
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.stat-info {
+  min-width: 0;
+
+  p {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+  }
+
+  h3 {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-extrabold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+// Lists
 .tables-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
 .table-card {
-  background-color: var(--white);
-  border: var(--border-width) solid var(--border-color);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
-
-  &:hover {
-    box-shadow:
-      0 4px 6px rgba(0, 0, 0, 0.1),
-      0 2px 4px rgba(0, 0, 0, 0.06);
-  }
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   mat-card-header {
-    padding: var(--space-5) var(--space-6);
-    border-bottom: var(--border-width) solid var(--border-color);
-    background-color: var(--gray-50);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
 
     mat-card-title {
       display: flex;
       align-items: center;
       gap: var(--space-2);
-      font-size: var(--text-lg);
-      font-weight: 600;
-      color: var(--gray-900);
-      margin: 0;
+      font-size: var(--text-base);
 
       mat-icon {
-        color: var(--primary-green);
+        color: var(--color-primary);
       }
     }
   }
 
   mat-card-content {
-    padding: 0;
-    min-height: 320px;
+    flex: 1;
+    padding: 0 !important;
+    min-height: 280px;
     max-height: 420px;
     overflow: auto;
-
-    .empty-state {
-      padding: 48px 24px;
-      text-align: center;
-      color: #666;
-
-      mat-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-      }
-    }
-
-    .comandas-list {
-      .comanda-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        border-bottom: 1px solid #f0f0f0;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-          background-color: rgba(85, 107, 47, 0.04);
-        }
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        .comanda-info {
-          h4 {
-            margin: 0 0 4px 0;
-            font-size: 16px;
-            font-weight: 500;
-            color: #333;
-          }
-
-          p {
-            margin: 0;
-            font-size: 14px;
-            color: #666;
-          }
-        }
-
-        .comanda-total {
-          .total {
-            font-size: var(--text-base);
-            font-weight: 600;
-            color: var(--primary-green);
-
-            &.completed {
-              color: #16a34a;
-            }
-          }
-        }
-      }
-    }
   }
 
   mat-card-actions {
-    border-top: var(--border-width) solid var(--border-color);
-    padding: var(--space-4) var(--space-6);
-    background-color: var(--gray-50);
-
-    button {
-      background-color: var(--primary-green) !important;
-      color: var(--white) !important;
-      font-weight: 500;
-
-      &:hover {
-        background-color: var(--primary-green-dark) !important;
-      }
-
-      mat-icon {
-        margin-right: var(--space-2);
-        font-size: 16px;
-        width: 16px;
-        height: 16px;
-      }
-    }
+    padding: var(--space-3) var(--space-5) !important;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface-sunken);
   }
 }
 
-// Responsive design
+.comandas-list {
+  list-style: none;
+
+  li + li {
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.comanda-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-5);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+
+  &:hover {
+    background-color: var(--color-primary-soft);
+
+    .chevron {
+      transform: translateX(2px);
+      color: var(--color-primary);
+    }
+  }
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+.comanda-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+
+  &--done {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+}
+
+.comanda-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.comanda-info__name {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comanda-info__date {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.total {
+  color: var(--color-primary);
+
+  &.completed {
+    color: var(--color-success);
+  }
+}
+
+.chevron {
+  color: var(--slate-400);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
 @media (max-width: 1200px) {
   .tables-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-4);
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--space-4);
   }
 }
 
 @media (max-width: 768px) {
-  .admin-sidenav {
-    width: 100%;
-  }
-
-  .dashboard-container {
-    padding: var(--space-4);
-  }
-
   .stats-grid {
     grid-template-columns: 1fr;
     gap: var(--space-3);
   }
-}
 
-.tables-grid {
-  gap: 16px;
+  .stat-info h3 {
+    font-size: var(--text-2xl);
+  }
+
+  .comanda-item {
+    padding: var(--space-3) var(--space-4);
+  }
 }

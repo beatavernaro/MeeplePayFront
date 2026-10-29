@@ -4,6 +4,22 @@
   [showSearchField]="true"
   (searchChange)="onSearchChange($event)"
 >
+  <!-- Abas de Categorias com Scroll Horizontal -->
+  <div class="categorias-bar">
+    <div class="categorias-tabs" role="toolbar" aria-label="Filtrar por categoria">
+      @for (categoria of categorias$ | async; track categoria) {
+        <button
+          type="button"
+          class="categoria-tab"
+          [class.ativa]="categoriaSelecionada.value === categoria"
+          [attr.aria-pressed]="categoriaSelecionada.value === categoria"
+          (click)="selecionarCategoria(categoria)"
+        >
+          {{ categoria }}
+        </button>
+      }
+    </div>
+  </div>
 </app-header>
 
 <app-footer-nav
@@ -13,66 +29,54 @@
 >
 </app-footer-nav>
 
-<!-- Abas de Categorias com Scroll Horizontal -->
-<div class="categorias-scroll-container">
-  <div class="categorias-tabs">
-    @for (categoria of categorias$ | async; track categoria) {
-      <button
-        class="categoria-tab"
-        [class.ativa]="(categoriaSelecionada.valueChanges | async) === categoria"
-        (click)="selecionarCategoria(categoria)"
-      >
-        {{ categoria }}
-      </button>
-    }
-  </div>
-</div>
-
-<div class="cardapio-container">
+<main class="cardapio-container">
   <div class="produtos-grid">
     @for (produto of produtosFiltrados$ | async; track produto.id) {
-      <div class="produto-card clean-card">
+      <article class="produto-card">
         <div class="produto-header">
-          <h3 class="produto-nome">
-            @if (produto.estoque <= 0) {
-              <mat-icon class="sem-estoque-icon" title="Produto sem estoque">warning</mat-icon>
-            }
-            {{ produto.nome }}
-          </h3>
-          <span class="produto-preco">{{ formatarPreco(produto.preco) }}</span>
+          <h3 class="produto-nome">{{ produto.nome }}</h3>
+          <span class="produto-preco money">{{ formatarPreco(produto.preco) }}</span>
         </div>
+        @if (produto.estoque <= 0) {
+          <span class="status-pill status-pill--warning sem-estoque">
+            <mat-icon aria-hidden="true">warning</mat-icon>
+            Sem estoque
+          </span>
+        }
         <button
           mat-raised-button
-          class="add-button btn-primary"
+          class="add-button"
+          [attr.aria-label]="'Adicionar ' + produto.nome"
           (click)="adicionarProduto(produto)"
         >
-          <mat-icon>add_circle</mat-icon>
+          <mat-icon aria-hidden="true">add_circle</mat-icon>
           Adicionar
         </button>
-      </div>
+      </article>
     }
 
     @if ((produtosFiltrados$ | async)?.length === 0) {
-      <div class="no-results">
-        <mat-icon>search_off</mat-icon>
-        <p>Nenhum produto encontrado</p>
+      <div class="empty-state no-results">
+        <mat-icon aria-hidden="true">search_off</mat-icon>
+        <h3>Nenhum produto encontrado</h3>
+        <p>Tente outro termo de busca ou selecione outra categoria.</p>
       </div>
     }
   </div>
 
   @if (produtoManualHabilitado) {
-    <div class="manual-section clean-card">
+    <div class="manual-section surface-card">
       <div class="manual-content">
-        <mat-icon class="manual-icon">edit_note</mat-icon>
+        <span class="icon-tile icon-tile--violet"><mat-icon aria-hidden="true">edit_note</mat-icon></span>
         <div class="manual-text">
           <h3>Produto não encontrado?</h3>
           <p>Adicione um item personalizado à sua comanda</p>
         </div>
         <button mat-stroked-button class="manual-button" (click)="abrirItemManual()">
-          <mat-icon>add</mat-icon>
+          <mat-icon aria-hidden="true">add</mat-icon>
           Adicionar Manual
         </button>
       </div>
     </div>
   }
-</div> 
+</main>

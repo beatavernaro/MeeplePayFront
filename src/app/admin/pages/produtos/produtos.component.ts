@@ -39,194 +39,153 @@ import { Subscription } from 'rxjs';
     MatFormFieldModule,
   ],
   template: `
-    <div style="padding: 24px;">
-      <!-- Header com título -->
-      <div
-        style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;"
-      >
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <mat-icon style="color: #556b2f; font-size: 32px; width: 32px; height: 32px;"
-            >inventory</mat-icon
-          >
-          <h1 style="margin: 0; color: #556b2f; font-weight: 500; font-size: 28px;">
-            Gerenciamento de Produtos
-          </h1>
+    <div class="page produtos-page">
+      <div class="page-header">
+        <div class="page-header__title">
+          <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>inventory</mat-icon></span>
+          <div>
+            <h1>Gerenciamento de Produtos</h1>
+            <p class="page-header__subtitle">Cadastre produtos, preços e estoque</p>
+          </div>
         </div>
-        <button
-          mat-raised-button
-          style="background-color: #556b2f; color: white;"
-          (click)="criarNovoProduto()"
-        >
-          <mat-icon>add</mat-icon>
-          Novo Produto
-        </button>
+        <div class="page-header__actions">
+          <button mat-raised-button (click)="criarNovoProduto()">
+            <mat-icon aria-hidden="true">add</mat-icon>
+            Novo Produto
+          </button>
+        </div>
       </div>
 
       <!-- Barra de pesquisa -->
-      <div style="margin-bottom: 24px;">
-        <mat-form-field style="width: 400px;" appearance="outline">
-          <mat-label>Buscar produtos</mat-label>
-          <input
-            matInput
-            [(ngModel)]="termoBusca"
-            (ngModelChange)="filtrarProdutos()"
-            placeholder="Digite o nome do produto..."
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
+      <mat-form-field class="produtos-busca" appearance="outline">
+        <mat-label>Buscar produtos</mat-label>
+        <input
+          matInput
+          type="search"
+          [(ngModel)]="termoBusca"
+          (ngModelChange)="filtrarProdutos()"
+          placeholder="Digite o nome do produto..."
+        />
+        <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+      </mat-form-field>
 
       <!-- Tabela de produtos -->
-      <div
-        style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-      >
-        <table mat-table [dataSource]="(produtosFiltrados$ | async) || []" style="width: 100%;">
-          <!-- Coluna Nome -->
-          <ng-container matColumnDef="nome">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px;"
-            >
-              Nome do Produto
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <mat-icon
-                  *ngIf="produto.estoque <= 0; else iconeProduto"
-                  style="color: #ff9800;"
-                  matTooltip="Produto sem estoque"
-                  matTooltipPosition="above"
-                  >warning</mat-icon
-                >
-                <ng-template #iconeProduto>
-                  <mat-icon style="color: #556b2f;">restaurant_menu</mat-icon>
-                </ng-template>
-                <span style="font-weight: 500;">{{ produto.nome }}</span>
-                <span
-                  *ngIf="!produto.ativo"
-                  style="background-color: #ff5722; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;"
-                >
-                  INATIVO
+      <div class="surface-card table-surface">
+        <div class="table-scroll">
+          <table mat-table [dataSource]="(produtosFiltrados$ | async) || []">
+            <!-- Coluna Nome -->
+            <ng-container matColumnDef="nome">
+              <th mat-header-cell *matHeaderCellDef>Nome do Produto</th>
+              <td mat-cell *matCellDef="let produto">
+                <div class="produto-cell">
+                  <span
+                    *ngIf="produto.estoque <= 0; else iconeProduto"
+                    class="icon-tile icon-tile--amber produto-cell__icon"
+                    matTooltip="Produto sem estoque"
+                    matTooltipPosition="above"
+                  >
+                    <mat-icon aria-label="Produto sem estoque">warning</mat-icon>
+                  </span>
+                  <ng-template #iconeProduto>
+                    <span class="icon-tile produto-cell__icon" aria-hidden="true">
+                      <mat-icon>restaurant_menu</mat-icon>
+                    </span>
+                  </ng-template>
+                  <span class="produto-cell__name">{{ produto.nome }}</span>
+                  <span *ngIf="!produto.ativo" class="status-pill status-pill--danger">Inativo</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Coluna Valor Unitário -->
+            <ng-container matColumnDef="preco">
+              <th mat-header-cell *matHeaderCellDef>Valor Unitário</th>
+              <td mat-cell *matCellDef="let produto">
+                <span class="money produto-preco">R$ {{ formatarMoeda(produto.preco) }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Coluna Estoque -->
+            <ng-container matColumnDef="estoque">
+              <th mat-header-cell *matHeaderCellDef>Estoque</th>
+              <td mat-cell *matCellDef="let produto">
+                <span class="money" [class.estoque-zerado]="produto.estoque <= 0">
+                  {{ produto.estoque }}
                 </span>
-              </div>
-            </td>
-          </ng-container>
+              </td>
+            </ng-container>
 
-          <!-- Coluna Valor Unitário -->
-          <ng-container matColumnDef="preco">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px;"
-            >
-              Valor Unitário
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px;">
-              <span style="font-weight: 500; color: #556b2f; font-size: 16px;">
-                R$ {{ formatarMoeda(produto.preco) }}
-              </span>
-            </td>
-          </ng-container>
+            <!-- Coluna Ações -->
+            <ng-container matColumnDef="acoes">
+              <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+              <td mat-cell *matCellDef="let produto" class="col-acoes">
+                <div class="row-actions">
+                  <button
+                    mat-icon-button
+                    class="row-action row-action--edit"
+                    matTooltip="Editar produto"
+                    matTooltipPosition="above"
+                    matTooltipShowDelay="300"
+                    aria-label="Editar produto"
+                    (click)="editarProduto(produto)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="row-action"
+                    matTooltip="Detalhes do produto"
+                    matTooltipPosition="above"
+                    matTooltipShowDelay="300"
+                    aria-label="Detalhes do produto"
+                    (click)="verDetalhes(produto.id!)"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="row-action"
+                    [class.row-action--danger]="produto.ativo"
+                    [class.row-action--success]="!produto.ativo"
+                    matTooltip="{{ produto.ativo ? 'Desativar produto' : 'Ativar produto' }}"
+                    matTooltipPosition="above"
+                    [attr.aria-label]="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
+                    (click)="toggleStatusProduto(produto)"
+                  >
+                    <mat-icon>{{ produto.ativo ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
 
-          <!-- Coluna Estoque -->
-          <ng-container matColumnDef="estoque">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px;"
-            >
-              Estoque
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px;">
-              <span
-                style="font-weight: 500; font-size: 16px;"
-                [style.color]="produto.estoque <= 0 ? '#ff5722' : '#333'"
-              >
-                {{ produto.estoque }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Coluna Ações -->
-          <ng-container matColumnDef="acoes">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px; text-align: center;"
-            >
-              Ações
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px; text-align: center;">
-              <div style="display: flex; gap: 8px; justify-content: center;">
-                <button
-                  mat-icon-button
-                  matTooltip="Editar produto"
-                  matTooltipPosition="above"
-                  matTooltipShowDelay="300"
-                  (click)="editarProduto(produto)"
-                  style="color: #2196f3;"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="Detalhes do produto"
-                  matTooltipPosition="above"
-                  matTooltipShowDelay="300"
-                  (click)="verDetalhes(produto.id!)"
-                  style="color: #556b2f;"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="{{ produto.ativo ? 'Desativar produto' : 'Ativar produto' }}"
-                  matTooltipPosition="above"
-                  (click)="toggleStatusProduto(produto)"
-                  [style.color]="produto.ativo ? '#ff5722' : '#4caf50'"
-                >
-                  <mat-icon>{{ produto.ativo ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
 
         <!-- Mensagem quando não há produtos -->
-        <div
-          *ngIf="(produtosFiltrados$ | async) as produtosFiltrados; else semProdutos"
-        >
-          <div
-            *ngIf="produtosFiltrados.length === 0"
-            style="padding: 48px; text-align: center; color: #666;"
-          >
-            <mat-icon style="font-size: 64px; width: 64px; height: 64px; color: #ddd;"
-              >inventory</mat-icon
-            >
-            <p style="margin: 16px 0; font-size: 18px;">
+        <div *ngIf="(produtosFiltrados$ | async) as produtosFiltrados; else semProdutos">
+          <div *ngIf="produtosFiltrados.length === 0" class="empty-state">
+            <mat-icon aria-hidden="true">inventory</mat-icon>
+            <h3>
               {{
                 (produtos$ | async)?.length === 0
                   ? 'Nenhum produto cadastrado'
                   : 'Nenhum produto encontrado para "' + termoBusca + '"'
               }}
-            </p>
+            </h3>
             <button
               *ngIf="(produtos$ | async)?.length === 0"
               mat-raised-button
-              style="background-color: #556b2f; color: white;"
               (click)="criarNovoProduto()"
             >
-              <mat-icon>add</mat-icon>
+              <mat-icon aria-hidden="true">add</mat-icon>
               Cadastrar Primeiro Produto
             </button>
           </div>
         </div>
         <ng-template #semProdutos>
-          <div style="padding: 48px; text-align: center; color: #666;">
+          <div class="empty-state" role="status">
             <p>Carregando produtos...</p>
           </div>
         </ng-template>
@@ -235,20 +194,87 @@ import { Subscription } from 'rxjs';
   `,
   styles: [
     `
-      table {
-        background-color: white;
+      .produtos-page .produtos-busca {
+        width: 100%;
+        max-width: 400px;
       }
 
-      .mat-mdc-row:hover {
-        background-color: #f9f9f9;
+      .produtos-page .produto-cell {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-width: 0;
       }
 
-      .mat-mdc-header-row {
-        background-color: #f5f5f5;
+      .produtos-page .produto-cell__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+      }
+
+      .produtos-page .produto-cell__icon .mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .produtos-page .produto-cell__name {
+        font-weight: var(--weight-semibold);
+        overflow-wrap: anywhere;
+      }
+
+      .produtos-page .produto-preco {
+        color: var(--color-primary);
+      }
+
+      .produtos-page .estoque-zerado {
+        color: var(--color-danger);
+      }
+
+      .produtos-page .mat-mdc-cell,
+      .produtos-page .mat-mdc-header-cell {
+        padding: 12px 16px;
+      }
+
+      .produtos-page .col-acoes {
+        text-align: center;
+        width: 160px;
+      }
+
+      .produtos-page .row-actions {
+        display: flex;
+        gap: var(--space-1);
+        justify-content: center;
+      }
+
+      .produtos-page .row-action {
+        color: var(--color-text-secondary);
+      }
+
+      .produtos-page .row-action--edit {
+        color: var(--color-primary);
+      }
+
+      .produtos-page .row-action--danger {
+        color: var(--color-danger);
+      }
+
+      .produtos-page .row-action--success {
+        color: var(--color-success);
+      }
+
+      .produtos-page .mat-mdc-row:hover {
+        background-color: var(--color-surface-sunken);
       }
 
       .mat-mdc-tooltip {
         transform: translateY(14px) !important;
+      }
+
+      @media (max-width: 768px) {
+        .produtos-page .produtos-busca {
+          max-width: none;
+        }
       }
     `,
   ],

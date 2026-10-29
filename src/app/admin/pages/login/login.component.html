@@ -1,9 +1,11 @@
-<div class="login-container">
+<main class="login-container">
   <div class="login-wrapper">
-    <mat-card class="login-card">
+    <mat-card class="login-card glass">
       <mat-card-header>
-        <mat-card-title>
+        <span class="icon-tile icon-tile--brand icon-tile--lg" aria-hidden="true">
           <mat-icon>admin_panel_settings</mat-icon>
+        </span>
+        <mat-card-title>
           Área Administrativa
         </mat-card-title>
         <mat-card-subtitle>Luderia Digital - Painel de Controle</mat-card-subtitle>
@@ -13,8 +15,8 @@
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email</mat-label>
-            <input matInput formControlName="email" type="email" placeholder="admin@luderia.com" />
-            <mat-icon matSuffix>email</mat-icon>
+            <input matInput formControlName="email" type="email" placeholder="admin@luderia.com" autocomplete="username" />
+            <mat-icon matSuffix aria-hidden="true">email</mat-icon>
             @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
               <mat-error>{{ getErrorMessage('email') }}</mat-error>
             }
@@ -27,8 +29,16 @@
               formControlName="password"
               [type]="hidePassword ? 'password' : 'text'"
               placeholder="Digite sua senha"
+              autocomplete="current-password"
             />
-            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              [attr.aria-label]="hidePassword ? 'Mostrar senha' : 'Ocultar senha'"
+              [attr.aria-pressed]="!hidePassword"
+              (click)="hidePassword = !hidePassword"
+            >
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
             @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
@@ -41,8 +51,7 @@
       <mat-card-actions>
         <button
           mat-raised-button
-          color="primary"
-          class="full-width login-button"
+          class="btn-block btn-lg login-button"
           (click)="onSubmit()"
           [disabled]="loading"
         >
@@ -61,4 +70,4 @@
       </mat-card-actions>
     </mat-card>
   </div>
-</div>
+</main>

@@ -39,115 +39,86 @@ interface Estatisticas {
     MatSnackBarModule,
   ],
   template: `
-    <div style="padding: 24px;">
+    <div class="page">
       <!-- Header com navegação -->
       <ng-container *ngIf="produto$ | async as produto">
-        <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 16px;">
-          <button mat-icon-button (click)="voltar()" matTooltip="Voltar">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <mat-icon style="color: #556b2f; font-size: 32px; width: 32px; height: 32px;"
-              >restaurant_menu</mat-icon
-            >
-            <h1 style="margin: 0; color: #556b2f; font-weight: 500; font-size: 28px;">
-              {{ produto.nome }}
-            </h1>
-            <mat-chip
-              *ngIf="!produto.ativo"
-              style="background-color: #ff5722; color: white;"
-            >
-              INATIVO
-            </mat-chip>
+        <div class="page-header">
+          <div class="page-header__title">
+            <button mat-icon-button (click)="voltar()" matTooltip="Voltar" aria-label="Voltar" class="back-button">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
+            <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>restaurant_menu</mat-icon></span>
+            <h1>{{ produto.nome }}</h1>
+            <span *ngIf="!produto.ativo" class="status-pill status-pill--danger">Inativo</span>
           </div>
         </div>
       </ng-container>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;" *ngIf="produto$ | async as produto">
+      <div class="detalhes-grid" *ngIf="produto$ | async as produto">
         <!-- Informações básicas do produto -->
         <mat-card>
-          <mat-card-header style="margin-bottom: 16px;">
-            <mat-card-title style="color: #556b2f;">
-              <mat-icon>info</mat-icon>
+          <mat-card-header class="card-header">
+            <mat-card-title>
+              <mat-icon aria-hidden="true">info</mat-icon>
               Informações do Produto
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
+            <dl class="info-list">
               <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Nome:</label
-                >
-                <span style="font-size: 18px; color: #333;">{{ produto.nome }}</span>
+                <dt>Nome</dt>
+                <dd class="info-value">{{ produto.nome }}</dd>
               </div>
               <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Preço:</label
-                >
-                <span style="font-size: 24px; font-weight: 600; color: #556b2f;">
-                  R$ {{ formatarMoeda(produto.preco) }}
-                </span>
+                <dt>Preço</dt>
+                <dd class="info-value info-value--price money">R$ {{ formatarMoeda(produto.preco) }}</dd>
               </div>
               <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Estoque:</label
-                >
-                <span
-                  style="font-size: 18px; display: inline-flex; align-items: center; gap: 4px;"
-                  [style.color]="produto.estoque <= 0 ? '#ff5722' : '#333'"
-                >
-                  <mat-icon *ngIf="produto.estoque <= 0" style="color: #ff9800;">warning</mat-icon>
+                <dt>Estoque</dt>
+                <dd class="info-value money" [class.estoque-zerado]="produto.estoque <= 0">
+                  <mat-icon *ngIf="produto.estoque <= 0" aria-label="Sem estoque">warning</mat-icon>
                   {{ produto.estoque }}
-                </span>
+                </dd>
               </div>
               <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Status:</label
-                >
-                <mat-chip
-                  [style.background-color]="produto.ativo ? '#4caf50' : '#ff5722'"
-                  style="color: white;"
-                >
-                  {{ produto.ativo ? 'ATIVO' : 'INATIVO' }}
-                </mat-chip>
+                <dt>Status</dt>
+                <dd>
+                  <span
+                    class="status-pill"
+                    [class.status-pill--success]="produto.ativo"
+                    [class.status-pill--danger]="!produto.ativo"
+                  >
+                    {{ produto.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </dd>
               </div>
-            </div>
+            </dl>
           </mat-card-content>
         </mat-card>
 
         <!-- Estatísticas do produto -->
         <mat-card>
-          <mat-card-header style="margin-bottom: 16px;">
-            <mat-card-title style="color: #556b2f;">
-              <mat-icon>analytics</mat-icon>
+          <mat-card-header class="card-header">
+            <mat-card-title>
+              <mat-icon aria-hidden="true">insights</mat-icon>
               Estatísticas de Vendas
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-              <div
-                style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px;"
-              >
-                <div style="font-size: 32px; font-weight: 600; color: #556b2f;">
-                  {{ (estatisticas$ | async)?.totalVendido || 0 }}
-                </div>
-                <div style="color: #666; font-size: 14px;">Total de Unidades Vendidas</div>
+            <div class="stats-list">
+              <div class="stat-tile">
+                <div class="stat-tile__value money">{{ (estatisticas$ | async)?.totalVendido || 0 }}</div>
+                <div class="stat-tile__label">Total de Unidades Vendidas</div>
               </div>
-              <div
-                style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px;"
-              >
-                <div style="font-size: 32px; font-weight: 600; color: #556b2f;">
+              <div class="stat-tile stat-tile--violet">
+                <div class="stat-tile__value money">
                   R$ {{ formatarMoeda((estatisticas$ | async)?.receitaTotal || 0) }}
                 </div>
-                <div style="color: #666; font-size: 14px;">Receita Total Gerada</div>
+                <div class="stat-tile__label">Receita Total Gerada</div>
               </div>
-              <div
-                style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px;"
-              >
-                <div style="font-size: 32px; font-weight: 600; color: #556b2f;">
-                  {{ (estatisticas$ | async)?.comandasComProduto || 0 }}
-                </div>
-                <div style="color: #666; font-size: 14px;">Comandas que Incluíram</div>
+              <div class="stat-tile stat-tile--green">
+                <div class="stat-tile__value money">{{ (estatisticas$ | async)?.comandasComProduto || 0 }}</div>
+                <div class="stat-tile__label">Comandas que Incluíram</div>
               </div>
             </div>
           </mat-card-content>
@@ -155,49 +126,166 @@ interface Estatisticas {
       </div>
 
       <!-- Ações do produto -->
-      <div style="margin-top: 24px; display: flex; gap: 16px;" *ngIf="produto$ | async as produto">
-        <button
-          mat-raised-button
-          style="background-color: #556b2f; color: white;"
-          (click)="editarProduto(produto)"
-        >
-          <mat-icon>edit</mat-icon>
+      <div class="detalhes-actions" *ngIf="produto$ | async as produto">
+        <button mat-raised-button (click)="editarProduto(produto)">
+          <mat-icon aria-hidden="true">edit</mat-icon>
           Editar Produto
         </button>
         <button
           mat-raised-button
-          [style.background-color]="produto.ativo ? '#ff5722' : '#4caf50'"
-          style="color: white;"
+          [class.btn-danger]="produto.ativo"
+          [class.btn-success]="!produto.ativo"
           (click)="toggleStatus(produto)"
         >
-          <mat-icon>{{ produto.ativo ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+          <mat-icon aria-hidden="true">{{ produto.ativo ? 'toggle_off' : 'toggle_on' }}</mat-icon>
           {{ produto.ativo ? 'Desativar' : 'Ativar' }} Produto
         </button>
       </div>
 
       <!-- Loading state -->
-      <div *ngIf="!(produto$ | async)" style="text-align: center; padding: 48px;">
-        <mat-icon
-          style="font-size: 64px; width: 64px; height: 64px; color: #ddd; animation: spin 1s linear infinite;"
-          >sync</mat-icon
-        >
-        <p style="margin: 16px 0; color: #666;">Carregando informações do produto...</p>
+      <div *ngIf="!(produto$ | async)" class="empty-state" role="status">
+        <mat-icon class="spin" aria-hidden="true">sync</mat-icon>
+        <p>Carregando informações do produto...</p>
       </div>
     </div>
   `,
   styles: [
     `
       @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
+        to {
           transform: rotate(360deg);
         }
       }
 
-      mat-card {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      .spin {
+        animation: spin 1s linear infinite;
+      }
+
+      .back-button {
+        color: var(--color-text-secondary);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+      }
+
+      .detalhes-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-5);
+      }
+
+      .card-header {
+        padding: var(--space-4) var(--space-5);
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: var(--space-2);
+      }
+
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--text-base);
+      }
+
+      mat-card-title mat-icon {
+        color: var(--color-primary);
+      }
+
+      .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        padding: var(--space-2) 0;
+      }
+
+      dt {
+        font-size: var(--text-xs);
+        font-weight: var(--weight-bold);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-text-secondary);
+        margin-bottom: 2px;
+      }
+
+      .info-value {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--text-lg);
+        font-weight: var(--weight-semibold);
+        color: var(--color-text);
+      }
+
+      .info-value--price {
+        font-size: var(--text-2xl);
+        font-weight: var(--weight-extrabold);
+        color: var(--color-primary);
+      }
+
+      .estoque-zerado {
+        color: var(--color-danger);
+      }
+
+      .estoque-zerado mat-icon {
+        color: var(--color-warning);
+      }
+
+      .stats-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-2) 0;
+      }
+
+      .stat-tile {
+        padding: var(--space-4);
+        border-radius: var(--radius-md);
+        background: var(--color-primary-soft);
+        text-align: center;
+      }
+
+      .stat-tile__value {
+        font-size: var(--text-3xl);
+        font-weight: var(--weight-extrabold);
+        color: var(--color-primary);
+      }
+
+      .stat-tile--violet {
+        background: var(--color-secondary-soft);
+      }
+
+      .stat-tile--violet .stat-tile__value {
+        color: var(--color-secondary);
+      }
+
+      .stat-tile--green {
+        background: var(--color-success-soft);
+      }
+
+      .stat-tile--green .stat-tile__value {
+        color: var(--color-success);
+      }
+
+      .stat-tile__label {
+        font-size: var(--text-sm);
+        color: var(--color-text-secondary);
+      }
+
+      .detalhes-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        margin-top: var(--space-6);
+      }
+
+      @media (max-width: 768px) {
+        .detalhes-grid {
+          grid-template-columns: 1fr;
+          gap: var(--space-4);
+        }
+
+        .detalhes-actions button {
+          flex: 1 1 100%;
+        }
       }
     `,
   ],

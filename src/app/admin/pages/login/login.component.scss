@@ -1,186 +1,81 @@
-// Admin login page
+// Admin login — deep brand backdrop + frosted card
 .login-container {
-  min-height: 100vh;
+  position: relative;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
-  padding: var(--space-5);
+  padding: var(--space-6) var(--space-4);
+  overflow: hidden;
+  background:
+    radial-gradient(700px 400px at 10% 10%, rgb(var(--rgb-blue) / 0.55), transparent 60%),
+    radial-gradient(600px 400px at 90% 90%, rgb(var(--rgb-violet) / 0.5), transparent 60%),
+    radial-gradient(400px 300px at 80% 15%, rgb(var(--rgb-green) / 0.3), transparent 60%),
+    var(--slate-900);
 }
 
 .login-wrapper {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 480px;
+  max-width: 440px;
 }
 
 .login-card {
-  background-color: var(--white);
-  border: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-lg);
-  
+  padding: var(--space-2);
+  border-radius: var(--radius-xl) !important;
+  background: var(--glass-bg-strong) !important;
+
   mat-card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
-    padding: var(--space-8) var(--space-6) var(--space-6);
-    
+    gap: var(--space-4);
+    padding: var(--space-8) var(--space-6) var(--space-4);
+
     mat-card-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-3);
-      font-size: var(--text-3xl);
-      font-weight: 700;
-      color: var(--gray-900);
-      margin: 0 0 var(--space-2) 0;
-      
-      mat-icon {
-        color: var(--primary-green);
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-      }
+      font-size: var(--text-2xl);
+      font-weight: var(--weight-extrabold);
+      color: var(--color-text);
     }
-    
+
     mat-card-subtitle {
-      color: var(--gray-600);
-      font-size: var(--text-base);
-      margin: 0;
+      margin-top: var(--space-1);
+      color: var(--color-text-secondary);
+      font-size: var(--text-sm);
     }
   }
-  
+
   mat-card-content {
-    padding: var(--space-6);
-    
-    .demo-credentials {
-      background-color: var(--gray-50);
-      border: var(--border-width) solid var(--gray-200);
-      border-left: 4px solid var(--primary-green);
-      padding: var(--space-4);
-      margin-top: var(--space-5);
-      
-      p {
-        margin: var(--space-1) 0;
-        font-size: var(--text-sm);
-        color: var(--gray-700);
-        
-        &:first-child {
-          margin: 0 0 var(--space-2) 0;
-          font-weight: 600;
-          color: var(--gray-900);
-        }
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
+    padding: var(--space-4) var(--space-6) 0;
   }
-  
+
   mat-card-actions {
-    padding: var(--space-6) var(--space-6) var(--space-8);
+    padding: var(--space-2) var(--space-6) var(--space-8);
   }
 }
 
-// Form elements
 .full-width {
   width: 100%;
-  margin-bottom: var(--space-5);
 }
 
-.login-button {
-  height: 48px;
-  font-size: var(--text-base);
-  font-weight: 600;
-  background-color: var(--primary-green) !important;
-  color: var(--white) !important;
-  transition: all 0.15s ease;
-  
-  &:hover {
-    background-color: var(--primary-green-dark) !important;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-  
-  mat-icon {
-    margin-right: var(--space-2);
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-}
-
-// Form field styling
-mat-form-field {
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: var(--white);
-    }
-    
-    .mdc-text-field--outlined {
-      .mdc-notched-outline {
-        border-color: var(--gray-300);
-        
-        .mdc-notched-outline__leading,
-        .mdc-notched-outline__notch,
-        .mdc-notched-outline__trailing {
-          border-radius: 0;
-        }
-      }
-      
-      &:not(.mdc-text-field--disabled):hover .mdc-notched-outline {
-        border-color: var(--gray-400);
-      }
-      
-      &.mdc-text-field--focused .mdc-notched-outline {
-        border-color: var(--primary-green);
-      }
-    }
-  }
-}
-
-// Responsive adjustments
 @media (max-width: 480px) {
-  .login-container {
-    padding: var(--space-2);
-  }
-  
   .login-card {
     mat-card-header {
-      padding: var(--space-6) var(--space-4) var(--space-4);
-      
-      mat-card-title {
-        font-size: var(--text-2xl);
-      }
-      
-      mat-card-subtitle {
-        font-size: var(--text-sm);
-      }
-    }
-    
-    mat-card-content {
-      padding: var(--space-4);
-      
-      .demo-credentials {
-        padding: var(--space-3);
-        
-        p {
-          font-size: var(--text-xs);
-        }
-      }
-    }
-    
-    mat-card-actions {
-      padding: var(--space-4) var(--space-4) var(--space-6);
-    }
-  }
-  
-  .login-button {
-    height: 44px;
-    font-size: var(--text-sm);
-  }
-}
+      padding: var(--space-6) var(--space-4) var(--space-3);
 
-@media (min-width: 768px) {
-  .login-wrapper {
-    max-width: 520px;
+      mat-card-title {
+        font-size: var(--text-xl);
+      }
+    }
+
+    mat-card-content {
+      padding: var(--space-3) var(--space-4) 0;
+    }
+
+    mat-card-actions {
+      padding: var(--space-2) var(--space-4) var(--space-6);
+    }
   }
 }

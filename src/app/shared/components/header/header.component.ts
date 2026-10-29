@@ -1,11 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
@@ -13,39 +8,40 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
   standalone: true,
   imports: [
     CommonModule,
-    MatToolbarModule,
-    MatButtonModule,
     MatIconModule,
-    MatBadgeModule,
-    MatFormFieldModule,
-    MatInputModule,
     ReactiveFormsModule,
   ],
   template: `
-    <div class="header-container">
-      <mat-toolbar class="custom-toolbar">
-        <div class="toolbar-content">
-          <div class="header-greeting">
-            <h2 class="greeting-text">{{ titulo || 'Olá, ' + nomeCliente }}</h2>
-            @if (numeroComanda) {
-              <span class="comanda-badge">Comanda #{{ numeroComanda }}</span>
-            }
-          </div>
-
-          @if (showSearchField) {
-            <div class="search-wrapper">
-              <mat-icon class="search-icon">search</mat-icon>
-              <input
-                class="search-input"
-                [formControl]="searchControl"
-                placeholder="Buscar produtos..."
-                (input)="onSearchChange($event)"
-              />
-            </div>
+    <header class="app-header">
+      <div class="app-header__inner">
+        <div class="app-header__row">
+          <h1 class="app-header__title">{{ titulo || 'Olá, ' + nomeCliente }}</h1>
+          @if (numeroComanda) {
+            <span class="comanda-badge">
+              <mat-icon aria-hidden="true">receipt_long</mat-icon>
+              Comanda #{{ numeroComanda }}
+            </span>
           }
         </div>
-      </mat-toolbar>
-    </div>
+
+        @if (showSearchField) {
+          <div class="search-field" role="search">
+            <mat-icon class="search-field__icon" aria-hidden="true">search</mat-icon>
+            <label for="header-search" class="sr-only">Buscar produtos</label>
+            <input
+              id="header-search"
+              class="search-field__input"
+              type="search"
+              autocomplete="off"
+              [formControl]="searchControl"
+              placeholder="Buscar produtos..."
+              (input)="onSearchChange($event)"
+            />
+          </div>
+        }
+      </div>
+      <ng-content />
+    </header>
   `,
   styleUrl: './header.component.scss',
 })

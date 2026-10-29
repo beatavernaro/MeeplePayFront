@@ -20,19 +20,21 @@ export interface ConfirmDialogData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button [mat-dialog-close]="false">{{ data.cancelText || 'Cancelar' }}</button>
-      <button mat-raised-button color="primary" [mat-dialog-close]="true">
+      <button mat-raised-button [mat-dialog-close]="true">
         {{ data.confirmText || 'Confirmar' }}
       </button>
     </mat-dialog-actions>
   `,
   styles: [
     `
-      mat-dialog-content {
-        padding: 20px 0;
+      mat-dialog-content p {
+        color: var(--color-text-secondary);
+        line-height: var(--leading-normal);
       }
 
       mat-dialog-actions {
-        gap: 8px;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-6) var(--space-5);
       }
     `,
   ],

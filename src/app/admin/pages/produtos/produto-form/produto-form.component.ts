@@ -25,17 +25,19 @@ import { ProdutoService } from '../../../../core/services/produto.service';
     MatSnackBarModule,
   ],
   template: `
-    <div class="container">
+    <div class="page page--narrow">
       <!-- Header com navegação -->
-      <div class="header">
-        <button mat-icon-button (click)="voltar()" class="back-button">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h1>{{ isEditMode ? 'Editar Produto' : 'Novo Produto' }}</h1>
+      <div class="page-header">
+        <div class="page-header__title">
+          <button mat-icon-button (click)="voltar()" class="back-button" aria-label="Voltar para produtos">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h1>{{ isEditMode ? 'Editar Produto' : 'Novo Produto' }}</h1>
+        </div>
       </div>
 
       <!-- Formulário -->
-      <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="form-container">
+      <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="form-container surface-card">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nome do Produto</mat-label>
           <input
@@ -43,9 +45,10 @@ import { ProdutoService } from '../../../../core/services/produto.service';
             formControlName="nome"
             placeholder="Digite o nome do produto"
             maxlength="50"
+            required
             #nomeInput
           />
-          <mat-hint>{{ nomeInput.value.length || 0 }}/50</mat-hint>
+          <mat-hint align="end">{{ nomeInput.value.length || 0 }}/50</mat-hint>
           <mat-error *ngIf="produtoForm.get('nome')?.hasError('required')">
             O nome do produto é obrigatório
           </mat-error>
@@ -54,41 +57,45 @@ import { ProdutoService } from '../../../../core/services/produto.service';
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Preço</mat-label>
-          <span matPrefix class="prefix-spacing">R$&nbsp;</span>
-          <input
-            matInput
-            formControlName="preco"
-            type="text"
-            placeholder="0,00"
-            (input)="formatPreco($event)"
-            (blur)="validatePreco()"
-          />
-          <mat-error *ngIf="produtoForm.get('preco')?.hasError('required')">
-            O preço é obrigatório
-          </mat-error>
-          <mat-error *ngIf="produtoForm.get('preco')?.hasError('min')">
-            O preço deve ser maior que zero
-          </mat-error>
-          <mat-error *ngIf="produtoForm.get('preco')?.hasError('invalid')">
-            Formato inválido. Use vírgula para decimais (ex: 10,50)
-          </mat-error>
-        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Preço</mat-label>
+            <span matTextPrefix class="prefix-spacing">R$&nbsp;</span>
+            <input
+              matInput
+              formControlName="preco"
+              type="text"
+              inputmode="decimal"
+              placeholder="0,00"
+              required
+              (input)="formatPreco($event)"
+              (blur)="validatePreco()"
+            />
+            <mat-error *ngIf="produtoForm.get('preco')?.hasError('required')">
+              O preço é obrigatório
+            </mat-error>
+            <mat-error *ngIf="produtoForm.get('preco')?.hasError('min')">
+              O preço deve ser maior que zero
+            </mat-error>
+            <mat-error *ngIf="produtoForm.get('preco')?.hasError('invalid')">
+              Formato inválido. Use vírgula para decimais (ex: 10,50)
+            </mat-error>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Estoque</mat-label>
-          <input matInput formControlName="estoque" type="number" min="0" step="1" placeholder="0" />
-          <mat-hint>Baixado automaticamente quando a comanda é paga</mat-hint>
-          <mat-error *ngIf="produtoForm.get('estoque')?.hasError('required')">
-            O estoque é obrigatório
-          </mat-error>
-          <mat-error
-            *ngIf="produtoForm.get('estoque')?.hasError('min') || produtoForm.get('estoque')?.hasError('pattern')"
-          >
-            O estoque deve ser um número inteiro maior ou igual a zero
-          </mat-error>
-        </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Estoque</mat-label>
+            <input matInput formControlName="estoque" type="number" min="0" step="1" placeholder="0" required />
+            <mat-hint>Baixado automaticamente quando a comanda é paga</mat-hint>
+            <mat-error *ngIf="produtoForm.get('estoque')?.hasError('required')">
+              O estoque é obrigatório
+            </mat-error>
+            <mat-error
+              *ngIf="produtoForm.get('estoque')?.hasError('min') || produtoForm.get('estoque')?.hasError('pattern')"
+            >
+              O estoque deve ser um número inteiro maior ou igual a zero
+            </mat-error>
+          </mat-form-field>
+        </div>
 
         <div class="checkbox-container">
           <mat-checkbox formControlName="ativo" color="primary"> Produto ativo </mat-checkbox>
@@ -101,12 +108,11 @@ import { ProdutoService } from '../../../../core/services/produto.service';
           </button>
           <button
             mat-raised-button
-            color="primary"
             type="submit"
             [disabled]="produtoForm.invalid || isLoading"
             class="submit-button"
           >
-            <mat-icon *ngIf="isLoading">hourglass_empty</mat-icon>
+            <mat-icon *ngIf="isLoading" aria-hidden="true">hourglass_empty</mat-icon>
             {{ isEditMode ? 'Salvar Alterações' : 'Criar Produto' }}
           </button>
         </div>
@@ -115,38 +121,23 @@ import { ProdutoService } from '../../../../core/services/produto.service';
   `,
   styles: [
     `
-      .container {
-        padding: 24px;
-        max-width: 600px;
-        margin: 0 auto;
-      }
-
-      .header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 24px;
-      }
-
       .back-button {
-        color: #556b2f;
-      }
-
-      h1 {
-        margin: 0;
-        color: #556b2f;
-        font-weight: 500;
-        font-size: 28px;
+        color: var(--color-text-secondary);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
       }
 
       .form-container {
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        background: white;
-        padding: 24px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        gap: var(--space-2);
+        padding: var(--space-6);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
       }
 
       .full-width {
@@ -154,56 +145,48 @@ import { ProdutoService } from '../../../../core/services/produto.service';
       }
 
       .checkbox-container {
-        margin: 8px 0 16px 0;
         display: flex;
         align-items: center;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--color-surface-sunken);
+        border: 1px solid var(--color-border);
       }
 
       .actions {
         display: flex;
-        gap: 16px;
+        gap: var(--space-3);
         justify-content: flex-end;
-        margin-top: 24px;
-        padding-top: 16px;
-        border-top: 1px solid #e0e0e0;
+        margin-top: var(--space-4);
+        padding-top: var(--space-5);
+        border-top: 1px solid var(--color-border);
       }
 
       .cancel-button {
-        color: #666;
+        color: var(--color-text-secondary);
       }
 
       .submit-button {
-        background-color: #556b2f !important;
-        color: white !important;
-        min-width: 160px;
-      }
-
-      .submit-button:disabled {
-        background-color: #ccc !important;
-        color: #999 !important;
-      }
-
-      mat-checkbox {
-        margin: 8px 0;
-      }
-
-      mat-form-field {
-        margin-bottom: 8px;
+        min-width: 180px;
       }
 
       .prefix-spacing {
-        color: #556b2f;
-        font-weight: 500;
-        margin-left: 10px;
+        color: var(--color-text-secondary);
+        font-weight: var(--weight-semibold);
       }
 
       @media (max-width: 768px) {
-        .container {
-          padding: 16px;
+        .form-container {
+          padding: var(--space-4);
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+          gap: 0;
         }
 
         .actions {
-          flex-direction: column;
+          flex-direction: column-reverse;
         }
 
         .cancel-button,

@@ -67,43 +67,28 @@ import { CreateProdutoRequest } from '../../../shared/models/api.interfaces';
   styles: [
     `
       .bottom-sheet-content {
-        padding: 24px;
-        background: white !important;
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        padding: var(--space-6);
         min-height: 200px;
-        position: relative;
-        z-index: 1000;
       }
       .bottom-sheet-content h3 {
-        margin: 0 0 20px 0;
-        color: #333 !important;
-        font-size: 1.25rem;
-        font-weight: 600;
+        margin: 0 0 var(--space-5) 0;
+        font-size: var(--text-xl);
       }
       .full-width {
         width: 100%;
-        margin-bottom: 16px;
+        margin-bottom: var(--space-2);
       }
       .actions {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
-        margin-top: 16px;
+        gap: var(--space-2);
+        margin-top: var(--space-4);
       }
       mat-form-field {
         width: 100%;
       }
-      .mat-mdc-form-field {
-        width: 100%;
-      }
-      input {
-        background: white !important;
-        color: #333 !important;
-      }
     `,
-  ],
-})
+  ],})
 export class AddItemManualComponent {
   form: FormGroup;
 

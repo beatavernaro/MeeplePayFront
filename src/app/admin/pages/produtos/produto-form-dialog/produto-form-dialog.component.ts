@@ -94,45 +94,29 @@ export interface ProdutoFormData {
   styles: [
     `
       .dialog-container {
-        min-width: 400px;
-        padding: 20px;
+        min-width: min(400px, 100%);
+        padding: var(--space-2);
       }
 
       .full-width {
         width: 100%;
-        margin-bottom: 16px;
+        margin-bottom: var(--space-2);
       }
 
       .checkbox-container {
-        margin-bottom: 20px;
-        padding-left: 8px;
+        margin-bottom: var(--space-4);
       }
 
       .dialog-actions {
         display: flex;
-        gap: 12px;
+        gap: var(--space-3);
         justify-content: flex-end;
-        padding: 16px 0 0 0;
+        padding: var(--space-4) var(--space-6) var(--space-5);
         margin: 0;
-      }
-
-      h2 {
-        margin-top: 0;
-        color: #556b2f;
-        font-weight: 500;
       }
 
       mat-form-field {
         display: block;
-      }
-
-      button[mat-raised-button] {
-        background-color: #556b2f !important;
-        color: white !important;
-      }
-
-      mat-checkbox {
-        margin: 8px 0;
       }
     `,
   ],

@@ -1,24 +1,14 @@
-// Content styles
-.cardapio-container {
-  padding: var(--space-6);
-  max-width: 1200px;
-  margin: 170px auto 100px;
-  min-height: calc(100vh - 300px);
-  background-color: var(--white) !important;
-}
-
-// Categorias Tab Styles
-.categorias-scroll-container {
-  position: fixed;
-  top: 90px;
-  left: 0;
-  right: 0;
-  background-color: var(--white);
+// Category tabs — projected into the sticky header
+.categorias-bar {
+  position: relative;
+  background: var(--glass-bg-strong);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  z-index: 999;
 
   &::-webkit-scrollbar {
     display: none;
@@ -28,61 +18,76 @@
 .categorias-tabs {
   display: flex;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-2);
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  min-width: min-content;
-  max-width: 1320px;
+  width: max-content;
+  min-width: 100%;
+  max-width: var(--container-lg);
   margin: 0 auto;
-  margin-top: 25px;
+  padding: var(--space-3) var(--space-6);
+
+  @media (min-width: 1248px) {
+    min-width: var(--container-lg);
+  }
 }
 
 .categoria-tab {
-  padding: var(--space-3) var(--space-5);
-  border: var(--border-width) solid var(--border-color);
-  background-color: var(--white);
-  color: var(--gray-700);
-  border-radius: 12px;
-  font-weight: 500;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
   flex-shrink: 0;
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
 
   &:hover {
-    border-color: var(--primary-green);
-    color: var(--primary-green);
+    border-color: var(--color-primary-soft-border);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
   }
 
   &.ativa {
-    background-color: var(--primary-green);
-    color: var(--white);
-    border-color: var(--primary-green);
-    font-weight: 600;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-brand);
   }
+}
+
+// Content
+.cardapio-container {
+  max-width: var(--container-lg);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) calc(112px + env(safe-area-inset-bottom));
 }
 
 .produtos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-6);
-  margin-bottom: var(--space-8);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
 }
 
 .produto-card {
-  background-color: var(--white);
-  border: var(--border-width) solid var(--border-color);
-  border-radius: 12px;
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-out);
 
   &:hover {
     box-shadow: var(--shadow-md);
-    border-color: var(--gray-300);
+    border-color: var(--color-primary-soft-border);
     transform: translateY(-2px);
   }
 }
@@ -96,75 +101,42 @@
 }
 
 .produto-nome {
-  font-size: var(--text-xl) !important;
-  font-weight: 600 !important;
-  color: var(--primary-green);
-  line-height: 1.4;
   flex: 1;
-}
-
-.sem-estoque-icon {
-  color: #ff9800;
-  vertical-align: middle;
-  margin-right: var(--space-1);
+  min-width: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  overflow-wrap: anywhere;
 }
 
 .produto-preco {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--primary-green);
-  white-space: nowrap;
+  font-size: var(--text-lg);
+  color: var(--color-primary);
+}
+
+.sem-estoque {
+  align-self: flex-start;
+
+  &::before {
+    display: none;
+  }
+
+  .mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .add-button {
   width: 100%;
-  height: 40px;
-  border-radius: 8px !important;
-  background-color: var(--primary-green) !important;
-  color: var(--white) !important;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  border: none !important;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: var(--primary-green-dark) !important;
-  }
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
 }
 
-// Empty state
 .no-results {
   grid-column: 1 / -1;
-  text-align: center;
-  padding: var(--space-16) var(--space-8);
-  color: var(--gray-500);
-
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    margin-bottom: var(--space-4);
-    color: var(--gray-400);
-  }
-
-  p {
-    margin: 0;
-    font-size: var(--text-lg);
-    color: var(--gray-600);
-  }
 }
 
-// Manual section
+// Manual item section
 .manual-section {
   margin-top: var(--space-8);
 
@@ -173,68 +145,38 @@
     align-items: center;
     gap: var(--space-4);
     padding: var(--space-6);
-    background-color: var(--white);
-    border: var(--border-width) solid var(--border-color);
+  }
 
-    .manual-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: var(--gray-400);
+  .manual-text {
+    flex: 1;
+
+    h3 {
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-1);
     }
 
-    .manual-text {
-      flex: 1;
-
-      h3 {
-        margin: 0 0 var(--space-2) 0;
-        font-size: var(--text-lg);
-        color: var(--gray-900);
-        font-weight: 600;
-      }
-
-      p {
-        margin: 0;
-        color: var(--gray-600);
-        font-size: var(--text-sm);
-        line-height: 1.5;
-      }
-    }
-
-    .manual-button {
-      height: 44px;
-      padding: 0 var(--space-6);
-      font-weight: 500;
+    p {
+      color: var(--color-text-secondary);
       font-size: var(--text-sm);
-      background-color: var(--gray-100);
-      color: var(--gray-700);
-      border: var(--border-width) solid var(--gray-300);
-
-      &:hover {
-        background-color: var(--gray-50);
-        border-color: var(--gray-400);
-      }
-
-      mat-icon {
-        margin-right: var(--space-2);
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
     }
   }
 }
 
-// Mobile-first responsive design
-@media (max-width: 480px) {
-  .categorias-scroll-container {
-    top: 110px;
+// Responsive
+@media (max-width: 1024px) {
+  .produtos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 600px) {
+  .categorias-tabs {
+    padding: var(--space-3) var(--space-4);
   }
 
   .cardapio-container {
-    padding: var(--space-4);
-    margin: 190px auto 100px;
-    min-height: calc(100vh - 320px);
+    padding: var(--space-4) var(--space-4) calc(104px + env(safe-area-inset-bottom));
   }
 
   .produtos-grid {
@@ -244,93 +186,15 @@
 
   .produto-card {
     padding: var(--space-4);
-
-    .produto-header {
-      gap: var(--space-2);
-
-      .produto-nome {
-        font-size: var(--text-base);
-        line-height: 1.3;
-      }
-
-      .produto-preco {
-        font-size: var(--text-lg);
-        white-space: nowrap;
-      }
-    }
-
-    .add-button {
-      height: 48px;
-      font-size: var(--text-base);
-      margin-top: var(--space-4);
-    }
   }
 
   .manual-section .manual-content {
     flex-direction: column;
     text-align: center;
-    gap: var(--space-4);
-    padding: var(--space-4);
-
-    .manual-text h3 {
-      font-size: var(--text-base);
-    }
-
-    .manual-text p {
-      font-size: var(--text-sm);
-    }
+    padding: var(--space-5);
 
     .manual-button {
       width: 100%;
-      height: 48px;
     }
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .categorias-scroll-container {
-    top: 90px;
-  }
-
-  .cardapio-container {
-    padding: var(--space-4) var(--space-2) var(--space-2);
-    margin: 170px auto 100px;
-  }
-
-  .produtos-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
-  }
-
-  .produto-card {
-    padding: var(--space-5);
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  .categorias-scroll-container {
-    top: 90px;
-  }
-
-  .cardapio-container {
-    margin: 170px auto 100px;
-  }
-
-  .produtos-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1025px) {
-  .categorias-scroll-container {
-    top: 90px;
-  }
-
-  .cardapio-container {
-    margin: 170px auto 100px;
-  }
-
-  .produtos-grid {
-    grid-template-columns: repeat(3, 1fr);
   }
 }

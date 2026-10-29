@@ -1,8 +1,8 @@
-<div class="start-container">
-  <mat-card class="start-card">
+<main class="start-container">
+  <mat-card class="start-card glass">
     <mat-card-header>
       <mat-card-title>
-        <img src="assets/AngatuLogo.png" alt="Angatu Jogos" class="logo-icon" />
+        <img src="assets/AngatuLogo.png" alt="" class="logo-icon" width="56" height="56" />
         Angatu Jogos
       </mat-card-title>
       <mat-card-subtitle>
@@ -18,15 +18,15 @@
       <!-- Sessão Ativa -->
       <mat-card-content>
         <div class="session-info">
-          <mat-icon color="primary">check_circle</mat-icon>
+          <mat-icon aria-hidden="true">check_circle</mat-icon>
           <span>Você tem uma comanda ativa</span>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Seu nome</mat-label>
-            <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" />
-            <mat-icon matSuffix>person</mat-icon>
+            <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" autocomplete="name" />
+            <mat-icon matSuffix aria-hidden="true">person</mat-icon>
             @if (form.get('nomeCliente')?.invalid && form.get('nomeCliente')?.touched) {
               <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
             }
@@ -34,8 +34,8 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Celular</mat-label>
-            <input matInput formControlName="celular" placeholder="11987654321" type="tel" />
-            <mat-icon matSuffix>phone</mat-icon>
+            <input matInput formControlName="celular" placeholder="11987654321" type="tel" inputmode="tel" autocomplete="tel-national" />
+            <mat-icon matSuffix aria-hidden="true">phone</mat-icon>
             @if (form.get('celular')?.invalid && form.get('celular')?.touched) {
               <mat-error>{{ getErrorMessage('celular') }}</mat-error>
             }
@@ -46,8 +46,7 @@
       <mat-card-actions class="session-actions">
         <button
           mat-raised-button
-          color="primary"
-          class="action-button"
+          class="action-button btn-lg"
           (click)="onSubmit()"
           [disabled]="loading"
         >
@@ -66,8 +65,7 @@
 
         <button
           mat-button
-          color="warn"
-          class="action-button"
+          class="action-button btn-danger-text"
           (click)="onClearSession()"
           [disabled]="loading"
         >
@@ -81,8 +79,8 @@
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Seu nome</mat-label>
-            <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" />
-            <mat-icon matSuffix>person</mat-icon>
+            <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" autocomplete="name" />
+            <mat-icon matSuffix aria-hidden="true">person</mat-icon>
             @if (form.get('nomeCliente')?.invalid && form.get('nomeCliente')?.touched) {
               <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
             }
@@ -90,8 +88,8 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Celular</mat-label>
-            <input matInput formControlName="celular" placeholder="11987654321" type="tel" />
-            <mat-icon matSuffix>phone</mat-icon>
+            <input matInput formControlName="celular" placeholder="11987654321" type="tel" inputmode="tel" autocomplete="tel-national" />
+            <mat-icon matSuffix aria-hidden="true">phone</mat-icon>
             @if (form.get('celular')?.invalid && form.get('celular')?.touched) {
               <mat-error>{{ getErrorMessage('celular') }}</mat-error>
             }
@@ -102,8 +100,7 @@
       <mat-card-actions class="new-session-actions">
         <button
           mat-raised-button
-          color="primary"
-          class="full-width start-button"
+          class="btn-block btn-lg start-button"
           (click)="onSubmit()"
           [disabled]="loading"
         >
@@ -124,7 +121,6 @@
           <span class="recovery-text">Já tem uma comanda?</span>
           <button
             mat-button
-            color="accent"
             class="recovery-button"
             (click)="onRecoverComanda()"
             [disabled]="loading || !form.get('celular')?.valid"
@@ -136,4 +132,4 @@
       </mat-card-actions>
     }
   </mat-card>
-</div>
+</main>

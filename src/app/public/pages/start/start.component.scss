@@ -1,251 +1,118 @@
-// Start page layout
+// Brand backdrop + frosted card
 .start-container {
-  padding: var(--space-4);
-  min-height: 100vh;
+  position: relative;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  padding: var(--space-6) var(--space-4);
+  background: var(--gradient-brand);
+  overflow: hidden;
+
+  // soft color orbs give the glass something to refract — decorative only
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+  }
+
+  &::before {
+    width: 420px;
+    height: 420px;
+    top: -120px;
+    left: -100px;
+    background: rgb(var(--rgb-green) / 0.45);
+  }
+
+  &::after {
+    width: 380px;
+    height: 380px;
+    bottom: -140px;
+    right: -80px;
+    background: rgb(var(--rgb-white) / 0.35);
+  }
 }
 
-// Main card
 .start-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 420px;
-  background-color: var(--white);
-  border: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-lg);
+  max-width: 440px;
+  padding: var(--space-2);
+  border-radius: var(--radius-xl) !important;
+  background: var(--glass-bg-strong) !important;
 
   mat-card-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: var(--space-8) var(--space-6) var(--space-4);
+    padding: var(--space-6) var(--space-6) var(--space-2);
 
     mat-card-title {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
+      gap: var(--space-3);
       font-size: var(--text-2xl);
-      font-weight: 700;
-      color: var(--gray-900);
-      margin: 0;
-
-      .logo-icon {
-        width: 32px;
-        height: 32px;
-        object-fit: contain;
-      }
+      font-weight: var(--weight-extrabold);
+      color: var(--color-text);
     }
 
     mat-card-subtitle {
       margin-top: var(--space-2);
-      color: var(--gray-600);
+      color: var(--color-text-secondary);
       font-size: var(--text-base);
-      text-align: center;
     }
   }
 
   mat-card-content {
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-4) var(--space-6) 0;
   }
 
   mat-card-actions {
-    padding: var(--space-4) var(--space-6) var(--space-6);
+    padding: var(--space-2) var(--space-6) var(--space-6);
   }
 }
 
-// Form elements
+.logo-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
 .full-width {
   width: 100%;
-  margin-bottom: var(--space-4);
 }
 
-// Start button
-.start-button {
-  height: 48px;
-  font-size: var(--text-base);
-  font-weight: 600;
-  background-color: var(--primary-green) !important;
-  color: var(--white) !important;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background-color: var(--primary-green-dark) !important;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-
-  mat-icon {
-    margin-right: var(--space-2);
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
-}
-
-// Form field styling
-mat-form-field {
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: var(--white);
-    }
-
-    .mdc-text-field--outlined {
-      .mdc-notched-outline {
-        border-color: var(--gray-300);
-
-        .mdc-notched-outline__leading,
-        .mdc-notched-outline__notch,
-        .mdc-notched-outline__trailing {
-          border-radius: 0;
-        }
-      }
-
-      &:not(.mdc-text-field--disabled):hover .mdc-notched-outline {
-        border-color: var(--gray-400);
-      }
-
-      &.mdc-text-field--focused .mdc-notched-outline {
-        border-color: var(--primary-green);
-      }
-    }
-  }
-}
-
-// Mobile-first responsive design
-@media (max-width: 480px) {
-  .start-container {
-    padding: var(--space-3);
-    min-height: 100vh;
-  }
-
-  .start-card {
-    max-width: none;
-    margin: 0;
-
-    mat-card-header {
-      padding: var(--space-6) var(--space-4) var(--space-4);
-
-      mat-card-title {
-        font-size: var(--text-xl);
-        flex-direction: column;
-        gap: var(--space-2);
-
-        mat-icon {
-          font-size: 32px;
-          width: 32px;
-          height: 32px;
-        }
-      }
-
-      mat-card-subtitle {
-        font-size: var(--text-sm);
-        margin-top: var(--space-3);
-      }
-    }
-
-    mat-card-content {
-      padding: var(--space-3) var(--space-4);
-    }
-
-    mat-card-actions {
-      padding: var(--space-3) var(--space-4) var(--space-6);
-    }
-  }
-
-  .full-width {
-    margin-bottom: var(--space-3);
-  }
-
-  .start-button {
-    height: 48px;
-    font-size: var(--text-base);
-    font-weight: 600;
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-  }
-
-  // Form field mobile optimization
-  mat-form-field {
-    .mat-mdc-form-field {
-      .mat-mdc-text-field-wrapper {
-        height: 48px;
-      }
-
-      .mdc-text-field--outlined {
-        .mdc-notched-outline {
-          .mdc-notched-outline__leading,
-          .mdc-notched-outline__notch,
-          .mdc-notched-outline__trailing {
-            border-width: 2px;
-          }
-        }
-      }
-    }
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .start-container {
-    padding: var(--space-4);
-  }
-
-  .start-card {
-    max-width: 400px;
-
-    mat-card-header {
-      padding: var(--space-6) var(--space-5) var(--space-4);
-    }
-
-    mat-card-content {
-      padding: var(--space-4) var(--space-5);
-    }
-
-    mat-card-actions {
-      padding: var(--space-4) var(--space-5) var(--space-6);
-    }
-  }
-}
-
-// Session-specific styles
 .session-info {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
-  padding: var(--space-3);
-  background-color: var(--success-light);
-  border: 1px solid var(--success);
-  border-radius: var(--radius);
-  color: var(--success-dark);
-  font-weight: 500;
-
-  mat-icon {
-    font-size: 1.25rem;
-  }
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
 }
 
 .session-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 
   .action-button {
     width: 100%;
-    height: 48px;
-    font-size: var(--text-base);
-    font-weight: 600;
-
-    mat-icon {
-      margin-right: var(--space-2);
-    }
   }
 }
 
@@ -255,31 +122,36 @@ mat-form-field {
   gap: var(--space-4);
 
   .recovery-section {
-    text-align: center;
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
 
-    .recovery-text {
-      display: block;
-      margin-bottom: var(--space-2);
-      font-size: var(--text-sm);
-      color: var(--gray-600);
-    }
-
-    .recovery-button {
-      font-size: var(--text-sm);
-
-      mat-icon {
-        font-size: 1rem;
-        margin-right: var(--space-1);
-      }
-    }
+  .recovery-text {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
   }
 }
 
-// Colors for session states
-:root {
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --success-dark: #047857;
+@media (max-width: 480px) {
+  .start-card {
+    mat-card-header {
+      padding: var(--space-5) var(--space-4) var(--space-2);
+
+      mat-card-title {
+        font-size: var(--text-xl);
+      }
+    }
+
+    mat-card-content {
+      padding: var(--space-4) var(--space-4) 0;
+    }
+
+    mat-card-actions {
+      padding: var(--space-2) var(--space-4) var(--space-5);
+    }
+  }
 }

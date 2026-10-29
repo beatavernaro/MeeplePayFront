@@ -1,202 +1,131 @@
-// Header styles
-.header-container {
-  position: fixed;
+// Sticky brand header. Pages can project extra rows (e.g. category tabs) via <ng-content>.
+:host {
+  display: block;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: var(--white);
-  border-bottom: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 40px; // Space for the search bar overlay
+  z-index: var(--z-header);
 }
 
-.custom-toolbar {
-  background-color: var(--primary-green) !important;
-  color: var(--white) !important;
-  min-height: 80px;
-  padding: 0;
+.app-header {
   position: relative;
+  background: var(--gradient-brand);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-md);
 
+  // soft light source for depth — decorative only
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--primary-green);
-    z-index: -1;
-  }
-
-  .toolbar-content {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: var(--space-1);
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: var(--space-3) var(--space-6);
-    height: 100%;
-    background-color: transparent;
-    position: relative;
+    inset: 0;
+    background: radial-gradient(600px 200px at 85% -40%, rgb(var(--rgb-white) / 0.28), transparent 70%);
+    pointer-events: none;
   }
 }
 
-.header-greeting {
-  width: 100%;
+.app-header__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: var(--container-lg);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6);
+}
+
+.app-header__row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
 
-  .greeting-text {
-    margin-top: 16px !important;
-    font-size: 30px !important;
-    font-weight: 600;
-    color: var(--white);
+.app-header__title {
+  color: inherit;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-extrabold);
+  overflow-wrap: anywhere;
+}
+
+.comanda-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg-tint);
+  border: 1px solid var(--glass-border-tint);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 48px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
+
+  &:focus-within {
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgb(var(--rgb-white) / 0.45), var(--shadow-md);
+  }
+}
+
+.search-field__icon {
+  color: var(--color-text-muted);
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.search-field__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-base);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    outline: none; // focus shown on the wrapper via :focus-within
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header__inner {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .app-header__title {
+    font-size: var(--text-xl);
   }
 
   .comanda-badge {
-    margin-top: 16px;
-    margin-left: auto;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: var(--white);
-    font-size: 16px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-}
-
-.search-wrapper {
-  position: absolute;
-  bottom: -24px;
-  left: var(--space-6);
-  right: var(--space-6);
-  width: auto;
-  background-color: var(--white);
-  border-radius: 12px;
-  border: 1px solid var(--gray-300);
-  padding: 8px 12px;
-  z-index: 1001;
-  height: 52px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .search-icon {
-    color: var(--gray-600);
-    font-size: 22px !important;
-    width: 20px !important;
-    height: 20px !important;
-    flex-shrink: 0;
-  }
-
-  .search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    color: var(--gray-900);
-    font-size: 14px;
-    outline: none;
-    padding: 0;
-
-    &::placeholder {
-      color: var(--gray-500);
-    }
-
-    &:focus {
-      outline: none;
-    }
-  }
-}
-
-// Mobile-first responsive design
-@media (max-width: 480px) {
-  .header-container {
-    margin-bottom: 50px;
-  }
-
-  .custom-toolbar {
-    min-height: 100px;
-
-    .toolbar-content {
-      padding: var(--space-3);
-      gap: var(--space-2);
-    }
-  }
-
-  .header-greeting {
-    padding-left: calc(var(--space-4) - var(--space-3));
-
-    .greeting-text {
-      font-size: var(--text-xl);
-    }
-  }
-
-  .search-wrapper {
-    bottom: -32px;
-    left: var(--space-4);
-    right: var(--space-4);
-    max-width: calc(100% - var(--space-8));
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .header-container {
-    margin-bottom: 45px;
-  }
-
-  .custom-toolbar {
-    min-height: 85px;
-
-    .toolbar-content {
-      padding: var(--space-3) var(--space-5);
-      gap: var(--space-2);
-    }
-  }
-
-  .header-greeting {
-    .greeting-text {
-      font-size: var(--text-xl);
-    }
-  }
-
-  .search-wrapper {
-    bottom: -28px;
-    left: var(--space-5);
-    right: var(--space-5);
-    max-width: calc(100% - var(--space-10));
-  }
-}
-
-@media (min-width: 769px) {
-  .header-container {
-    margin-bottom: 40px;
-  }
-
-  .custom-toolbar {
-    min-height: 80px;
-
-    .toolbar-content {
-      padding: var(--space-3) var(--space-6);
-      gap: var(--space-1);
-    }
-  }
-
-  .header-greeting {
-    .greeting-text {
-      font-size: var(--text-2xl);
-    }
-  }
-
-  .search-wrapper {
-    bottom: -24px;
-    left: var(--space-6);
-    right: var(--space-6);
-    max-width: calc(100% - var(--space-12));
+    font-size: var(--text-xs);
+    padding: 5px 10px;
   }
 }

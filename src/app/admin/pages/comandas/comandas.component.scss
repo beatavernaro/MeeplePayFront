@@ -1,393 +1,123 @@
-.page-container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #f8faf9;
-}
-
-.header-card {
-  margin-bottom: 24px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.04);
-  border: none;
-
-  mat-card-header {
-    padding: 24px;
-  }
-
-  mat-card-title {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 1.75em;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0;
-
-    mat-icon {
-      color: #556b2f;
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-    }
-  }
-}
-
 .filtro-numero {
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
+}
+
+.tabs-container {
+  --mat-tab-container-height: 52px;
 }
 
 .tab-content {
-  padding: 24px 0;
+  padding: var(--space-5) 0 0;
 }
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 
-  .stat-card {
-    text-align: center;
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.08),
-      0 1px 2px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s ease;
-    border: none;
+  .stat-card mat-card-content {
+    padding: var(--space-5) !important;
+  }
 
-    &:hover {
-      box-shadow:
-        0 4px 6px rgba(0, 0, 0, 0.1),
-        0 2px 4px rgba(0, 0, 0, 0.06);
-      transform: translateY(-1px);
-    }
+  .stat-card:first-child .stat-number {
+    color: var(--color-primary);
+  }
 
-    mat-card-content {
-      padding: 24px 16px !important;
+  .stat-card:last-child .stat-number {
+    color: var(--color-secondary);
+  }
 
-      .stat-number {
-        font-size: 2.5em;
-        font-weight: bold;
-        color: #556b2f;
-        margin-bottom: 8px;
-      }
+  .stat-number {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-extrabold);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: var(--space-1);
+  }
 
-      .stat-label {
-        font-size: 0.9em;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-    }
+  .stat-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 }
 
-.table-card {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
-  border: none;
-
-  &:hover {
-    box-shadow:
-      0 4px 6px rgba(0, 0, 0, 0.1),
-      0 2px 4px rgba(0, 0, 0, 0.06);
-  }
-
-  mat-card-content {
-    padding: 0 !important;
-  }
-}
-.table-container {
-  overflow-x: auto;
+.table-card mat-card-content {
+  padding: 0 !important;
 }
 
 .comandas-table {
-  width: 100%;
-
-  th {
-    background-color: #f5f5f5;
-    font-weight: 600;
-    color: #333;
-    padding: 16px 12px;
-    text-align: left;
-
-    &:last-child {
-      text-align: center;
-      width: 150px;
-    }
+  th,
+  td {
+    padding: 14px 16px;
   }
 
-  td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #e0e0e0;
-    vertical-align: middle;
+  th:last-child,
+  td:last-child {
+    text-align: center;
+    width: 140px;
+  }
 
-    &:first-child {
-      font-weight: 500;
-      color: #333;
-      width: 120px;
-      min-width: 120px;
-      max-width: 120px;
-    }
+  td:first-child {
+    width: 120px;
+  }
 
-    &:last-child {
-      text-align: center;
-      width: 150px;
-    }
+  .comanda-num {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
   }
 
   .total-cell {
-    font-weight: 600;
-    color: #556b2f;
+    color: var(--color-primary);
 
     &.completed {
-      color: #16a34a;
+      color: var(--color-success);
     }
-  }
-
-  .action-buttons {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    justify-content: center;
   }
 
   .action-btn {
-    width: 40px;
-    height: 40px;
-    min-width: auto;
+    color: var(--color-primary);
 
-    mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+    &--success {
+      color: var(--color-success);
     }
-  }
-
-  .comanda-row {
-    cursor: pointer;
-    transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: rgba(85, 107, 47, 0.04);
+      background-color: var(--color-surface-muted);
     }
-  }
-
-  // Evitar hover duplo quando clicar nos botões
-  .action-btn:hover {
-    background-color: inherit;
-  }
-}
-
-.no-data {
-  text-align: center;
-  padding: 48px 24px;
-  color: #666;
-  mat-icon {
-    font-size: 48px;
-    height: 48px;
-    width: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-  p {
-    font-size: 1.1em;
-    margin: 0;
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 24px;
-}
-
-.modal-card {
-  max-width: 800px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-
-  mat-card-header {
-    position: relative;
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 1.3em;
-      mat-icon {
-        color: #ff6b35;
-      }
-    }
-    .close-button {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-    }
-  }
-}
-
-.modal-content {
-  padding: 24px !important;
-
-  .comanda-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e0e0e0;
-
-    .cliente-details {
-      h3 {
-        margin: 0 0 8px 0;
-        color: #333;
-      }
-      p {
-        margin: 4px 0;
-        color: #666;
-      }
-    }
-
-    .comanda-status {
-      text-align: right;
-      mat-chip-set {
-        margin-bottom: 12px;
-      }
-      p {
-        margin: 0;
-        font-size: 1.1em;
-        color: #333;
-      }
-    }
-  }
-
-  .datas-info {
-    margin-bottom: 24px;
-    p {
-      margin: 8px 0;
-      color: #666;
-    }
-  }
-
-  .itens-section {
-    h4 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-      color: #333;
-      mat-icon {
-        color: #ff6b35;
-      }
-    }
-
-    .loading,
-    .no-items {
-      text-align: center;
-      padding: 32px;
-      color: #666;
-      p {
-        margin: 0;
-      }
-    }
-
-    .loading mat-spinner {
-      margin: 0 auto 16px;
-    }
-    .no-items mat-icon {
-      font-size: 36px;
-      height: 36px;
-      width: 36px;
-      margin-bottom: 12px;
-      opacity: 0.5;
-    }
-
-    .itens-list .item-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      margin-bottom: 8px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background-color: #fafafa;
-
-      .item-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        strong {
-          color: #333;
-        }
-        small {
-          color: #666;
-          font-size: 0.8em;
-          text-transform: uppercase;
-        }
-      }
-
-      .item-values {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 4px;
-        text-align: right;
-        span {
-          font-size: 0.9em;
-          color: #666;
-        }
-        strong {
-          color: #ff6b35;
-          font-size: 1.1em;
-        }
-      }
-    }
-  }
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px !important;
-  border-top: 1px solid #e0e0e0;
-  button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
   }
 }
 
 @media (max-width: 768px) {
-  .page-container {
-    padding: 16px;
+  .filtro-numero {
+    max-width: none;
   }
+
   .stats-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+
+    .stat-number {
+      font-size: var(--text-xl);
+    }
   }
-  .comandas-table th,
-  .comandas-table td {
-    padding: 12px 8px;
-    font-size: 0.9em;
-  }
-  .modal-overlay {
-    padding: 16px;
-  }
-  .modal-content {
-    padding: 16px !important;
+
+  .comandas-table {
+    th,
+    td {
+      padding: 12px 10px;
+      font-size: var(--text-sm);
+    }
   }
 }
