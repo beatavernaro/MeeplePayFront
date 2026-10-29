@@ -33,7 +33,7 @@ describe('AuthInterceptor', () => {
     http = TestBed.inject(HttpClient);
     httpTesting = TestBed.inject(HttpTestingController);
     sessao = TestBed.inject(SessaoClienteService);
-    sessao.definirToken(USER_TOKEN);
+    sessao.iniciar(USER_TOKEN, 'c1');
   });
 
   afterEach(() => httpTesting.verify());

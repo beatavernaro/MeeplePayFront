@@ -1,29 +1,54 @@
 import { TestBed } from '@angular/core/testing';
 import { SessaoClienteService } from './sessao-cliente.service';
 
+const CHAVE = 'meeplepay_sessao_cliente';
+const HORA = 60 * 60 * 1000;
+
 describe('SessaoClienteService', () => {
   let service: SessaoClienteService;
 
   beforeEach(() => {
-    sessionStorage.clear();
     localStorage.clear();
     service = TestBed.inject(SessaoClienteService);
   });
 
-  it('começa sem token', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('começa sem sessão', () => {
     expect(service.getAccessToken()).toBeNull();
+    expect(service.getComandaId()).toBeNull();
   });
 
-  it('guarda o token só em memória', () => {
-    service.definirToken('tok');
-    expect(service.getAccessToken()).toBe('tok');
-    expect(sessionStorage.length).toBe(0);
-    expect(localStorage.length).toBe(0);
+  it('salva token e comanda para sobreviver a um recarregamento', () => {
+    service.iniciar('tok', 'c1');
+
+    const outraInstancia = new SessaoClienteService();
+    expect(outraInstancia.getAccessToken()).toBe('tok');
+    expect(outraInstancia.getComandaId()).toBe('c1');
   });
 
-  it('limpar remove o token', () => {
-    service.definirToken('tok');
+  it('expira depois de 6 horas e apaga os dados', () => {
+    vi.useFakeTimers();
+    service.iniciar('tok', 'c1');
+
+    vi.advanceTimersByTime(6 * HORA - 1000);
+    expect(service.getComandaId()).toBe('c1');
+
+    vi.advanceTimersByTime(2000);
+    expect(service.getAccessToken()).toBeNull();
+    expect(localStorage.getItem(CHAVE)).toBeNull();
+  });
+
+  it('dados ilegíveis são descartados', () => {
+    localStorage.setItem(CHAVE, '{quebrado');
+    expect(service.getAccessToken()).toBeNull();
+    expect(localStorage.getItem(CHAVE)).toBeNull();
+  });
+
+  it('limpar remove a sessão', () => {
+    service.iniciar('tok', 'c1');
     service.limpar();
     expect(service.getAccessToken()).toBeNull();
+    expect(localStorage.getItem(CHAVE)).toBeNull();
   });
 });

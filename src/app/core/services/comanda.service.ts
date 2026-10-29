@@ -21,7 +21,8 @@ export interface AcessoComanda {
 
 /**
  * Chamadas da API de comandas e o estado da comanda do cliente (comanda atual e seus itens).
- * O estado fica só em memória; erros 401/403 são tratados no AuthInterceptor.
+ * A comanda vem sempre do backend; só o token e o id ficam salvos (SessaoClienteService)
+ * para recuperá-la ao recarregar a página. Erros 401/403 são tratados no AuthInterceptor.
  */
 @Injectable({
   providedIn: 'root',
@@ -78,15 +79,41 @@ export class ComandaService {
   }
 
   /**
-   * Comanda do cliente já carregada; sem ela o cliente precisa entrar pelo celular de novo
+   * Recarrega do backend a comanda da sessão salva (ex.: após atualizar a página).
+   * Emite null se não há sessão ou se a comanda não pôde ser carregada.
    */
-  garantirComandaAtiva(): Observable<Comanda> {
+  restaurarSessao(): Observable<Comanda | null> {
     const comandaAtual = this.comandaAtualState();
     if (comandaAtual) {
       return of(comandaAtual);
     }
 
-    return throwError(() => new Error('Nenhuma comanda ativa encontrada'));
+    const comandaId = this.sessaoCliente.getComandaId();
+    if (!comandaId || !this.sessaoCliente.getAccessToken()) {
+      return of(null);
+    }
+
+    return this.buscarComanda(comandaId).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Erro ao recuperar a comanda da sessão:', error);
+        // Comanda inexistente: a sessão salva não serve mais
+        if (error.status === 404) {
+          this.limparSessaoComanda();
+        }
+        return of(null);
+      }),
+    );
+  }
+
+  /**
+   * Comanda do cliente carregada (ou recuperada da sessão salva)
+   */
+  garantirComandaAtiva(): Observable<Comanda> {
+    return this.restaurarSessao().pipe(
+      switchMap((comanda) =>
+        comanda ? of(comanda) : throwError(() => new Error('Nenhuma comanda ativa encontrada')),
+      ),
+    );
   }
 
   /**
@@ -244,7 +271,7 @@ export class ComandaService {
   // === AUXILIARES ===
 
   private iniciarSessao(response: CreateComandaResponse): Comanda {
-    this.sessaoCliente.definirToken(response.accessToken);
+    this.sessaoCliente.iniciar(response.accessToken, response.comanda.id);
     return this.definirComandaAtual(response.comanda);
   }
 

@@ -186,7 +186,7 @@ src/
 │   │   └── services/
 │   │       ├── admin-auth.service.ts   # Autenticação admin
 │   │       ├── comanda.service.ts      # Operações com comandas
-│   │       ├── sessao-cliente.service.ts # Token do cliente, só em memória
+│   │       ├── sessao-cliente.service.ts # Sessão do cliente (token + comanda, 6h)
 │   │       └── produto.service.ts      # Operações com produtos
 │   │
 │   ├── public/                         # Módulo público (clientes)
@@ -478,19 +478,21 @@ public/                                 # Arquivos estáticos servidos
 **Localização**: `core/services/sessao-cliente.service.ts`
 
 **Responsabilidades**:
-- Guardar o token JWT da comanda do cliente enquanto a página está aberta
+- Guardar o token JWT e o id da comanda do cliente para recuperar a comanda ao recarregar a página
 
 **Métodos**:
 
 | Método | Parâmetros | Retorno | Descrição |
 |--------|-----------|----------|-----------|
 | `getAccessToken()` | - | `string \| null` | Token atual do cliente |
-| `definirToken()` | `token: string` | `void` | Guarda o token recebido da API |
-| `limpar()` | - | `void` | Remove o token |
+| `getComandaId()` | - | `string \| null` | Id da comanda da sessão |
+| `iniciar()` | `accessToken, comandaId` | `void` | Salva a sessão (válida por 6 horas) |
+| `limpar()` | - | `void` | Remove a sessão |
 
 **Armazenamento**:
-- Somente em memória: nada do cliente é salvo no navegador
-- Ao recarregar a página, o cliente informa o celular de novo e a comanda aberta é recuperada pelo backend
+- `localStorage`, chave `meeplepay_sessao_cliente`: `{ accessToken, comandaId, expiraEm }`
+- Expira 6 horas depois de o cliente entrar; sessão expirada ou ilegível é apagada
+- Só serve para recuperar a comanda: os dados da comanda sempre vêm do backend, e a tela inicial sempre consulta pelo celular digitado
 - A expiração do token (24h) é validada pela API; um 401 leva o cliente de volta para `/start`
 
 **Dados Armazenados** (UserData):
@@ -668,13 +670,13 @@ O sistema implementa dois níveis distintos de autenticação:
 
 #### 1. **Autenticação de Cliente (Session)**
 - **Tipo**: JWT (JSON Web Token)
-- **Armazenamento**: somente em memória (SessaoClienteService)
-- **Duração**: enquanto a página estiver aberta (o token expira em 24 horas na API)
+- **Armazenamento**: `localStorage` com token e id da comanda (SessaoClienteService)
+- **Duração**: 6 horas (o token expira em 24 horas na API); recarregar a página recupera a comanda
 - **Fluxo**:
   1. Cliente insere nome e celular na tela de start ("Acessar Comanda")
   2. `POST /api/comandas/reconectar`: se houver comanda aberta para o celular, ela é recuperada (com o nome salvo nela)
   3. Se a API responder 404, `POST /api/comandas` cria uma nova
-  4. A API retorna um JWT único para essa comanda, guardado em memória
+  4. A API retorna um JWT único para essa comanda, salvo por 6 horas junto com o id da comanda
   5. Usado em requisições para produtos, itens, etc.
 
 #### 2. **Autenticação Admin (Admin JWT)**
@@ -766,7 +768,7 @@ Retorna: { comanda, accessToken }
     ↓
 ComandaService:
   - Guarda a comanda no estado (signal)
-  - SessaoClienteService.definirToken()
+  - SessaoClienteService.iniciar(token, comandaId)
     ↓
 Start Component:
   - Mostra "Comanda #N recuperada/criada"
@@ -976,9 +978,8 @@ Erro → Exibe mensagem de erro
 
 #### A. Validação de Sessão
 - SessionGuard verifica:
-  - Comanda carregada nesta página e token JWT presente (senão, volta para /start)
-  - Status atual da comanda na API (encerrada ou paga vai para /encerrada)
-- Nada do cliente fica salvo no navegador
+  - Sessão do cliente: comanda carregada nesta página ou sessão salva há menos de 6h (senão, volta para /start)
+  - Status atual da comanda na API, que também recupera a comanda após recarregar a página (encerrada ou paga vai para /encerrada)
 
 #### B. Tratamento de Erros
 - Erros HTTP tratados globalmente pelo interceptor
@@ -999,10 +1000,22 @@ Erro → Exibe mensagem de erro
 
 ## Armazenamento de Dados
 
-### Dados do Cliente
-Nada é salvo no navegador. A comanda e o token ficam só em memória
-(`ComandaService` e `SessaoClienteService`). Ao recarregar a página, o cliente
-informa o celular de novo e a comanda aberta é recuperada pela API.
+### LocalStorage (Sessão do Cliente)
+**Chave**: `meeplepay_sessao_cliente`
+
+**Dados Armazenados**:
+```json
+{
+  "accessToken": "eyJhbGc...",
+  "comandaId": "abc123",
+  "expiraEm": 1772462400000
+}
+```
+
+**Características**:
+- Válida por 6 horas a partir da entrada na comanda
+- Permite recarregar a página sem perder a comanda (os dados são buscados de novo no backend)
+- Limpa ao iniciar uma nova comanda, ao acessar outra pelo celular ou após 401/403
 
 ### LocalStorage (Dados do Admin)
 **Chave**: `adminToken`
@@ -1206,7 +1219,7 @@ describe('App Component', () => {
 - JWT para autenticação
 - HTTPS obrigatório em produção
 - CORS configurado no backend
-- Token do cliente só em memória (nada salvo no navegador)
+- Sessão do cliente expira em 6 horas (só token e id da comanda)
 - Tokens expiram automaticamente
 
 ### Escalabilidade
@@ -1256,7 +1269,7 @@ describe('App Component', () => {
 │  │  ┌──────────────────────┐  ┌──────────────────────┐ │    │
 │  │  │ AdminAuthService     │  │ SessaoClienteService │ │    │
 │  │  ├──────────────────────┤  ├──────────────────────┤ │    │
-│  │  │ - login              │  │ - definirToken       │ │    │
+│  │  │ - login              │  │ - iniciar            │ │    │
 │  │  │ - logout             │  │ - getAccessToken     │ │    │
 │  │  │ - isAuthenticated    │  │ - limpar             │ │    │
 │  │  └──────────────────────┘  └──────────────────────┘ │    │
@@ -1294,7 +1307,7 @@ O **Comanda Virtual** é uma aplicação web moderna desenvolvida em **Angular 2
 ✅ **Reatividade completa** utilizando RxJS Observables
 ✅ **Lazy loading** de rotas para performance otimizada
 ✅ **Tratamento robusto** de erros e edge cases
-✅ **Sessão do cliente só em memória**; token do admin em LocalStorage
+✅ **Sessão do cliente de 6 horas** e token do admin em LocalStorage
 ✅ **Experiência mobile-first** com Material Design
 
 A plataforma está pronta para produção e integrada com API backend robusta, oferecendo uma solução completa para modernizar a experiência de atendimento.

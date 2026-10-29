@@ -6,23 +6,23 @@ import { ComandaService } from '../services/comanda.service';
 import { SessaoClienteService } from '../services/sessao-cliente.service';
 
 /**
- * Exige uma comanda carregada nesta página (sem ela, o cliente entra pelo celular em /start);
- * comanda encerrada ou paga vai para /encerrada.
+ * Exige uma sessão de cliente (carregada nesta página ou salva há menos de 6h);
+ * sem ela, o cliente entra pelo celular em /start. Comanda encerrada ou paga vai para /encerrada.
  */
 export const sessionGuard: CanActivateFn = () => {
   const comandaService = inject(ComandaService);
   const sessaoCliente = inject(SessaoClienteService);
   const router = inject(Router);
 
-  const comanda = comandaService.comandaAtual();
-  if (!comanda || !sessaoCliente.getAccessToken()) {
+  const comandaId = comandaService.comandaAtual()?.id ?? sessaoCliente.getComandaId();
+  if (!comandaId || !sessaoCliente.getAccessToken()) {
     return router.createUrlTree(['/start']);
   }
 
-  // Consultar o status atual no servidor: comanda encerrada ou paga não pode mais ser acessada
-  return comandaService.buscarComanda(comanda.id).pipe(
+  // Consultar o status atual no servidor (também recupera a comanda após recarregar a página)
+  return comandaService.buscarComanda(comandaId).pipe(
     map((atual) => (atual.status === 'ABERTA' ? true : router.createUrlTree(['/encerrada']))),
-    // Em caso de falha a própria tela trata o erro
-    catchError(() => of(true)),
+    // Se já há comanda carregada a própria tela trata o erro; sem ela, não há o que mostrar
+    catchError(() => of(comandaService.comandaAtual() ? true : router.createUrlTree(['/start']))),
   );
 };

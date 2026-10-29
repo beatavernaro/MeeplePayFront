@@ -25,6 +25,11 @@ export class EncerradaComponent {
   readonly pix = environment.pix;
   readonly chaveCopiada = signal(false);
 
+  constructor() {
+    // Ao recarregar a página, recupera a comanda da sessão salva para mostrar o pagamento
+    this.comandaService.restaurarSessao().subscribe();
+  }
+
   copiarChavePix(): void {
     if (this.clipboard.copy(this.pix.chave)) {
       this.chaveCopiada.set(true);

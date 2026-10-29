@@ -45,6 +45,7 @@ describe('ComandaService', () => {
   let navigate: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
+    localStorage.clear();
     navigate = vi.fn();
     TestBed.configureTestingModule({
       providers: [
@@ -128,11 +129,43 @@ describe('ComandaService', () => {
 
   it('limparSessaoComanda zera o estado e o token', () => {
     const sessao = TestBed.inject(SessaoClienteService);
-    sessao.definirToken('tok');
+    sessao.iniciar('tok', 'c1');
     service.limparSessaoComanda();
     expect(service.comandaAtual()).toBeNull();
     expect(service.itens()).toEqual([]);
     expect(sessao.getAccessToken()).toBeNull();
+    expect(sessao.getComandaId()).toBeNull();
+  });
+
+  describe('restaurarSessao', () => {
+    beforeEach(() => service.limparSessaoComanda());
+
+    it('busca no backend a comanda salva, como após recarregar a página', async () => {
+      TestBed.inject(SessaoClienteService).iniciar('tok', 'c1');
+
+      const restaurada = firstValueFrom(service.restaurarSessao());
+      httpTesting.expectOne(`${API}/comandas/c1`).flush(comanda());
+
+      expect((await restaurada)?.id).toBe('c1');
+      expect(service.itens()).toEqual([item({ quantidade: 2 })]);
+    });
+
+    it('sem sessão salva não consulta o backend', async () => {
+      expect(await firstValueFrom(service.restaurarSessao())).toBeNull();
+    });
+
+    it('comanda não encontrada apaga a sessão salva', async () => {
+      const sessao = TestBed.inject(SessaoClienteService);
+      sessao.iniciar('tok', 'sumiu');
+
+      const restaurada = firstValueFrom(service.restaurarSessao());
+      httpTesting
+        .expectOne(`${API}/comandas/sumiu`)
+        .flush({}, { status: 404, statusText: 'Not Found' });
+
+      expect(await restaurada).toBeNull();
+      expect(sessao.getComandaId()).toBeNull();
+    });
   });
 
   describe('acessarComanda', () => {
@@ -148,6 +181,7 @@ describe('ComandaService', () => {
       expect(service.comandaAtual()?.id).toBe('c104');
       expect(service.comandaAtual()?.nomeCliente).toBe('Ana');
       expect(TestBed.inject(SessaoClienteService).getAccessToken()).toBe('tok-104');
+      expect(TestBed.inject(SessaoClienteService).getComandaId()).toBe('c104');
     });
 
     it('sem comanda aberta (404) cria uma nova', async () => {

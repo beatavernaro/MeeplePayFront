@@ -13,6 +13,7 @@ describe('sessionGuard', () => {
   let sessao: SessaoClienteService;
 
   beforeEach(() => {
+    localStorage.clear();
     buscarComanda = vi.fn();
     comandaAtual = signal<Comanda | null>(null);
     TestBed.configureTestingModule({
@@ -23,7 +24,7 @@ describe('sessionGuard', () => {
 
   function entrarNaComanda(): void {
     comandaAtual.set({ id: 'c1', status: 'ABERTA' } as Comanda);
-    sessao.definirToken('tok');
+    sessao.iniciar('tok', 'c1');
   }
 
   async function executar(): Promise<boolean | UrlTree> {
@@ -37,12 +38,12 @@ describe('sessionGuard', () => {
     return TestBed.inject(Router).serializeUrl(resultado as UrlTree);
   }
 
-  it('sem comanda carregada redireciona para /start', async () => {
+  it('sem sessão redireciona para /start', async () => {
     expect(url(await executar())).toBe('/start');
     expect(buscarComanda).not.toHaveBeenCalled();
   });
 
-  it('comanda sem token (ex.: após 401) redireciona para /start', async () => {
+  it('sessão sem token (ex.: após 401) redireciona para /start', async () => {
     entrarNaComanda();
     sessao.limpar();
     expect(url(await executar())).toBe('/start');
@@ -55,15 +56,28 @@ describe('sessionGuard', () => {
     expect(buscarComanda).toHaveBeenCalledWith('c1');
   });
 
+  it('após recarregar a página, recupera a comanda da sessão salva', async () => {
+    sessao.iniciar('tok', 'c9');
+    buscarComanda.mockReturnValue(of({ status: 'ABERTA' }));
+    expect(await executar()).toBe(true);
+    expect(buscarComanda).toHaveBeenCalledWith('c9');
+  });
+
   it.each(['ENCERRADA', 'PAGA'])('comanda %s redireciona para /encerrada', async (status) => {
     entrarNaComanda();
     buscarComanda.mockReturnValue(of({ status }));
     expect(url(await executar())).toBe('/encerrada');
   });
 
-  it('erro ao consultar a comanda libera o acesso (a tela trata)', async () => {
+  it('erro ao consultar com comanda carregada libera o acesso (a tela trata)', async () => {
     entrarNaComanda();
     buscarComanda.mockReturnValue(throwError(() => new Error('falha')));
     expect(await executar()).toBe(true);
+  });
+
+  it('erro ao recuperar a comanda salva redireciona para /start', async () => {
+    sessao.iniciar('tok', 'c9');
+    buscarComanda.mockReturnValue(throwError(() => new Error('falha')));
+    expect(url(await executar())).toBe('/start');
   });
 });
