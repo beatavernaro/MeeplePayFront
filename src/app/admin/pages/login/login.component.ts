@@ -9,6 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-login',
@@ -21,6 +22,7 @@ import { AdminAuthService } from '../../../core/services/admin-auth.service';
     MatButtonModule,
     MatCardModule,
     MatIconModule,
+    LucideAngularModule,
     MatSnackBarModule,
   ],
   templateUrl: './login.component.html',

@@ -2,7 +2,7 @@
   <mat-card class="start-card glass">
     <mat-card-header>
       <mat-card-title>
-        <img src="assets/AngatuLogo.png" alt="" class="logo-icon" width="56" height="56" />
+        <img src="assets/AngatuLogo.png" alt="" class="logo-icon" width="48" height="48" />
         Angatu Jogos
       </mat-card-title>
       <mat-card-subtitle>
@@ -18,7 +18,7 @@
       <!-- Sessão Ativa -->
       <mat-card-content>
         <div class="session-info">
-          <mat-icon aria-hidden="true">check_circle</mat-icon>
+          <lucide-icon name="circle-check" />
           <span>Você tem uma comanda ativa</span>
         </div>
 
@@ -26,7 +26,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Seu nome</mat-label>
             <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" autocomplete="name" />
-            <mat-icon matSuffix aria-hidden="true">person</mat-icon>
+            <lucide-icon matSuffix name="user" />
             @if (form.get('nomeCliente')?.invalid && form.get('nomeCliente')?.touched) {
               <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
             }
@@ -35,7 +35,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Celular</mat-label>
             <input matInput formControlName="celular" placeholder="11987654321" type="tel" inputmode="tel" autocomplete="tel-national" />
-            <mat-icon matSuffix aria-hidden="true">phone</mat-icon>
+            <lucide-icon matSuffix name="phone" />
             @if (form.get('celular')?.invalid && form.get('celular')?.touched) {
               <mat-error>{{ getErrorMessage('celular') }}</mat-error>
             }
@@ -52,12 +52,12 @@
         >
           @if (loading) {
             <ng-container>
-              <mat-icon>hourglass_empty</mat-icon>
+              <lucide-icon class="spin" name="loader-circle" />
               Continuando...
             </ng-container>
           } @else {
             <ng-container>
-              <mat-icon>play_arrow</mat-icon>
+              <lucide-icon name="arrow-right" />
               Continuar Comanda
             </ng-container>
           }
@@ -69,7 +69,7 @@
           (click)="onClearSession()"
           [disabled]="loading"
         >
-          <mat-icon>clear</mat-icon>
+          <lucide-icon name="plus" />
           Nova Comanda
         </button>
       </mat-card-actions>
@@ -80,7 +80,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Seu nome</mat-label>
             <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" autocomplete="name" />
-            <mat-icon matSuffix aria-hidden="true">person</mat-icon>
+            <lucide-icon matSuffix name="user" />
             @if (form.get('nomeCliente')?.invalid && form.get('nomeCliente')?.touched) {
               <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
             }
@@ -89,7 +89,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Celular</mat-label>
             <input matInput formControlName="celular" placeholder="11987654321" type="tel" inputmode="tel" autocomplete="tel-national" />
-            <mat-icon matSuffix aria-hidden="true">phone</mat-icon>
+            <lucide-icon matSuffix name="phone" />
             @if (form.get('celular')?.invalid && form.get('celular')?.touched) {
               <mat-error>{{ getErrorMessage('celular') }}</mat-error>
             }
@@ -106,12 +106,12 @@
         >
           @if (loading) {
             <ng-container>
-              <mat-icon>hourglass_empty</mat-icon>
+              <lucide-icon class="spin" name="loader-circle" />
               Criando comanda...
             </ng-container>
           } @else {
             <ng-container>
-              <mat-icon>play_arrow</mat-icon>
+              <lucide-icon name="arrow-right" />
               Iniciar Comanda
             </ng-container>
           }
@@ -125,7 +125,7 @@
             (click)="onRecoverComanda()"
             [disabled]="loading || !form.get('celular')?.valid"
           >
-            <mat-icon>restore</mat-icon>
+            <lucide-icon name="rotate-ccw" />
             Recuperar Comanda
           </button>
         </div>

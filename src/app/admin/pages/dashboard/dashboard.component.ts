@@ -10,11 +10,12 @@ import { map, catchError, shareReplay } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Comanda } from '../../../shared/models/comanda.model';
 import { ComandaService } from '../../../core/services/comanda.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatCardModule, MatSnackBarModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, LucideAngularModule, MatCardModule, MatSnackBarModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })

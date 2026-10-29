@@ -1,4 +1,5 @@
-// Sticky brand header. Pages can project extra rows (e.g. category tabs) via <ng-content>.
+// Sticky glass header — content scrolls beneath it, so blur adds legibility.
+// Pages can project extra rows (e.g. category tabs) via <ng-content>.
 :host {
   display: block;
   position: sticky;
@@ -7,29 +8,19 @@
 }
 
 .app-header {
-  position: relative;
-  background: var(--gradient-brand);
-  color: var(--color-text-inverse);
-  box-shadow: var(--shadow-md);
-
-  // soft light source for depth — decorative only
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(600px 200px at 85% -40%, rgb(var(--rgb-white) / 0.28), transparent 70%);
-    pointer-events: none;
-  }
+  background: var(--glass-bg-strong);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
 }
 
 .app-header__inner {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   max-width: var(--container-lg);
   margin: 0 auto;
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-4) var(--space-6);
 }
 
 .app-header__row {
@@ -41,9 +32,8 @@
 }
 
 .app-header__title {
-  color: inherit;
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-extrabold);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 
@@ -51,22 +41,19 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  background: var(--glass-bg-tint);
-  border: 1px solid var(--glass-border-tint);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: var(--color-text-inverse);
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-badge);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 
-  .mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+  lucide-icon {
+    color: var(--color-icon);
   }
 }
 
@@ -74,27 +61,27 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  height: 48px;
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--glass-bg-strong);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
+  height: var(--control-height-touch);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
   transition:
-    box-shadow var(--duration-base) var(--ease-standard),
-    background-color var(--duration-base) var(--ease-standard);
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+
+  &:hover {
+    border-color: var(--slate-400);
+  }
 
   &:focus-within {
-    background: var(--color-surface);
-    box-shadow: 0 0 0 3px rgb(var(--rgb-white) / 0.45), var(--shadow-md);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
   }
 }
 
 .search-field__icon {
-  color: var(--color-text-muted);
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  color: var(--color-icon);
 }
 
 .search-field__input {
@@ -106,7 +93,7 @@
   font-size: var(--text-base);
 
   &::placeholder {
-    color: var(--color-text-muted);
+    color: var(--slate-400);
   }
 
   &:focus-visible {
@@ -116,16 +103,14 @@
 
 @media (max-width: 480px) {
   .app-header__inner {
-    padding: var(--space-4);
-    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
   }
 
   .app-header__title {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
   }
 
   .comanda-badge {
     font-size: var(--text-xs);
-    padding: 5px 10px;
   }
 }

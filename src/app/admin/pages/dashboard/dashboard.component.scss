@@ -1,91 +1,29 @@
-// Stat cards
 .stats-grid {
-  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-5);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
-.stat-card {
-  transition:
-    box-shadow var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-out);
-
-  &:hover {
-    box-shadow: var(--shadow-md) !important;
-    transform: translateY(-2px);
-  }
-
-  mat-card-content {
-    padding: var(--space-5) !important;
-  }
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.stat-info {
-  min-width: 0;
-
-  p {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    color: var(--color-text-secondary);
-    margin-bottom: 2px;
-  }
-
-  h3 {
-    font-size: var(--text-3xl);
-    font-weight: var(--weight-extrabold);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-}
-
-// Lists
 .tables-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
-.table-card {
+.list-card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
 
-  mat-card-header {
-    padding: var(--space-4) var(--space-5);
-    border-bottom: 1px solid var(--color-border);
-
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: var(--text-base);
-
-      mat-icon {
-        color: var(--color-primary);
-      }
-    }
+  .card-head {
+    padding-right: var(--space-2);
   }
+}
 
-  mat-card-content {
-    flex: 1;
-    padding: 0 !important;
-    min-height: 280px;
-    max-height: 420px;
-    overflow: auto;
-  }
-
-  mat-card-actions {
-    padding: var(--space-3) var(--space-5) !important;
-    border-top: 1px solid var(--color-border);
-    background: var(--color-surface-sunken);
-  }
+.list-card__body {
+  flex: 1;
+  min-height: 240px;
+  max-height: 400px;
+  overflow: auto;
 }
 
 .comandas-list {
@@ -101,42 +39,30 @@
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  min-height: 64px;
-  padding: var(--space-3) var(--space-5);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-4);
   text-align: left;
   transition: background-color var(--duration-fast) var(--ease-standard);
 
   &:hover {
-    background-color: var(--color-primary-soft);
+    background-color: var(--color-surface-hover);
 
     .chevron {
-      transform: translateX(2px);
-      color: var(--color-primary);
+      color: var(--color-text-secondary);
     }
   }
 
   &:focus-visible {
     outline-offset: -2px;
   }
-}
 
-.comanda-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 52px;
-  height: 36px;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-hover);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
+  .record-id {
+    min-width: 44px;
+    font-size: var(--text-sm);
+  }
 
-  &--done {
-    background: var(--color-success-soft);
-    color: var(--color-success);
+  .money {
+    font-size: var(--text-sm);
   }
 }
 
@@ -148,7 +74,8 @@
 }
 
 .comanda-info__name {
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -156,42 +83,23 @@
 }
 
 .comanda-info__date {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.total {
-  color: var(--color-primary);
-
-  &.completed {
-    color: var(--color-success);
-  }
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 
 .chevron {
-  color: var(--slate-400);
-  transition:
-    transform var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+  color: var(--slate-300);
+  transition: color var(--duration-fast) var(--ease-standard);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1100px) {
   .tables-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-
-  .stat-info h3 {
-    font-size: var(--text-2xl);
-  }
-
-  .comanda-item {
-    padding: var(--space-3) var(--space-4);
   }
 }

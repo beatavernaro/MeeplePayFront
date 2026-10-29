@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Produto } from '../../../../shared/models/produto.model';
 import { ProdutoService } from '../../../../core/services/produto.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-produto-form',
@@ -22,6 +23,7 @@ import { ProdutoService } from '../../../../core/services/produto.service';
     MatButtonModule,
     MatCheckboxModule,
     MatIconModule,
+    LucideAngularModule,
     MatSnackBarModule,
   ],
   template: `
@@ -30,7 +32,7 @@ import { ProdutoService } from '../../../../core/services/produto.service';
       <div class="page-header">
         <div class="page-header__title">
           <button mat-icon-button (click)="voltar()" class="back-button" aria-label="Voltar para produtos">
-            <mat-icon>arrow_back</mat-icon>
+            <lucide-icon name="arrow-left" />
           </button>
           <h1>{{ isEditMode ? 'Editar Produto' : 'Novo Produto' }}</h1>
         </div>
@@ -112,7 +114,7 @@ import { ProdutoService } from '../../../../core/services/produto.service';
             [disabled]="produtoForm.invalid || isLoading"
             class="submit-button"
           >
-            <mat-icon *ngIf="isLoading" aria-hidden="true">hourglass_empty</mat-icon>
+            <lucide-icon *ngIf="isLoading" class="spin" name="loader-circle" />
             {{ isEditMode ? 'Salvar Alterações' : 'Criar Produto' }}
           </button>
         </div>
@@ -121,17 +123,11 @@ import { ProdutoService } from '../../../../core/services/produto.service';
   `,
   styles: [
     `
-      .back-button {
-        color: var(--color-text-secondary);
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-      }
-
       .form-container {
         display: flex;
         flex-direction: column;
-        gap: var(--space-2);
-        padding: var(--space-6);
+        gap: var(--space-1);
+        padding: var(--space-5);
       }
 
       .form-row {
@@ -148,7 +144,7 @@ import { ProdutoService } from '../../../../core/services/produto.service';
         display: flex;
         align-items: center;
         padding: var(--space-2) var(--space-3);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-control);
         background: var(--color-surface-sunken);
         border: 1px solid var(--color-border);
       }

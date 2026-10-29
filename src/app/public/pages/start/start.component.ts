@@ -11,6 +11,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { ComandaService } from '../../../core/services/comanda.service';
 import { LocalStorageService, UserData } from '../../../core/services/local-storage.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-start',
@@ -23,6 +24,7 @@ import { LocalStorageService, UserData } from '../../../core/services/local-stor
     MatButtonModule,
     MatCardModule,
     MatIconModule,
+    LucideAngularModule,
     MatSnackBarModule,
     MatDialogModule,
   ],

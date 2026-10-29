@@ -38,8 +38,8 @@
           <span class="produto-preco money">{{ formatarPreco(produto.preco) }}</span>
         </div>
         @if (produto.estoque <= 0) {
-          <span class="status-pill status-pill--warning sem-estoque">
-            <mat-icon aria-hidden="true">warning</mat-icon>
+          <span class="status-badge status-badge--warning sem-estoque">
+            <lucide-icon name="triangle-alert" />
             Sem estoque
           </span>
         }
@@ -49,7 +49,7 @@
           [attr.aria-label]="'Adicionar ' + produto.nome"
           (click)="adicionarProduto(produto)"
         >
-          <mat-icon aria-hidden="true">add_circle</mat-icon>
+          <lucide-icon name="plus" />
           Adicionar
         </button>
       </article>
@@ -57,7 +57,7 @@
 
     @if ((produtosFiltrados$ | async)?.length === 0) {
       <div class="empty-state no-results">
-        <mat-icon aria-hidden="true">search_off</mat-icon>
+        <lucide-icon name="search-x" />
         <h3>Nenhum produto encontrado</h3>
         <p>Tente outro termo de busca ou selecione outra categoria.</p>
       </div>
@@ -67,13 +67,13 @@
   @if (produtoManualHabilitado) {
     <div class="manual-section surface-card">
       <div class="manual-content">
-        <span class="icon-tile icon-tile--violet"><mat-icon aria-hidden="true">edit_note</mat-icon></span>
+        <lucide-icon class="manual-icon" name="notebook-pen" [size]="20" />
         <div class="manual-text">
           <h3>Produto não encontrado?</h3>
           <p>Adicione um item personalizado à sua comanda</p>
         </div>
         <button mat-stroked-button class="manual-button" (click)="abrirItemManual()">
-          <mat-icon aria-hidden="true">add</mat-icon>
+          <lucide-icon name="plus" />
           Adicionar Manual
         </button>
       </div>

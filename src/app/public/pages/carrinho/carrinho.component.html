@@ -16,11 +16,11 @@
   @if (itensComanda$ | async; as itens) {
     @if (itens.length === 0) {
       <div class="surface-card empty-state empty-cart">
-        <span class="icon-tile icon-tile--lg"><mat-icon aria-hidden="true">shopping_cart</mat-icon></span>
+        <lucide-icon name="shopping-bag" />
         <h3>Sua comanda está vazia</h3>
         <p>Adicione itens do cardápio para continuar</p>
         <button mat-raised-button (click)="voltarCardapio()">
-          <mat-icon aria-hidden="true">restaurant_menu</mat-icon>
+          <lucide-icon name="book-open" />
           Ver Cardápio
         </button>
       </div>
@@ -47,7 +47,7 @@
                     aria-label="Diminuir quantidade"
                     (click)="diminuirQuantidade(item)"
                   >
-                    <mat-icon>remove</mat-icon>
+                    <lucide-icon name="minus" />
                   </button>
 
                   <span class="stepper__value" aria-live="polite">{{ item.quantidade }}</span>
@@ -58,7 +58,7 @@
                     aria-label="Aumentar quantidade"
                     (click)="aumentarQuantidade(item)"
                   >
-                    <mat-icon>add</mat-icon>
+                    <lucide-icon name="plus" />
                   </button>
                 </div>
 
@@ -78,12 +78,12 @@
 
       <div class="actions">
         <button mat-stroked-button class="btn-lg" (click)="voltarCardapio()">
-          <mat-icon aria-hidden="true">add</mat-icon>
+          <lucide-icon name="plus" />
           Adicionar Mais Itens
         </button>
 
-        <button mat-raised-button class="btn-lg btn-success" (click)="encerrarComanda()">
-          <mat-icon aria-hidden="true">check</mat-icon>
+        <button mat-raised-button class="btn-lg finalizar-button" (click)="encerrarComanda()">
+          <lucide-icon name="check" />
           Finalizar Comanda
         </button>
       </div>

@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-footer-nav',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, LucideAngularModule],
   template: `
     <nav class="footer-nav" aria-label="Navegação principal">
       <div class="footer-nav__inner">
@@ -16,7 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
           [attr.aria-current]="currentRoute === 'cardapio' ? 'page' : null"
           (click)="onNavClick('cardapio')"
         >
-          <mat-icon aria-hidden="true">restaurant_menu</mat-icon>
+          <lucide-icon name="book-open" [size]="20" />
           <span class="nav-btn__label">Cardápio</span>
         </button>
 
@@ -27,7 +28,7 @@ import { MatIconModule } from '@angular/material/icon';
           [attr.aria-current]="currentRoute === 'carrinho' ? 'page' : null"
           (click)="onNavClick('carrinho')"
         >
-          <mat-icon aria-hidden="true">shopping_cart</mat-icon>
+          <lucide-icon name="shopping-bag" [size]="20" />
           <span class="nav-btn__label">Comanda</span>
           @if (totalItens > 0) {
             <span class="nav-btn__badge" [attr.aria-label]="totalItens + ' itens'">{{ totalItens }}</span>

@@ -29,6 +29,7 @@ import { LocalStorageService } from '../../../core/services/local-storage.servic
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterNavComponent } from '../../../shared/components/footer-nav/footer-nav.component';
 import { CreateProdutoRequest } from '../../../shared/models/api.interfaces';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-add-item-manual',
@@ -40,6 +41,7 @@ import { CreateProdutoRequest } from '../../../shared/models/api.interfaces';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
   ],
   template: `
     <div class="bottom-sheet-content">
@@ -163,6 +165,7 @@ export class AddItemManualComponent {
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
     MatBadgeModule,
     MatBottomSheetModule,
     MatFormFieldModule,

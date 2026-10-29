@@ -1,0 +1,101 @@
+import { EnvironmentProviders, importProvidersFrom, Provider } from '@angular/core';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  ChartLine,
+  Check,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  Eye,
+  EyeOff,
+  Headset,
+  History,
+  Info,
+  LayoutDashboard,
+  LoaderCircle,
+  Lock,
+  LogIn,
+  LogOut,
+  LucideAngularModule,
+  LucideIconConfig,
+  Mail,
+  Menu,
+  Minus,
+  NotebookPen,
+  Package,
+  Pencil,
+  Phone,
+  Plus,
+  ReceiptText,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  SearchX,
+  ShoppingBag,
+  ToggleLeft,
+  ToggleRight,
+  TriangleAlert,
+  User,
+  Wallet,
+} from 'lucide-angular';
+
+// Single registry of the Lucide icons used in the app (only these are bundled).
+// Use in templates as <lucide-icon name="kebab-case-name" />.
+const APP_ICONS = {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  ChartLine,
+  Check,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  Eye,
+  EyeOff,
+  Headset,
+  History,
+  Info,
+  LayoutDashboard,
+  LoaderCircle,
+  Lock,
+  LogIn,
+  LogOut,
+  Mail,
+  Menu,
+  Minus,
+  NotebookPen,
+  Package,
+  Pencil,
+  Phone,
+  Plus,
+  ReceiptText,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  SearchX,
+  ShoppingBag,
+  ToggleLeft,
+  ToggleRight,
+  TriangleAlert,
+  User,
+  Wallet,
+};
+
+export function provideAppIcons(): (Provider | EnvironmentProviders)[] {
+  return [
+    importProvidersFrom(LucideAngularModule.pick(APP_ICONS)),
+    {
+      provide: LucideIconConfig,
+      useFactory: () => {
+        const config = new LucideIconConfig();
+        config.size = 18;
+        config.strokeWidth = 1.75;
+        return config;
+      },
+    },
+  ];
+}

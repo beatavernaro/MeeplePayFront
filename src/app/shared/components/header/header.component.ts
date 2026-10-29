@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-header',
@@ -9,6 +10,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     MatIconModule,
+    LucideAngularModule,
     ReactiveFormsModule,
   ],
   template: `
@@ -18,7 +20,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
           <h1 class="app-header__title">{{ titulo || 'Olá, ' + nomeCliente }}</h1>
           @if (numeroComanda) {
             <span class="comanda-badge">
-              <mat-icon aria-hidden="true">receipt_long</mat-icon>
+              <lucide-icon name="receipt-text" [size]="16" />
               Comanda #{{ numeroComanda }}
             </span>
           }
@@ -26,7 +28,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
         @if (showSearchField) {
           <div class="search-field" role="search">
-            <mat-icon class="search-field__icon" aria-hidden="true">search</mat-icon>
+            <lucide-icon class="search-field__icon" name="search" />
             <label for="header-search" class="sr-only">Buscar produtos</label>
             <input
               id="header-search"

@@ -8,11 +8,12 @@ import { MatDividerModule } from '@angular/material/divider';
 import { Observable } from 'rxjs';
 import { Comanda } from '../../../shared/models/comanda.model';
 import { ComandaService } from '../../../core/services/comanda.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-encerrada',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, LucideAngularModule, MatDividerModule],
   templateUrl: './encerrada.component.html',
   styleUrl: './encerrada.component.scss',
 })

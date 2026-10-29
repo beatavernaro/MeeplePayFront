@@ -1,100 +1,45 @@
 .filtro-numero {
   width: 100%;
-  max-width: 380px;
-}
-
-.tabs-container {
-  --mat-tab-container-height: 52px;
+  max-width: 360px;
 }
 
 .tab-content {
-  padding: var(--space-5) 0 0;
+  padding: var(--space-4) 0 0;
 }
 
 .stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-
-  .stat-card mat-card-content {
-    padding: var(--space-5) !important;
-  }
-
-  .stat-card:first-child .stat-number {
-    color: var(--color-primary);
-  }
-
-  .stat-card:last-child .stat-number {
-    color: var(--color-secondary);
-  }
-
-  .stat-number {
-    font-size: var(--text-3xl);
-    font-weight: var(--weight-extrabold);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: var(--space-1);
-  }
-
-  .stat-label {
-    font-size: var(--text-xs);
-    font-weight: var(--weight-bold);
-    color: var(--color-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-}
-
-.table-card mat-card-content {
-  padding: 0 !important;
+  margin-bottom: var(--space-4);
 }
 
 .comandas-table {
   th,
   td {
-    padding: 14px 16px;
+    padding: 0 16px;
   }
 
   th:last-child,
   td:last-child {
     text-align: center;
-    width: 140px;
-  }
-
-  td:first-child {
     width: 120px;
   }
 
-  .comanda-num {
-    display: inline-flex;
-    align-items: center;
-    height: 30px;
-    padding: 0 10px;
-    border-radius: var(--radius-sm);
-    background: var(--color-primary-soft);
-    color: var(--color-primary-hover);
-    font-weight: var(--weight-bold);
-    font-variant-numeric: tabular-nums;
+  td:first-child {
+    width: 110px;
   }
 
   .total-cell {
-    color: var(--color-primary);
-
-    &.completed {
-      color: var(--color-success);
-    }
+    color: var(--color-text);
   }
 
   .action-btn {
-    color: var(--color-primary);
-
-    &--success {
-      color: var(--color-success);
-    }
+    color: var(--color-icon);
 
     &:hover {
-      background-color: var(--color-surface-muted);
+      color: var(--color-primary);
+    }
+
+    &--success:hover {
+      color: var(--color-success);
     }
   }
 }
@@ -106,18 +51,12 @@
 
   .stats-row {
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-
-    .stat-number {
-      font-size: var(--text-xl);
-    }
   }
 
   .comandas-table {
     th,
     td {
-      padding: 12px 10px;
-      font-size: var(--text-sm);
+      padding: 0 10px;
     }
   }
 }

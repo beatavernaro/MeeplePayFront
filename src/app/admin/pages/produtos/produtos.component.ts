@@ -21,6 +21,7 @@ import {
   ConfirmDialogData,
 } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-produtos',
@@ -31,6 +32,7 @@ import { Subscription } from 'rxjs';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
     MatTableModule,
     MatTooltipModule,
     MatDialogModule,
@@ -42,7 +44,6 @@ import { Subscription } from 'rxjs';
     <div class="page produtos-page">
       <div class="page-header">
         <div class="page-header__title">
-          <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>inventory</mat-icon></span>
           <div>
             <h1>Gerenciamento de Produtos</h1>
             <p class="page-header__subtitle">Cadastre produtos, preços e estoque</p>
@@ -50,7 +51,7 @@ import { Subscription } from 'rxjs';
         </div>
         <div class="page-header__actions">
           <button mat-raised-button (click)="criarNovoProduto()">
-            <mat-icon aria-hidden="true">add</mat-icon>
+            <lucide-icon name="plus" />
             Novo Produto
           </button>
         </div>
@@ -66,7 +67,7 @@ import { Subscription } from 'rxjs';
           (ngModelChange)="filtrarProdutos()"
           placeholder="Digite o nome do produto..."
         />
-        <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+        <lucide-icon matSuffix name="search" />
       </mat-form-field>
 
       <!-- Tabela de produtos -->
@@ -78,21 +79,12 @@ import { Subscription } from 'rxjs';
               <th mat-header-cell *matHeaderCellDef>Nome do Produto</th>
               <td mat-cell *matCellDef="let produto">
                 <div class="produto-cell">
-                  <span
-                    *ngIf="produto.estoque <= 0; else iconeProduto"
-                    class="icon-tile icon-tile--amber produto-cell__icon"
-                    matTooltip="Produto sem estoque"
-                    matTooltipPosition="above"
-                  >
-                    <mat-icon aria-label="Produto sem estoque">warning</mat-icon>
-                  </span>
-                  <ng-template #iconeProduto>
-                    <span class="icon-tile produto-cell__icon" aria-hidden="true">
-                      <mat-icon>restaurant_menu</mat-icon>
-                    </span>
-                  </ng-template>
                   <span class="produto-cell__name">{{ produto.nome }}</span>
-                  <span *ngIf="!produto.ativo" class="status-pill status-pill--danger">Inativo</span>
+                  <span *ngIf="produto.estoque <= 0" class="status-badge status-badge--warning">
+                    <lucide-icon name="triangle-alert" />
+                    Sem estoque
+                  </span>
+                  <span *ngIf="!produto.ativo" class="status-badge status-badge--danger">Inativo</span>
                 </div>
               </td>
             </ng-container>
@@ -129,7 +121,7 @@ import { Subscription } from 'rxjs';
                     aria-label="Editar produto"
                     (click)="editarProduto(produto)"
                   >
-                    <mat-icon>edit</mat-icon>
+                    <lucide-icon name="pencil" />
                   </button>
                   <button
                     mat-icon-button
@@ -140,7 +132,7 @@ import { Subscription } from 'rxjs';
                     aria-label="Detalhes do produto"
                     (click)="verDetalhes(produto.id!)"
                   >
-                    <mat-icon>visibility</mat-icon>
+                    <lucide-icon name="eye" />
                   </button>
                   <button
                     mat-icon-button
@@ -152,7 +144,7 @@ import { Subscription } from 'rxjs';
                     [attr.aria-label]="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
                     (click)="toggleStatusProduto(produto)"
                   >
-                    <mat-icon>{{ produto.ativo ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                    <lucide-icon [name]="produto.ativo ? 'toggle-right' : 'toggle-left'" />
                   </button>
                 </div>
               </td>
@@ -166,7 +158,7 @@ import { Subscription } from 'rxjs';
         <!-- Mensagem quando não há produtos -->
         <div *ngIf="(produtosFiltrados$ | async) as produtosFiltrados; else semProdutos">
           <div *ngIf="produtosFiltrados.length === 0" class="empty-state">
-            <mat-icon aria-hidden="true">inventory</mat-icon>
+            <lucide-icon name="package" />
             <h3>
               {{
                 (produtos$ | async)?.length === 0
@@ -179,7 +171,7 @@ import { Subscription } from 'rxjs';
               mat-raised-button
               (click)="criarNovoProduto()"
             >
-              <mat-icon aria-hidden="true">add</mat-icon>
+              <lucide-icon name="plus" />
               Cadastrar Primeiro Produto
             </button>
           </div>
@@ -206,25 +198,13 @@ import { Subscription } from 'rxjs';
         min-width: 0;
       }
 
-      .produtos-page .produto-cell__icon {
-        width: 36px;
-        height: 36px;
-        border-radius: var(--radius-sm);
-      }
-
-      .produtos-page .produto-cell__icon .mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-      }
-
       .produtos-page .produto-cell__name {
         font-weight: var(--weight-semibold);
         overflow-wrap: anywhere;
       }
 
       .produtos-page .produto-preco {
-        color: var(--color-primary);
+        color: var(--color-text);
       }
 
       .produtos-page .estoque-zerado {
@@ -233,7 +213,7 @@ import { Subscription } from 'rxjs';
 
       .produtos-page .mat-mdc-cell,
       .produtos-page .mat-mdc-header-cell {
-        padding: 12px 16px;
+        padding: 0 16px;
       }
 
       .produtos-page .col-acoes {
@@ -248,23 +228,19 @@ import { Subscription } from 'rxjs';
       }
 
       .produtos-page .row-action {
-        color: var(--color-text-secondary);
+        color: var(--color-icon);
       }
 
-      .produtos-page .row-action--edit {
+      .produtos-page .row-action:hover {
         color: var(--color-primary);
       }
 
-      .produtos-page .row-action--danger {
+      .produtos-page .row-action--danger:hover {
         color: var(--color-danger);
       }
 
       .produtos-page .row-action--success {
         color: var(--color-success);
-      }
-
-      .produtos-page .mat-mdc-row:hover {
-        background-color: var(--color-surface-sunken);
       }
 
       .mat-mdc-tooltip {

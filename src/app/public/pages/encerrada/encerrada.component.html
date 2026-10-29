@@ -2,15 +2,15 @@
   <div class="encerrada-content">
     @if (comandaAtual$ | async; as comanda) {
       <div class="success-header">
-        <span class="success-icon glass" aria-hidden="true">
-          <mat-icon>{{ comanda.status === 'PAGA' ? 'check_circle' : 'lock' }}</mat-icon>
+        <span class="status-icon" [class.status-icon--paga]="comanda.status === 'PAGA'">
+          <lucide-icon [name]="comanda.status === 'PAGA' ? 'circle-check' : 'lock'" [size]="28" />
         </span>
         <h1>{{ comanda.status === 'PAGA' ? 'Comanda Paga' : 'Comanda Encerrada' }}</h1>
         <p>Obrigado por utilizar nosso serviço</p>
       </div>
 
       <div class="closed-notice" role="status">
-        <mat-icon aria-hidden="true">support_agent</mat-icon>
+        <lucide-icon name="headset" />
         <p>
           Esta comanda foi {{ comanda.status === 'PAGA' ? 'paga' : 'encerrada' }} e não aceita mais pedidos.
           <strong>Entre em contato com o caixa.</strong>
@@ -43,29 +43,29 @@
       </mat-card>
 
       <div class="actions">
-        <button mat-raised-button class="btn-lg nova-comanda-button" (click)="novaComanda()">
-          <mat-icon aria-hidden="true">refresh</mat-icon>
+        <button mat-stroked-button class="btn-lg nova-comanda-button" (click)="novaComanda()">
+          <lucide-icon name="refresh-cw" />
           Iniciar Nova Comanda
         </button>
       </div>
     } @else {
       <div class="success-header">
-        <span class="success-icon glass" aria-hidden="true">
-          <mat-icon>lock</mat-icon>
+        <span class="status-icon">
+          <lucide-icon name="lock" [size]="28" />
         </span>
         <h1>Comanda Encerrada</h1>
       </div>
 
       <div class="closed-notice" role="status">
-        <mat-icon aria-hidden="true">support_agent</mat-icon>
+        <lucide-icon name="headset" />
         <p>
           Esta comanda não está mais disponível. <strong>Entre em contato com o caixa.</strong>
         </p>
       </div>
 
       <div class="actions">
-        <button mat-raised-button class="btn-lg nova-comanda-button" (click)="novaComanda()">
-          <mat-icon aria-hidden="true">refresh</mat-icon>
+        <button mat-stroked-button class="btn-lg nova-comanda-button" (click)="novaComanda()">
+          <lucide-icon name="refresh-cw" />
           Iniciar Nova Comanda
         </button>
       </div>

@@ -19,6 +19,7 @@ import {
   ConfirmDialogComponent,
   ConfirmDialogData,
 } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { LucideAngularModule } from 'lucide-angular';
 
 interface Estatisticas {
   totalVendido: number;
@@ -34,6 +35,7 @@ interface Estatisticas {
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
     MatChipsModule,
     MatDialogModule,
     MatSnackBarModule,
@@ -45,11 +47,10 @@ interface Estatisticas {
         <div class="page-header">
           <div class="page-header__title">
             <button mat-icon-button (click)="voltar()" matTooltip="Voltar" aria-label="Voltar" class="back-button">
-              <mat-icon>arrow_back</mat-icon>
+              <lucide-icon name="arrow-left" />
             </button>
-            <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>restaurant_menu</mat-icon></span>
             <h1>{{ produto.nome }}</h1>
-            <span *ngIf="!produto.ativo" class="status-pill status-pill--danger">Inativo</span>
+            <span *ngIf="!produto.ativo" class="status-badge status-badge--danger">Inativo</span>
           </div>
         </div>
       </ng-container>
@@ -59,7 +60,7 @@ interface Estatisticas {
         <mat-card>
           <mat-card-header class="card-header">
             <mat-card-title>
-              <mat-icon aria-hidden="true">info</mat-icon>
+              <lucide-icon name="info" />
               Informações do Produto
             </mat-card-title>
           </mat-card-header>
@@ -76,7 +77,7 @@ interface Estatisticas {
               <div>
                 <dt>Estoque</dt>
                 <dd class="info-value money" [class.estoque-zerado]="produto.estoque <= 0">
-                  <mat-icon *ngIf="produto.estoque <= 0" aria-label="Sem estoque">warning</mat-icon>
+                  <lucide-icon *ngIf="produto.estoque <= 0" aria-label="Sem estoque" name="triangle-alert" />
                   {{ produto.estoque }}
                 </dd>
               </div>
@@ -84,9 +85,9 @@ interface Estatisticas {
                 <dt>Status</dt>
                 <dd>
                   <span
-                    class="status-pill"
-                    [class.status-pill--success]="produto.ativo"
-                    [class.status-pill--danger]="!produto.ativo"
+                    class="status-badge"
+                    [class.status-badge--success]="produto.ativo"
+                    [class.status-badge--danger]="!produto.ativo"
                   >
                     {{ produto.ativo ? 'Ativo' : 'Inativo' }}
                   </span>
@@ -100,25 +101,25 @@ interface Estatisticas {
         <mat-card>
           <mat-card-header class="card-header">
             <mat-card-title>
-              <mat-icon aria-hidden="true">insights</mat-icon>
+              <lucide-icon name="chart-line" />
               Estatísticas de Vendas
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div class="stats-list">
-              <div class="stat-tile">
-                <div class="stat-tile__value money">{{ (estatisticas$ | async)?.totalVendido || 0 }}</div>
-                <div class="stat-tile__label">Total de Unidades Vendidas</div>
+              <div class="stat-row">
+                <span class="stat-row__label">Unidades vendidas</span>
+                <span class="stat-row__value money">{{ (estatisticas$ | async)?.totalVendido || 0 }}</span>
               </div>
-              <div class="stat-tile stat-tile--violet">
-                <div class="stat-tile__value money">
+              <div class="stat-row">
+                <span class="stat-row__label">Receita gerada</span>
+                <span class="stat-row__value stat-row__value--accent money">
                   R$ {{ formatarMoeda((estatisticas$ | async)?.receitaTotal || 0) }}
-                </div>
-                <div class="stat-tile__label">Receita Total Gerada</div>
+                </span>
               </div>
-              <div class="stat-tile stat-tile--green">
-                <div class="stat-tile__value money">{{ (estatisticas$ | async)?.comandasComProduto || 0 }}</div>
-                <div class="stat-tile__label">Comandas que Incluíram</div>
+              <div class="stat-row">
+                <span class="stat-row__label">Comandas que incluíram</span>
+                <span class="stat-row__value money">{{ (estatisticas$ | async)?.comandasComProduto || 0 }}</span>
               </div>
             </div>
           </mat-card-content>
@@ -128,159 +129,116 @@ interface Estatisticas {
       <!-- Ações do produto -->
       <div class="detalhes-actions" *ngIf="produto$ | async as produto">
         <button mat-raised-button (click)="editarProduto(produto)">
-          <mat-icon aria-hidden="true">edit</mat-icon>
+          <lucide-icon name="pencil" />
           Editar Produto
         </button>
         <button
-          mat-raised-button
-          [class.btn-danger]="produto.ativo"
-          [class.btn-success]="!produto.ativo"
+          mat-stroked-button
+          [class.btn-danger-outline]="produto.ativo"
           (click)="toggleStatus(produto)"
         >
-          <mat-icon aria-hidden="true">{{ produto.ativo ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+          <lucide-icon [name]="produto.ativo ? 'toggle-left' : 'toggle-right'" />
           {{ produto.ativo ? 'Desativar' : 'Ativar' }} Produto
         </button>
       </div>
 
       <!-- Loading state -->
       <div *ngIf="!(produto$ | async)" class="empty-state" role="status">
-        <mat-icon class="spin" aria-hidden="true">sync</mat-icon>
+        <lucide-icon class="spin" name="loader-circle" />
         <p>Carregando informações do produto...</p>
       </div>
     </div>
   `,
   styles: [
     `
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .spin {
-        animation: spin 1s linear infinite;
-      }
-
-      .back-button {
-        color: var(--color-text-secondary);
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-      }
-
       .detalhes-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: var(--space-5);
+        gap: var(--space-4);
       }
 
       .card-header {
-        padding: var(--space-4) var(--space-5);
+        padding: var(--space-3) var(--space-4);
         border-bottom: 1px solid var(--color-border);
-        margin-bottom: var(--space-2);
       }
 
       mat-card-title {
         display: flex;
         align-items: center;
         gap: var(--space-2);
-        font-size: var(--text-base);
       }
 
-      mat-card-title mat-icon {
-        color: var(--color-primary);
+      mat-card-title lucide-icon {
+        color: var(--color-icon);
       }
 
-      .info-list {
+      mat-card-content {
+        padding: var(--space-2) var(--space-4) var(--space-3) !important;
+      }
+
+      .info-list > div,
+      .stat-row {
         display: flex;
-        flex-direction: column;
-        gap: var(--space-4);
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-3);
+        min-height: 44px;
         padding: var(--space-2) 0;
       }
 
-      dt {
-        font-size: var(--text-xs);
-        font-weight: var(--weight-bold);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--color-text-secondary);
-        margin-bottom: 2px;
+      .info-list > div + div,
+      .stat-row + .stat-row {
+        border-top: 1px solid var(--color-border);
+      }
+
+      dt,
+      .stat-row__label {
+        font-size: var(--text-sm);
+        color: var(--color-text-muted);
       }
 
       .info-value {
         display: inline-flex;
         align-items: center;
         gap: var(--space-1);
-        font-size: var(--text-lg);
-        font-weight: var(--weight-semibold);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
         color: var(--color-text);
+        text-align: right;
       }
 
       .info-value--price {
-        font-size: var(--text-2xl);
-        font-weight: var(--weight-extrabold);
-        color: var(--color-primary);
+        font-size: var(--text-lg);
+        font-weight: var(--weight-semibold);
       }
 
       .estoque-zerado {
         color: var(--color-danger);
       }
 
-      .estoque-zerado mat-icon {
+      .estoque-zerado lucide-icon {
         color: var(--color-warning);
       }
 
-      .stats-list {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-3);
-        padding: var(--space-2) 0;
+      .stat-row__value {
+        font-size: var(--text-lg);
+        color: var(--color-text);
       }
 
-      .stat-tile {
-        padding: var(--space-4);
-        border-radius: var(--radius-md);
-        background: var(--color-primary-soft);
-        text-align: center;
-      }
-
-      .stat-tile__value {
-        font-size: var(--text-3xl);
-        font-weight: var(--weight-extrabold);
-        color: var(--color-primary);
-      }
-
-      .stat-tile--violet {
-        background: var(--color-secondary-soft);
-      }
-
-      .stat-tile--violet .stat-tile__value {
-        color: var(--color-secondary);
-      }
-
-      .stat-tile--green {
-        background: var(--color-success-soft);
-      }
-
-      .stat-tile--green .stat-tile__value {
-        color: var(--color-success);
-      }
-
-      .stat-tile__label {
-        font-size: var(--text-sm);
-        color: var(--color-text-secondary);
+      .stat-row__value--accent {
+        color: var(--color-accent);
       }
 
       .detalhes-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--space-3);
-        margin-top: var(--space-6);
+        gap: var(--space-2);
+        margin-top: var(--space-4);
       }
 
       @media (max-width: 768px) {
         .detalhes-grid {
           grid-template-columns: 1fr;
-          gap: var(--space-4);
         }
 
         .detalhes-actions button {

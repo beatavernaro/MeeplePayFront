@@ -2,9 +2,7 @@
   <div class="login-wrapper">
     <mat-card class="login-card glass">
       <mat-card-header>
-        <span class="icon-tile icon-tile--brand icon-tile--lg" aria-hidden="true">
-          <mat-icon>admin_panel_settings</mat-icon>
-        </span>
+        <img src="/logo.png" alt="" class="login-logo" width="40" height="40" />
         <mat-card-title>
           Área Administrativa
         </mat-card-title>
@@ -16,7 +14,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" type="email" placeholder="admin@luderia.com" autocomplete="username" />
-            <mat-icon matSuffix aria-hidden="true">email</mat-icon>
+            <lucide-icon matSuffix name="mail" />
             @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
               <mat-error>{{ getErrorMessage('email') }}</mat-error>
             }
@@ -39,7 +37,7 @@
               [attr.aria-pressed]="!hidePassword"
               (click)="hidePassword = !hidePassword"
             >
-              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              <lucide-icon [name]="hidePassword ? 'eye-off' : 'eye'" />
             </button>
             @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
               <mat-error>{{ getErrorMessage('password') }}</mat-error>
@@ -57,12 +55,12 @@
         >
           @if (loading) {
             <ng-container>
-              <mat-icon>hourglass_empty</mat-icon>
+              <lucide-icon class="spin" name="loader-circle" />
               Entrando...
             </ng-container>
           } @else {
             <ng-container>
-              <mat-icon>login</mat-icon>
+              <lucide-icon name="log-in" />
               Entrar
             </ng-container>
           }

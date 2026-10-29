@@ -1,7 +1,6 @@
 <div class="page">
   <div class="page-header">
     <div class="page-header__title">
-      <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>restaurant_menu</mat-icon></span>
       <div>
         <h1>Gerenciamento de Comandas</h1>
         <p class="page-header__subtitle">Acompanhe, encerre e confirme pagamentos</p>
@@ -12,7 +11,7 @@
   <mat-form-field appearance="outline" class="filtro-numero">
     <mat-label>Filtrar por nº da comanda ou celular</mat-label>
     <input matInput type="text" inputmode="numeric" placeholder="105 ou 11999998888" (input)="onFiltroBuscaChange($event)" />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+    <lucide-icon matSuffix name="search" />
   </mat-form-field>
 
   <mat-tab-group class="tabs-container">
@@ -23,32 +22,27 @@
       </ng-template>
 
       <div class="tab-content">
-        <div class="stats-row">
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-number money">{{ (totalAbertas$ | async) || 0 }}</div>
-              <div class="stat-label">Total Abertas</div>
-            </mat-card-content>
-          </mat-card>
+        <div class="metric-grid stats-row">
+          <div class="metric-card">
+            <span class="metric-card__label">Total Abertas</span>
+            <span class="metric-card__value">{{ (totalAbertas$ | async) || 0 }}</span>
+            <lucide-icon class="metric-card__icon" name="receipt-text" />
+          </div>
 
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-number money">
-                {{ formatarPreco((totalReceitaAbertas$ | async) || 0) }}
-              </div>
-              <div class="stat-label">Receita Pendente</div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <span class="metric-card__label">Receita Pendente</span>
+            <span class="metric-card__value metric-card__value--accent">{{ formatarPreco((totalReceitaAbertas$ | async) || 0) }}</span>
+            <lucide-icon class="metric-card__icon" name="wallet" />
+          </div>
         </div>
 
-        <mat-card class="table-card table-surface">
-          <mat-card-content>
+        <div class="surface-card table-surface">
             <div class="table-scroll">
             <table mat-table [dataSource]="(comandasAbertasFiltradas$ | async) || []" class="comandas-table">
               <!-- Coluna Numero -->
               <ng-container matColumnDef="numero">
                 <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
-                <td mat-cell *matCellDef="let comanda"><span class="comanda-num">#{{ comanda.numeroComanda }}</span></td>
+                <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
               </ng-container>
 
               <!-- Coluna Nome -->
@@ -67,7 +61,7 @@
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>Status</th>
                 <td mat-cell *matCellDef="let comanda">
-                  <span class="status-pill" [ngClass]="'status-pill--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
+                  <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
                 </td>
               </ng-container>
 
@@ -86,11 +80,11 @@
                   <button mat-icon-button 
                     (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes" aria-label="Visualizar detalhes"
                     class="action-btn">
-                    <mat-icon aria-hidden="true">visibility</mat-icon>
+                    <lucide-icon name="eye" />
                   </button>
                   <button mat-icon-button (click)="encerrarComanda(comanda); $event.stopPropagation()"
                     matTooltip="Encerrar comanda" aria-label="Encerrar comanda" class="action-btn action-btn--success">
-                    <mat-icon aria-hidden="true">check</mat-icon>
+                    <lucide-icon name="check" />
                   </button>
                 </td>
               </ng-container>
@@ -102,12 +96,11 @@
             </div>
 
             <div *ngIf="!(comandasAbertas$ | async)?.length" class="empty-state">
-              <mat-icon aria-hidden="true">restaurant_menu</mat-icon>
+              <lucide-icon name="receipt-text" />
               <h3>Nenhuma comanda aberta</h3>
               <p>Todas as comandas estão encerradas ou ainda não foram iniciadas.</p>
             </div>
-          </mat-card-content>
-        </mat-card>
+        </div>
       </div>
     </mat-tab>
 
@@ -118,32 +111,27 @@
       </ng-template>
 
       <div class="tab-content">
-        <div class="stats-row">
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-number money">{{ (totalEncerradas$ | async) || 0 }}</div>
-              <div class="stat-label">Total Encerradas</div>
-            </mat-card-content>
-          </mat-card>
+        <div class="metric-grid stats-row">
+          <div class="metric-card">
+            <span class="metric-card__label">Total Encerradas</span>
+            <span class="metric-card__value">{{ (totalEncerradas$ | async) || 0 }}</span>
+            <lucide-icon class="metric-card__icon" name="receipt-text" />
+          </div>
 
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-number money">
-                {{ formatarPreco((totalReceitaEncerradas$ | async) || 0) }}
-              </div>
-              <div class="stat-label">Receita Total</div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <span class="metric-card__label">Receita Total</span>
+            <span class="metric-card__value metric-card__value--accent">{{ formatarPreco((totalReceitaEncerradas$ | async) || 0) }}</span>
+            <lucide-icon class="metric-card__icon" name="wallet" />
+          </div>
         </div>
 
-        <mat-card class="table-card table-surface">
-          <mat-card-content>
+        <div class="surface-card table-surface">
             <div class="table-scroll">
             <table mat-table [dataSource]="(comandasEncerradasFiltradas$ | async) || []" class="comandas-table">
               <!-- Coluna Numero -->
               <ng-container matColumnDef="numero">
                 <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
-                <td mat-cell *matCellDef="let comanda"><span class="comanda-num">#{{ comanda.numeroComanda }}</span></td>
+                <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
               </ng-container>
 
               <!-- Coluna Nome -->
@@ -168,7 +156,7 @@
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>Status</th>
                 <td mat-cell *matCellDef="let comanda">
-                  <span class="status-pill" [ngClass]="'status-pill--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
+                  <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
                 </td>
               </ng-container>
 
@@ -187,7 +175,7 @@
                   <button mat-icon-button 
                     (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes" aria-label="Visualizar detalhes"
                     class="action-btn">
-                    <mat-icon aria-hidden="true">visibility</mat-icon>
+                    <lucide-icon name="eye" />
                   </button>
                 </td>
               </ng-container>
@@ -199,12 +187,11 @@
             </div>
 
             <div *ngIf="!(comandasEncerradas$ | async)?.length" class="empty-state">
-              <mat-icon aria-hidden="true">check_circle</mat-icon>
+              <lucide-icon name="circle-check" />
               <h3>Nenhuma comanda encerrada</h3>
               <p>Ainda não há comandas finalizadas no sistema.</p>
             </div>
-          </mat-card-content>
-        </mat-card>
+        </div>
       </div>
     </mat-tab>
 
@@ -215,32 +202,27 @@
       </ng-template>
 
       <div class="tab-content">
-        <div class="stats-row">
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-number money">{{ (totalPagas$ | async) || 0 }}</div>
-              <div class="stat-label">Total Comandas Pagas</div>
-            </mat-card-content>
-          </mat-card>
+        <div class="metric-grid stats-row">
+          <div class="metric-card">
+            <span class="metric-card__label">Total Comandas Pagas</span>
+            <span class="metric-card__value">{{ (totalPagas$ | async) || 0 }}</span>
+            <lucide-icon class="metric-card__icon" name="receipt-text" />
+          </div>
 
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-number money">
-                {{ formatarPreco((totalReceitaPagas$ | async) || 0) }}
-              </div>
-              <div class="stat-label">Receita Total</div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <span class="metric-card__label">Receita Total</span>
+            <span class="metric-card__value metric-card__value--accent">{{ formatarPreco((totalReceitaPagas$ | async) || 0) }}</span>
+            <lucide-icon class="metric-card__icon" name="wallet" />
+          </div>
         </div>
 
-        <mat-card class="table-card table-surface">
-          <mat-card-content>
+        <div class="surface-card table-surface">
             <div class="table-scroll">
             <table mat-table [dataSource]="(comandasPagasFiltradas$ | async) || []" class="comandas-table">
               <!-- Coluna Numero -->
               <ng-container matColumnDef="numero">
                 <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
-                <td mat-cell *matCellDef="let comanda"><span class="comanda-num">#{{ comanda.numeroComanda }}</span></td>
+                <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
               </ng-container>
 
               <!-- Coluna Nome -->
@@ -265,7 +247,7 @@
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>Status</th>
                 <td mat-cell *matCellDef="let comanda">
-                  <span class="status-pill" [ngClass]="'status-pill--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
+                  <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">{{ comanda.status }}</span>
                 </td>
               </ng-container>
 
@@ -284,7 +266,7 @@
                   <button mat-icon-button 
                     (click)="visualizarComanda(comanda.id); $event.stopPropagation()" matTooltip="Visualizar detalhes" aria-label="Visualizar detalhes"
                     class="action-btn">
-                    <mat-icon aria-hidden="true">visibility</mat-icon>
+                    <lucide-icon name="eye" />
                   </button>
                 </td>
               </ng-container>
@@ -296,12 +278,11 @@
             </div>
 
             <div *ngIf="!(comandasPagas$ | async)?.length" class="empty-state">
-              <mat-icon aria-hidden="true">check_circle</mat-icon>
+              <lucide-icon name="circle-check" />
               <h3>Nenhuma comanda paga</h3>
               <p>Ainda não há comandas pagas no sistema.</p>
             </div>
-          </mat-card-content>
-        </mat-card>
+        </div>
       </div>
     </mat-tab>
 

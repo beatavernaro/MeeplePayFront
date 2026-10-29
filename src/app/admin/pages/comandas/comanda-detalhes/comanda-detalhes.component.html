@@ -2,9 +2,8 @@
   <div class="page-header">
     <div class="page-header__title">
       <button mat-icon-button (click)="voltar()" class="back-button" aria-label="Voltar para comandas">
-        <mat-icon>arrow_back</mat-icon>
+        <lucide-icon name="arrow-left" />
       </button>
-      <span class="icon-tile icon-tile--brand" aria-hidden="true"><mat-icon>receipt_long</mat-icon></span>
       <h1>Detalhes da Comanda</h1>
     </div>
   </div>
@@ -22,13 +21,13 @@
           <mat-card class="status-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon aria-hidden="true">info</mat-icon>
+                <lucide-icon name="info" />
                 Status da Comanda #{{ comanda.numeroComanda }}
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <div class="status-info">
-                <span class="status-pill" [ngClass]="'status-pill--' + (comanda.status | lowercase)">
+                <span class="status-badge" [ngClass]="'status-badge--' + (comanda.status | lowercase)">
                   {{ comanda.status }}
                 </span>
                 <div class="total-value">
@@ -49,13 +48,13 @@
             </mat-card-content>
             <mat-card-actions *ngIf="comanda.status === 'ABERTA'">
               <button mat-raised-button (click)="encerrarComanda()">
-                <mat-icon aria-hidden="true">lock</mat-icon>
+                <lucide-icon name="lock" />
                 Encerrar Comanda
               </button>
             </mat-card-actions>
             <mat-card-actions *ngIf="comanda.status === 'ENCERRADA'">
               <button mat-raised-button class="btn-success" (click)="confirmarPagamento()">
-                <mat-icon aria-hidden="true">check_circle</mat-icon>
+                <lucide-icon name="circle-check" />
                 Confirmar Pagamento
               </button>
             </mat-card-actions>
@@ -64,7 +63,7 @@
           <mat-card class="info-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon aria-hidden="true">person</mat-icon>
+                <lucide-icon name="user" />
                 Informações do Cliente
               </mat-card-title>
             </mat-card-header>
@@ -95,7 +94,7 @@
                   (input)="onProdutoDigitado()"
                   placeholder="Digite para buscar e selecionar"
                 />
-                <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+                <lucide-icon matSuffix name="search" />
                 <mat-autocomplete
                   #produtosAuto="matAutocomplete"
                   class="produtos-autocomplete-panel"
@@ -120,7 +119,7 @@
                 (click)="adicionarProdutoSelecionado(comanda.id)"
                 [disabled]="adicionandoProduto || !produtoSelecionado"
               >
-                <mat-icon aria-hidden="true">add</mat-icon>
+                <lucide-icon name="plus" />
                 Adicionar
               </button>
             </div>
@@ -128,12 +127,12 @@
 
           <ng-container *ngIf="itens$ | async as itens">
             <h2 class="section-title">
-              <mat-icon aria-hidden="true">shopping_cart</mat-icon>
+              <lucide-icon name="shopping-bag" />
               Itens da Comanda ({{ itens.length }})
             </h2>
 
             <div *ngIf="itens.length === 0" class="surface-card empty-state">
-              <mat-icon aria-hidden="true">shopping_cart_off</mat-icon>
+              <lucide-icon name="shopping-bag" />
               <p>Nenhum item adicionado à comanda</p>
             </div>
 
@@ -145,12 +144,12 @@
                     <div class="stepper">
                       <button *ngIf="comanda.status === 'ABERTA'" mat-icon-button (click)="diminuirQuantidade(item)"
                         class="decrease" matTooltip="Diminuir quantidade" aria-label="Diminuir quantidade">
-                        <mat-icon>remove</mat-icon>
+                        <lucide-icon name="minus" />
                       </button>
                       <span class="stepper__value">{{ item.quantidade }}</span>
                       <button *ngIf="comanda.status === 'ABERTA'" mat-icon-button (click)="aumentarQuantidade(item)"
                         class="increase" matTooltip="Aumentar quantidade" aria-label="Aumentar quantidade">
-                        <mat-icon>add</mat-icon>
+                        <lucide-icon name="plus" />
                       </button>
                     </div>
                   </td>
@@ -190,11 +189,11 @@
   <div *ngIf="(comanda$ | async) === null" class="error-container">
     <mat-card class="error-card">
       <mat-card-content class="empty-state">
-        <span class="icon-tile icon-tile--red icon-tile--lg" aria-hidden="true"><mat-icon>error</mat-icon></span>
+        <lucide-icon class="error-icon" name="circle-alert" />
         <h3>Comanda não encontrada</h3>
         <p>A comanda solicitada não foi encontrada ou não existe.</p>
         <button mat-raised-button (click)="voltar()">
-          <mat-icon aria-hidden="true">arrow_back</mat-icon>
+          <lucide-icon name="arrow-left" />
           Voltar para Comandas
         </button>
       </mat-card-content>

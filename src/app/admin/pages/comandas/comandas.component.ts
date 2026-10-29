@@ -18,6 +18,7 @@ import { of } from 'rxjs';
 import { Comanda } from '../../../shared/models/comanda.model';
 import { ComandaService } from '../../../core/services/comanda.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-comandas',
@@ -27,6 +28,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
     MatTableModule,
     MatTabsModule,
     MatChipsModule,

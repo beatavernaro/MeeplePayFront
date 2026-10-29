@@ -10,6 +10,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-admin-layout',
@@ -22,6 +23,7 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
     MatListModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
   ],
   template: `
     <mat-sidenav-container class="admin-container">
@@ -33,15 +35,11 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
         [disableClose]="!isHandset()"
       >
         <div class="sidenav-header">
-          <img src="/logo.png" alt="" class="logo-image" width="44" height="44" />
-          <div class="sidenav-brand">
-            <span class="sidenav-brand__name">Angatu Admin</span>
-            <span class="sidenav-brand__caption">MeeplePay</span>
-          </div>
+          <img src="/logo.png" alt="" class="logo-image" width="28" height="28" />
+          <span class="sidenav-brand__name">Angatu Admin</span>
         </div>
 
         <nav class="sidenav-nav" aria-label="Menu administrativo">
-          <span class="sidenav-section">Menu</span>
           <mat-nav-list>
             @for (item of menuItems; track item.route) {
               <a
@@ -53,7 +51,7 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
                 (keydown.enter)="navigateTo(item.route)"
                 tabindex="0"
               >
-                <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
+                <lucide-icon matListItemIcon [name]="item.icon" [size]="20" />
                 <span matListItemTitle>{{ item.label }}</span>
               </a>
             }
@@ -62,7 +60,7 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
 
         <div class="sidenav-footer">
           <button type="button" class="logout-item" (click)="logout()">
-            <mat-icon aria-hidden="true">logout</mat-icon>
+            <lucide-icon name="log-out" [size]="20" />
             <span>Sair</span>
           </button>
         </div>
@@ -72,7 +70,7 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
         @if (isHandset()) {
           <header class="mobile-topbar">
             <button mat-icon-button aria-label="Abrir menu" (click)="sidenav.open()">
-              <mat-icon>menu</mat-icon>
+              <lucide-icon name="menu" [size]="20" />
             </button>
             <span class="mobile-topbar__title">Angatu Admin</span>
           </header>
@@ -89,9 +87,9 @@ export class AdminLayoutComponent {
   @ViewChild('sidenav') sidenav?: MatSidenav;
 
   menuItems = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/admin/dashboard' },
-    { icon: 'restaurant_menu', label: 'Comandas', route: '/admin/comandas' },
-    { icon: 'inventory', label: 'Produtos', route: '/admin/produtos' },
+    { icon: 'layout-dashboard', label: 'Dashboard', route: '/admin/dashboard' },
+    { icon: 'receipt-text', label: 'Comandas', route: '/admin/comandas' },
+    { icon: 'package', label: 'Produtos', route: '/admin/produtos' },
   ];
 
   private breakpointObserver = inject(BreakpointObserver);

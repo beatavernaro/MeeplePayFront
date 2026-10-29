@@ -22,6 +22,7 @@ import { Produto } from '../../../../shared/models/produto.model';
 import { ComandaService } from '../../../../core/services/comanda.service';
 import { ProdutoService } from '../../../../core/services/produto.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-comanda-detalhes',
@@ -32,6 +33,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
     MatChipsModule,
     MatProgressSpinnerModule,
     MatTableModule,

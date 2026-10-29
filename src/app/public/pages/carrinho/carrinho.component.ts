@@ -18,6 +18,7 @@ import { LocalStorageService } from '../../../core/services/local-storage.servic
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterNavComponent } from '../../../shared/components/footer-nav/footer-nav.component';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-carrinho',
@@ -28,6 +29,7 @@ import { FooterNavComponent } from '../../../shared/components/footer-nav/footer
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    LucideAngularModule,
     MatListModule,
     MatDividerModule,
     MatSnackBarModule,
