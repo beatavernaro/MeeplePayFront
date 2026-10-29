@@ -90,6 +90,18 @@ interface Estatisticas {
               </div>
               <div>
                 <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
+                  >Estoque:</label
+                >
+                <span
+                  style="font-size: 18px; display: inline-flex; align-items: center; gap: 4px;"
+                  [style.color]="produto.estoque <= 0 ? '#ff5722' : '#333'"
+                >
+                  <mat-icon *ngIf="produto.estoque <= 0" style="color: #ff9800;">warning</mat-icon>
+                  {{ produto.estoque }}
+                </span>
+              </div>
+              <div>
+                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
                   >Status:</label
                 >
                 <mat-chip

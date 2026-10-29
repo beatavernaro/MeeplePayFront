@@ -152,6 +152,7 @@ export class ProdutoFormDialogComponent {
       this.produtoForm.patchValue({
         nome: data.produto.nome,
         preco: data.produto.preco,
+        estoque: data.produto.estoque,
         ativo: data.produto.ativo,
       });
     }
@@ -163,6 +164,7 @@ export class ProdutoFormDialogComponent {
       descricao: ['', [Validators.maxLength(255)]],
       preco: [0, [Validators.required, Validators.min(0.01)]],
       categoria: ['', [Validators.maxLength(50)]],
+      estoque: [0, [Validators.required, Validators.min(0)]],
       ativo: [true],
     });
   }
@@ -176,6 +178,7 @@ export class ProdutoFormDialogComponent {
         preco: parseFloat(formValue.preco),
         categoria: formValue.categoria?.trim() || '',
         ativo: formValue.ativo,
+        estoque: Number(formValue.estoque),
       };
 
       this.dialogRef.close(produto);

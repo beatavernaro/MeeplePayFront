@@ -55,6 +55,7 @@ export interface Produto {
   preco: number;
   categoria: string;
   ativo: boolean;
+  estoque: number;
 }
 
 export interface CreateProdutoRequest {
@@ -62,6 +63,7 @@ export interface CreateProdutoRequest {
   descricao?: string;
   preco: number;
   categoria?: string;
+  estoque?: number;
 }
 
 export interface UpdateProdutoRequest {
@@ -70,6 +72,7 @@ export interface UpdateProdutoRequest {
   preco?: number;
   categoria?: string;
   ativo?: boolean;
+  estoque?: number;
 }
 
 export interface LoginRequest {

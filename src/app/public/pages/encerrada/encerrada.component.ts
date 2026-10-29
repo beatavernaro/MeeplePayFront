@@ -5,7 +5,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Observable } from 'rxjs';
 import { Comanda } from '../../../shared/models/comanda.model';
 import { ComandaService } from '../../../core/services/comanda.service';
@@ -13,24 +12,16 @@ import { ComandaService } from '../../../core/services/comanda.service';
 @Component({
   selector: 'app-encerrada',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatSnackBarModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule],
   templateUrl: './encerrada.component.html',
   styleUrl: './encerrada.component.scss',
 })
 export class EncerradaComponent implements OnInit {
   comandaAtual$!: Observable<Comanda | null>;
 
-  // Dados de Pix mockados - em um ambiente real, viriam da configuração
-  pixDados = {
-    chave: 'angatujogos@gmail.com',
-    banco: 'Bradesco S.A.',
-    favorecido: 'Gustavo Moraes Ramos Valladao'
-  };
-
   constructor(
     private comandaService: ComandaService,
     private router: Router,
-    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -60,21 +51,4 @@ export class EncerradaComponent implements OnInit {
     }).format(new Date(data));
   }
 
-  copiarChavePix(): void {
-    navigator.clipboard.writeText(this.pixDados.chave).then(() => {
-      this.snackBar.open('Chave PIX copiada com sucesso!', 'Fechar', {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top',
-        panelClass: ['snackbar-success'],
-      });
-    }).catch(() => {
-      this.snackBar.open('Erro ao copiar chave PIX', 'Fechar', {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top',
-        panelClass: ['snackbar-error'],
-      });
-    });
-  }
 }

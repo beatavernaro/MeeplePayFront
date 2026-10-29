@@ -7,4 +7,5 @@ export interface ProdutoFormData {
   descricao?: string;
   preco: number;
   categoria?: string;
+  estoque?: number;
 }

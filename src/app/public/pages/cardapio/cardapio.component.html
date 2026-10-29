@@ -33,7 +33,12 @@
     @for (produto of produtosFiltrados$ | async; track produto.id) {
       <div class="produto-card clean-card">
         <div class="produto-header">
-          <h3 class="produto-nome">{{ produto.nome }}</h3>
+          <h3 class="produto-nome">
+            @if (produto.estoque <= 0) {
+              <mat-icon class="sem-estoque-icon" title="Produto sem estoque">warning</mat-icon>
+            }
+            {{ produto.nome }}
+          </h3>
           <span class="produto-preco">{{ formatarPreco(produto.preco) }}</span>
         </div>
         <button

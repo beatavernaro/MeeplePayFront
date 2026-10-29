@@ -31,53 +31,11 @@
         </div>
 
         <div class="total-row">
-          <span class="total-label">Total a Pagar:</span>
+          <span class="total-label">{{ comanda.status === 'PAGA' ? 'Total:' : 'Total a Pagar:' }}</span>
           <span class="total-value">{{ formatarPreco(comanda.valorTotal) }}</span>
         </div>
       </mat-card-content>
     </mat-card>
-
-    @if (comanda.status !== 'PAGA') {
-    <mat-card class="pix-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>qr_code</mat-icon>
-          Dados para Pagamento - PIX
-        </mat-card-title>
-      </mat-card-header>
-
-      <mat-card-content>
-        <div class="pix-info">
-          <div class="pix-row">
-            <span class="pix-label">Chave PIX:</span>
-            <div class="pix-value-container">
-              <span class="pix-value">{{ pixDados.chave }}</span>
-              <button mat-icon-button (click)="copiarChavePix()" class="copy-button">
-                <mat-icon>content_copy</mat-icon>
-              </button>
-            </div>
-          </div>
-
-          <div class="pix-row">
-            <span class="pix-label">Favorecido:</span>
-            <span class="pix-value">{{ pixDados.favorecido }}</span>
-          </div>
-          <div class="pix-row">
-            <span class="pix-label">Valor:</span>
-            <span class="pix-value highlight">{{ formatarPreco(comanda.valorTotal) }}</span>
-          </div>
-        </div>
-
-        <div class="payment-notice">
-          <mat-icon>info</mat-icon>
-          <p>
-            <strong>Importante:</strong> O pagamento deve ser realizado diretamente no caixa ou
-            através do PIX acima. Apresente esta tela para confirmação do pagamento.
-          </p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-    }
 
     <div class="actions">
       <button mat-raised-button color="primary" class="nova-comanda-button" (click)="novaComanda()">

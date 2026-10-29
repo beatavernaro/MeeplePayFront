@@ -92,7 +92,16 @@ import { Subscription } from 'rxjs';
             </th>
             <td mat-cell *matCellDef="let produto" style="padding: 16px;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <mat-icon style="color: #556b2f;">restaurant_menu</mat-icon>
+                <mat-icon
+                  *ngIf="produto.estoque <= 0; else iconeProduto"
+                  style="color: #ff9800;"
+                  matTooltip="Produto sem estoque"
+                  matTooltipPosition="above"
+                  >warning</mat-icon
+                >
+                <ng-template #iconeProduto>
+                  <mat-icon style="color: #556b2f;">restaurant_menu</mat-icon>
+                </ng-template>
                 <span style="font-weight: 500;">{{ produto.nome }}</span>
                 <span
                   *ngIf="!produto.ativo"
@@ -116,6 +125,25 @@ import { Subscription } from 'rxjs';
             <td mat-cell *matCellDef="let produto" style="padding: 16px;">
               <span style="font-weight: 500; color: #556b2f; font-size: 16px;">
                 R$ {{ formatarMoeda(produto.preco) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Coluna Estoque -->
+          <ng-container matColumnDef="estoque">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              style="background-color: #f5f5f5; font-weight: 600; padding: 16px;"
+            >
+              Estoque
+            </th>
+            <td mat-cell *matCellDef="let produto" style="padding: 16px;">
+              <span
+                style="font-weight: 500; font-size: 16px;"
+                [style.color]="produto.estoque <= 0 ? '#ff5722' : '#333'"
+              >
+                {{ produto.estoque }}
               </span>
             </td>
           </ng-container>
@@ -228,7 +256,7 @@ import { Subscription } from 'rxjs';
 })
 export class AdminProdutosComponent implements OnInit, OnDestroy {
   termoBusca: string = '';
-  displayedColumns: string[] = ['nome', 'preco', 'acoes'];
+  displayedColumns: string[] = ['nome', 'preco', 'estoque', 'acoes'];
   private routeSubscription?: Subscription;
   
   // Observable com todos os produtos

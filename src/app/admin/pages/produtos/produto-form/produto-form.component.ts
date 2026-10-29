@@ -76,6 +76,20 @@ import { ProdutoService } from '../../../../core/services/produto.service';
           </mat-error>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Estoque</mat-label>
+          <input matInput formControlName="estoque" type="number" min="0" step="1" placeholder="0" />
+          <mat-hint>Baixado automaticamente quando a comanda é paga</mat-hint>
+          <mat-error *ngIf="produtoForm.get('estoque')?.hasError('required')">
+            O estoque é obrigatório
+          </mat-error>
+          <mat-error
+            *ngIf="produtoForm.get('estoque')?.hasError('min') || produtoForm.get('estoque')?.hasError('pattern')"
+          >
+            O estoque deve ser um número inteiro maior ou igual a zero
+          </mat-error>
+        </mat-form-field>
+
         <div class="checkbox-container">
           <mat-checkbox formControlName="ativo" color="primary"> Produto ativo </mat-checkbox>
         </div>
@@ -231,6 +245,7 @@ export class ProdutoFormComponent implements OnInit {
       descricao: ['', [Validators.maxLength(255)]],
       preco: ['', [Validators.required, this.precoValidator]],
       categoria: ['', [Validators.maxLength(50)]],
+      estoque: [0, [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]],
       ativo: [true],
     });
   }
@@ -297,6 +312,7 @@ export class ProdutoFormComponent implements OnInit {
           this.produtoForm.patchValue({
             nome: produto.nome,
             preco: produto.preco.toString().replace('.', ','),
+            estoque: produto.estoque,
             ativo: produto.ativo,
           });
         } else {
@@ -331,6 +347,7 @@ export class ProdutoFormComponent implements OnInit {
         preco: precoNumerico,
         categoria: formValue.categoria?.trim() || '',
         ativo: formValue.ativo,
+        estoque: Number(formValue.estoque),
       };
 
       if (this.isEditMode && this.produtoId) {
