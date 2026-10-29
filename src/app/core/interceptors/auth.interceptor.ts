@@ -29,7 +29,8 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (isAdminRoute && (error.status === 401 || error.status === 403)) {
+      // usaTokenAdmin (e não só a rota): no F5 o guard chama /auth/sessao antes da URL do admin ser aplicada
+      if (usaTokenAdmin && (error.status === 401 || error.status === 403)) {
         // Token admin expirado, com assinatura antiga ou sem permissão de admin
         adminAuthService.logout();
         router.navigate(['/admin/login']);
