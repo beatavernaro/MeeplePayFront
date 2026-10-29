@@ -1,12 +1,12 @@
 @use '@angular/material' as mat;
 
 // =============================================================================
-// MeeplePay Design System
+// MeeplePay Design System — Angatu Jogos brand
 // Style: minimal Flat Design with selective Glassmorphism — neutral surfaces,
-// blue as the single action color, violet as a restrained brand accent, green
-// and red reserved for success and error/destructive states. Glass is used only
-// on sticky chrome that content scrolls under (header, bottom nav) and on auth
-// cards. Icons: Lucide (outline, 18–20px, stroke 1.75) — see shared/icons.ts.
+// Angatu green as the single action color, yellow only as a pinpoint highlight,
+// emerald / amber / red reserved for success, warning and error states. Glass is
+// used only on sticky chrome that content scrolls under (header, bottom nav) and
+// on auth cards. Icons: Lucide (outline, 18–20px, stroke 1.75) — see shared/icons.ts.
 // =============================================================================
 
 // -----------------------------------------------------------------------------
@@ -14,22 +14,23 @@
 // -----------------------------------------------------------------------------
 :root {
   // Primitives -----------------------------------------------------------------
-  --blue-50: #eff6ff;
-  --blue-100: #dbeafe;
-  --blue-200: #bfdbfe;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
-  --blue-800: #1e40af;
+  // Brand green. #008D45 is the logo green (4.3:1 on white): use it for non-text
+  // marks (indicators, focus, icons). Text and filled buttons use brand-600 (5.4:1).
+  --brand-50: #e9f5ee;
+  --brand-100: #d2ebdd;
+  --brand-200: #a6d7ba;
+  --brand-500: #008d45;
+  --brand-600: #007a3c;
+  --brand-700: #006633;
+  --brand-900: #00381b;
 
-  --violet-50: #f5f3ff;
-  --violet-100: #ede9fe;
-  --violet-600: #7c3aed;
-  --violet-700: #6d28d9;
+  // Brand yellow — decorative only (1.8:1 on white, never as text color)
+  --yellow-50: #fef8e1;
+  --yellow-400: #f3b900;
 
+  // Semantic state primitives
   --green-50: #ecfdf5;
   --green-100: #d1fae5;
-  --green-600: #059669;
   --green-700: #047857;
   --green-800: #065f46;
 
@@ -42,32 +43,36 @@
   --red-600: #dc2626;
   --red-700: #b91c1c;
 
-  --slate-50: #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1e293b;
-  --slate-900: #0f172a;
+  // Neutrals — cool gray anchored on graphite #1F2933 and background #F5F7F6
+  --neutral-50: #f5f7f6;
+  --neutral-100: #eef1f0;
+  --neutral-200: #e1e6e4;
+  --neutral-300: #cbd2d0;
+  --neutral-400: #9aa5b1;
+  --neutral-500: #7b8794; // icons (3.6:1)
+  --neutral-600: #616e7c; // muted text (5.2:1)
+  --neutral-700: #52606d; // secondary text (6.5:1)
+  --neutral-800: #323f4b;
+  --neutral-900: #1f2933; // primary text (14:1)
 
-  // RGB channels for alpha tints: rgb(var(--rgb-blue) / 0.2)
-  --rgb-blue: 37 99 235;
-  --rgb-violet: 124 58 237;
-  --rgb-slate: 15 23 42;
+  // RGB channels for alpha tints: rgb(var(--rgb-brand) / 0.2)
+  --rgb-brand: 0 141 69;
+  --rgb-highlight: 243 185 0;
+  --rgb-ink: 31 41 51;
   --rgb-white: 255 255 255;
 
   // Semantic colors ------------------------------------------------------------
-  --color-primary: var(--blue-600); // 5.2:1 on white
-  --color-primary-hover: var(--blue-700);
-  --color-primary-soft: var(--blue-50);
-  --color-primary-border: var(--blue-200);
+  --color-primary: var(--brand-600); // text + filled buttons, 5.4:1 on white
+  --color-primary-hover: var(--brand-700);
+  --color-primary-soft: var(--brand-50); // selection / subtle highlight backgrounds
+  --color-primary-border: var(--brand-200);
   --color-on-primary: #ffffff;
+  --color-brand: var(--brand-500); // exact logo green for non-text marks
 
-  --color-accent: var(--violet-600); // brand accent, used sparingly
-  --color-accent-soft: var(--violet-50);
+  --color-accent: var(--color-primary); // emphasized values (e.g. revenue)
+  --color-highlight: var(--yellow-400); // pinpoint details only
+  --color-highlight-soft: var(--yellow-50);
+  --color-on-highlight: var(--neutral-900); // 8:1 on yellow
 
   --color-success: var(--green-700); // text-safe 5.5:1
   --color-success-solid: var(--green-700);
@@ -81,33 +86,44 @@
 
   --color-danger: var(--red-600);
   --color-danger-hover: var(--red-700);
+  --color-danger-text: var(--red-700); // 5.9:1 on danger-soft, for small text
   --color-danger-soft: var(--red-50);
   --color-danger-border: var(--red-100);
 
-  --color-bg: var(--slate-50);
+  --color-bg: var(--neutral-50);
   --color-surface: #ffffff;
-  --color-surface-muted: var(--slate-100);
-  --color-surface-sunken: var(--slate-50);
-  --color-surface-hover: var(--slate-50);
-  --color-text: var(--slate-900);
-  --color-text-secondary: var(--slate-600);
-  --color-text-muted: var(--slate-500);
+  --color-surface-muted: var(--neutral-100);
+  --color-surface-sunken: var(--neutral-50);
+  --color-surface-hover: var(--neutral-50);
+  --color-surface-inverse: var(--neutral-800); // tooltips, snackbars
+  --color-text: var(--neutral-900);
+  --color-text-secondary: var(--neutral-700);
+  --color-text-muted: var(--neutral-600);
   --color-text-inverse: #ffffff;
-  --color-icon: var(--slate-500);
-  --color-border: var(--slate-200);
-  --color-border-strong: var(--slate-300);
-  --color-ring: var(--blue-600);
+  --color-placeholder: var(--neutral-400);
+  --color-icon: var(--neutral-500);
+  --color-icon-subtle: var(--neutral-300);
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-300);
+  --color-border-hover: var(--neutral-400);
+  --color-ring: var(--brand-500); // 4.3:1 — above the 3:1 non-text minimum
+  --color-disabled-bg: var(--neutral-100);
+  --color-disabled-text: var(--neutral-400);
+  --color-scrollbar: var(--neutral-300);
+  --color-scrollbar-hover: var(--neutral-400);
+  --color-selection-bg: var(--brand-100);
+  --color-selection-text: var(--brand-900);
 
   // Backdrop — a barely-there tint so glass has something to sit on
   --gradient-app:
-    radial-gradient(1000px 500px at 0% 0%, rgb(var(--rgb-blue) / 0.04), transparent 60%),
-    radial-gradient(800px 400px at 100% 0%, rgb(var(--rgb-violet) / 0.035), transparent 60%),
+    radial-gradient(1000px 500px at 0% 0%, rgb(var(--rgb-brand) / 0.04), transparent 60%),
+    radial-gradient(800px 400px at 100% 0%, rgb(var(--rgb-highlight) / 0.035), transparent 60%),
     var(--color-bg);
 
   // Glass ------------------------------------------------------------------------
   --glass-bg: rgb(var(--rgb-white) / 0.78);
   --glass-bg-strong: rgb(var(--rgb-white) / 0.9);
-  --glass-border: rgb(var(--rgb-slate) / 0.08);
+  --glass-border: rgb(var(--rgb-ink) / 0.08);
   --glass-blur: 12px;
 
   // Typography -----------------------------------------------------------------
@@ -150,10 +166,10 @@
   --radius-round: 50%; // avatars and dots only
 
   // Elevation (very restrained) ---------------------------------------------------
-  --shadow-xs: 0 1px 2px rgb(var(--rgb-slate) / 0.04);
-  --shadow-sm: 0 1px 3px rgb(var(--rgb-slate) / 0.06), 0 1px 2px rgb(var(--rgb-slate) / 0.03);
-  --shadow-overlay: 0 12px 32px -8px rgb(var(--rgb-slate) / 0.18), 0 2px 6px rgb(var(--rgb-slate) / 0.05);
-  --shadow-focus: 0 0 0 3px rgb(var(--rgb-blue) / 0.2);
+  --shadow-xs: 0 1px 2px rgb(var(--rgb-ink) / 0.04);
+  --shadow-sm: 0 1px 3px rgb(var(--rgb-ink) / 0.06), 0 1px 2px rgb(var(--rgb-ink) / 0.03);
+  --shadow-overlay: 0 12px 32px -8px rgb(var(--rgb-ink) / 0.18), 0 2px 6px rgb(var(--rgb-ink) / 0.05);
+  --shadow-focus: 0 0 0 3px rgb(var(--rgb-brand) / 0.2);
 
   // Icons --------------------------------------------------------------------------
   --icon-sm: 16px;
@@ -178,16 +194,16 @@
   --primary-green: var(--color-primary);
   --primary-green-dark: var(--color-primary-hover);
   --primary-green-light: var(--color-primary-soft);
-  --gray-50: var(--slate-50);
-  --gray-100: var(--slate-100);
-  --gray-200: var(--slate-200);
-  --gray-300: var(--slate-300);
-  --gray-400: var(--slate-400);
-  --gray-500: var(--slate-500);
-  --gray-600: var(--slate-600);
-  --gray-700: var(--slate-700);
-  --gray-800: var(--slate-800);
-  --gray-900: var(--slate-900);
+  --gray-50: var(--neutral-50);
+  --gray-100: var(--neutral-100);
+  --gray-200: var(--neutral-200);
+  --gray-300: var(--neutral-300);
+  --gray-400: var(--neutral-400);
+  --gray-500: var(--neutral-500);
+  --gray-600: var(--neutral-600);
+  --gray-700: var(--neutral-700);
+  --gray-800: var(--neutral-800);
+  --gray-900: var(--neutral-900);
   --white: #ffffff;
   --black: #000000;
   --shadow: var(--shadow-xs);
@@ -206,8 +222,8 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$blue-palette,
-        tertiary: mat.$violet-palette,
+        primary: mat.$green-palette,
+        tertiary: mat.$yellow-palette,
         theme-type: light,
       ),
       typography: 'Plus Jakarta Sans',
@@ -217,23 +233,23 @@ html {
 
   @include mat.theme-overrides(
     (
-      primary: #2563eb,
+      primary: #007a3c,
       on-primary: #ffffff,
-      primary-container: #dbeafe,
-      on-primary-container: #1e3a8a,
-      tertiary: #7c3aed,
-      on-tertiary: #ffffff,
+      primary-container: #e9f5ee,
+      on-primary-container: #00381b,
+      tertiary: #f3b900,
+      on-tertiary: #1f2933,
       error: #dc2626,
       surface: #ffffff,
-      on-surface: #0f172a,
-      on-surface-variant: #475569,
-      outline: #cbd5e1,
-      outline-variant: #e2e8f0,
+      on-surface: #1f2933,
+      on-surface-variant: #52606d,
+      outline: #cbd2d0,
+      outline-variant: #e1e6e4,
       surface-container-lowest: #ffffff,
       surface-container-low: #ffffff,
-      surface-container: #f8fafc,
-      surface-container-high: #f1f5f9,
-      surface-container-highest: #e2e8f0,
+      surface-container: #f5f7f6,
+      surface-container-high: #eef1f0,
+      surface-container-highest: #e1e6e4,
       corner-extra-small: 4px,
       corner-small: 6px,
       corner-medium: 8px,
@@ -254,8 +270,8 @@ html {
       protected-hover-container-elevation-shadow: none,
       protected-focus-container-elevation-shadow: none,
       protected-pressed-container-elevation-shadow: none,
-      protected-disabled-container-color: var(--slate-100),
-      protected-disabled-label-text-color: var(--slate-400),
+      protected-disabled-container-color: var(--color-disabled-bg),
+      protected-disabled-label-text-color: var(--color-disabled-text),
       protected-label-text-weight: 600,
       protected-label-text-size: 14px,
       protected-label-text-tracking: 0,
@@ -308,11 +324,11 @@ html {
     (
       outlined-container-shape: var(--radius-control),
       outlined-outline-color: var(--color-border-strong),
-      outlined-hover-outline-color: var(--slate-400),
+      outlined-hover-outline-color: var(--color-border-hover),
       outlined-focus-outline-color: var(--color-primary),
       outlined-focus-outline-width: 1.5px,
       outlined-label-text-color: var(--color-text-secondary),
-      outlined-input-text-placeholder-color: var(--slate-400),
+      outlined-input-text-placeholder-color: var(--color-placeholder),
     )
   );
 
@@ -327,19 +343,19 @@ html {
   @include mat.snack-bar-overrides(
     (
       container-shape: var(--radius-control),
-      container-color: var(--slate-800),
+      container-color: var(--color-surface-inverse),
       supporting-text-color: #ffffff,
     )
   );
 
   @include mat.tabs-overrides(
     (
-      active-indicator-color: var(--color-primary),
+      active-indicator-color: var(--color-brand),
       active-label-text-color: var(--color-text),
       active-focus-label-text-color: var(--color-text),
       active-hover-label-text-color: var(--color-text),
-      active-focus-indicator-color: var(--color-primary),
-      active-hover-indicator-color: var(--color-primary),
+      active-focus-indicator-color: var(--color-brand),
+      active-hover-indicator-color: var(--color-brand),
       inactive-label-text-color: var(--color-text-muted),
       inactive-hover-label-text-color: var(--color-text),
       active-indicator-height: 2px,
@@ -391,16 +407,16 @@ html {
 
   @include mat.tooltip-overrides(
     (
-      container-color: var(--slate-800),
+      container-color: var(--color-surface-inverse),
       container-shape: var(--radius-badge),
     )
   );
 
   @include mat.checkbox-overrides(
     (
-      selected-icon-color: var(--color-primary),
-      selected-focus-icon-color: var(--color-primary),
-      selected-hover-icon-color: var(--color-primary),
+      selected-icon-color: var(--color-brand),
+      selected-focus-icon-color: var(--color-brand),
+      selected-hover-icon-color: var(--color-brand),
     )
   );
 }
@@ -473,8 +489,8 @@ a {
 }
 
 ::selection {
-  background: var(--violet-100);
-  color: var(--violet-700);
+  background: var(--color-selection-bg);
+  color: var(--color-selection-text);
 }
 
 ::-webkit-scrollbar {
@@ -485,13 +501,13 @@ a {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--slate-300);
+  background: var(--color-scrollbar);
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--slate-400);
+  background-color: var(--color-scrollbar-hover);
 }
 
 // Lucide icons -------------------------------------------------------------------
@@ -544,7 +560,7 @@ lucide-icon {
 
 .mat-mdc-outlined-button:not(:disabled):hover {
   background-color: var(--color-surface-hover);
-  border-color: var(--slate-400);
+  border-color: var(--color-border-hover);
 }
 
 .mat-mdc-icon-button {
@@ -595,7 +611,7 @@ lucide-icon {
 }
 
 .cdk-overlay-dark-backdrop {
-  background: rgb(var(--rgb-slate) / 0.4);
+  background: rgb(var(--rgb-ink) / 0.4);
   backdrop-filter: blur(2px);
 }
 
@@ -612,7 +628,7 @@ lucide-icon {
 .success-snackbar {
   @include mat.snack-bar-overrides(
     (
-      container-color: var(--green-700),
+      container-color: var(--color-success-solid),
       supporting-text-color: #ffffff,
       button-color: #ffffff,
     )
@@ -622,7 +638,7 @@ lucide-icon {
 .error-snackbar {
   @include mat.snack-bar-overrides(
     (
-      container-color: var(--red-600),
+      container-color: var(--color-danger),
       supporting-text-color: #ffffff,
       button-color: #ffffff,
     )
@@ -817,7 +833,7 @@ lucide-icon {
   &--danger {
     background: var(--color-danger-soft);
     border-color: var(--color-danger-border);
-    color: var(--color-danger);
+    color: var(--color-danger-text);
   }
 }
 
@@ -832,7 +848,7 @@ lucide-icon {
   color: var(--color-text-secondary);
 
   > lucide-icon {
-    color: var(--slate-400);
+    color: var(--color-placeholder);
     margin-bottom: var(--space-2);
 
     svg {

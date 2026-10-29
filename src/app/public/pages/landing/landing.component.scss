@@ -4,8 +4,8 @@
   align-items: center;
   padding: var(--space-16) 0;
   background:
-    radial-gradient(700px 500px at 80% 40%, rgb(var(--rgb-violet) / 0.08), transparent 70%),
-    radial-gradient(600px 400px at 10% 10%, rgb(var(--rgb-blue) / 0.07), transparent 70%),
+    radial-gradient(700px 500px at 80% 40%, rgb(var(--rgb-highlight) / 0.08), transparent 70%),
+    radial-gradient(600px 400px at 10% 10%, rgb(var(--rgb-brand) / 0.07), transparent 70%),
     var(--color-bg);
 }
 
@@ -37,7 +37,7 @@
   width: 6px;
   height: 6px;
   border-radius: var(--radius-round);
-  background: currentColor;
+  background: var(--color-highlight);
 }
 
 .hero h1 {

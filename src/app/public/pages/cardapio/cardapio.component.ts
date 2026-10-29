@@ -229,7 +229,7 @@ export class CardapioComponent implements OnInit {
         const categorias = Array.from(
           new Set(produtos.map((p) => p.categoria).filter((c) => c))
         ).sort();
-        return ['TODOS', ...categorias];
+        return categorias;
       }),
     );
 
@@ -324,7 +324,9 @@ export class CardapioComponent implements OnInit {
   }
 
   selecionarCategoria(categoria: string): void {
-    this.categoriaSelecionada.setValue(categoria);
+    // Sem aba "TODOS": tocar na categoria ativa remove o filtro e volta a mostrar tudo
+    const atual = this.categoriaSelecionada.value;
+    this.categoriaSelecionada.setValue(atual === categoria ? 'TODOS' : categoria);
   }
 
   irParaCarrinho(): void {

@@ -71,7 +71,7 @@
     box-shadow var(--duration-fast) var(--ease-standard);
 
   &:hover {
-    border-color: var(--slate-400);
+    border-color: var(--color-border-hover);
   }
 
   &:focus-within {
@@ -93,7 +93,7 @@
   font-size: var(--text-base);
 
   &::placeholder {
-    color: var(--slate-400);
+    color: var(--color-placeholder);
   }
 
   &:focus-visible {
