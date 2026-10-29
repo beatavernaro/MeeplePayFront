@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,16 +8,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LucideAngularModule } from 'lucide-angular';
-import { Comanda, Produto } from '../../../../shared/models/api.interfaces';
+import { EstatisticasProduto, Produto } from '../../../../shared/models/api.interfaces';
 import { ProdutoService } from '../../../../core/services/produto.service';
-import { ComandaService } from '../../../../core/services/comanda.service';
 import { NotificacaoService } from '../../../../core/services/notificacao.service';
 
-interface Estatisticas {
-  totalVendido: number;
-  receitaTotal: number;
-  comandasComProduto: number;
-}
+const SEM_ESTATISTICAS: EstatisticasProduto = { totalVendido: 0, receitaTotal: 0, comandasComProduto: 0 };
 
 @Component({
   selector: 'app-produto-detalhes',
@@ -242,41 +237,16 @@ export class ProdutoDetalhesComponent {
 
   readonly produto = signal<Produto | null>(null);
 
-  // A listagem de comandas já traz os itens de cada uma
-  private readonly comandas = toSignal(
-    inject(ComandaService)
-      .obterComandasCompletas()
-      .pipe(
-        catchError((error) => {
-          console.error('Erro ao carregar estatísticas:', error);
-          return of([] as Comanda[]);
-        }),
-      ),
-    { initialValue: [] },
+  // Somadas no banco a partir dos itens de todas as comandas
+  readonly estatisticas = toSignal(
+    this.produtoService.obterEstatisticasProduto(this.produtoId ?? '').pipe(
+      catchError((error) => {
+        console.error('Erro ao carregar estatísticas:', error);
+        return of(SEM_ESTATISTICAS);
+      }),
+    ),
+    { initialValue: SEM_ESTATISTICAS },
   );
-
-  readonly estatisticas = computed<Estatisticas>(() => {
-    const produto = this.produto();
-    const estatisticas: Estatisticas = { totalVendido: 0, receitaTotal: 0, comandasComProduto: 0 };
-    if (!produto) return estatisticas;
-
-    for (const comanda of this.comandas()) {
-      let temProduto = false;
-      for (const item of comanda.itens ?? []) {
-        // Priorizar matching por produtoId, fallback para nome
-        const isMatch = item.produtoId ? item.produtoId === produto.id : item.nome === produto.nome;
-        if (isMatch) {
-          estatisticas.totalVendido += item.quantidade;
-          estatisticas.receitaTotal += item.quantidade * item.valorUnitario;
-          temProduto = true;
-        }
-      }
-      if (temProduto) {
-        estatisticas.comandasComProduto++;
-      }
-    }
-    return estatisticas;
-  });
 
   constructor() {
     this.carregarProduto();

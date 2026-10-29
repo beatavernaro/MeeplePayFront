@@ -16,6 +16,29 @@ export interface Comanda {
   itens?: ItemComanda[];
 }
 
+export interface Pagina<T> {
+  itens: T[];
+  totalItens: number;
+  // Começa em 1
+  pagina: number;
+  tamanhoPagina: number;
+}
+
+export interface ListarComandasParams {
+  status?: ComandaStatus[];
+  // Nº da comanda ou celular (só dígitos)
+  busca?: string;
+  ordenarPor?: 'dataCriacao' | 'dataEncerramento';
+  pagina?: number;
+  tamanhoPagina?: number;
+}
+
+export interface ResumoStatusComanda {
+  status: ComandaStatus;
+  quantidade: number;
+  receita: number;
+}
+
 export interface CreateComandaRequest {
   nomeCliente: string;
   celular: string;
@@ -56,6 +79,12 @@ export interface Produto {
   categoria: string;
   ativo: boolean;
   estoque: number;
+}
+
+export interface EstatisticasProduto {
+  totalVendido: number;
+  receitaTotal: number;
+  comandasComProduto: number;
 }
 
 export interface CreateProdutoRequest {

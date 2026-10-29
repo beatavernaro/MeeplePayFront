@@ -1,15 +1,18 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { CurrencyPipe, DatePipe, LowerCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { LucideAngularModule } from 'lucide-angular';
-import { Comanda, ComandaStatus } from '../../../shared/models/api.interfaces';
+import { Comanda, ComandaStatus, Pagina, ResumoStatusComanda } from '../../../shared/models/api.interfaces';
 import { ComandaService } from '../../../core/services/comanda.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
 import {
@@ -26,7 +29,9 @@ interface Aba {
   vazio: { icone: string; titulo: string; texto: string };
 }
 
-const COLUNAS_ABERTAS = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
+const TAMANHO_PAGINA = 20;
+
+const COLUNAS_ABERTAS =['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
 const COLUNAS_FECHADAS = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
 
 const ABAS: Aba[] = [
@@ -76,6 +81,7 @@ const ABAS: Aba[] = [
     LowerCasePipe,
     MatButtonModule,
     MatTableModule,
+    MatPaginatorModule,
     MatTabsModule,
     MatTooltipModule,
     MatFormFieldModule,
@@ -91,30 +97,79 @@ export class AdminComandasComponent {
   private dialog = inject(MatDialog);
   private router = inject(Router);
 
-  private readonly comandas = signal<Comanda[]>([]);
+  // Índice da aba aberta em ABAS
+  readonly abaSelecionada = signal(0);
+  // Índice do paginador (começa em 0; a API começa em 1)
+  readonly pagina = signal(0);
   // Somente dígitos: nº da comanda ou celular
   readonly filtroBusca = signal('');
+  readonly tamanhoPagina = TAMANHO_PAGINA;
+  readonly carregando = signal(true);
+  readonly comandasPagina = signal<Comanda[]>([]);
+  readonly totalItens = signal(0);
+  private readonly resumo = signal<ResumoStatusComanda[]>([]);
+  // Incrementado para buscar de novo a mesma página (ex.: depois de encerrar uma comanda)
+  private readonly recarga = signal(0);
+  private readonly filtroDigitado$ = new Subject<string>();
 
-  readonly abas = computed(() => {
-    const filtro = this.filtroBusca();
-    return ABAS.map((aba) => {
-      const comandas = this.comandas().filter((c) => c.status === aba.status);
-      return {
-        ...aba,
-        comandas,
-        receita: comandas.reduce((total, c) => total + c.valorTotal, 0),
-        filtradas: filtro ? comandas.filter((c) => correspondeAoFiltro(c, filtro)) : comandas,
-      };
-    });
-  });
+  // Números das abas e dos cards vêm do resumo, que soma todas as comandas no banco
+  readonly abas = computed(() =>
+    ABAS.map((aba) => {
+      const resumo = this.resumo().find((r) => r.status === aba.status);
+      return { ...aba, quantidade: resumo?.quantidade ?? 0, receita: resumo?.receita ?? 0 };
+    }),
+  );
+
+  private readonly consulta = computed(() => ({
+    status: ABAS[this.abaSelecionada()].status,
+    busca: this.filtroBusca(),
+    pagina: this.pagina(),
+    recarga: this.recarga(),
+  }));
 
   constructor() {
-    this.carregarComandas();
+    this.filtroDigitado$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((busca) => {
+        this.filtroBusca.set(busca);
+        this.pagina.set(0);
+      });
+
+    // switchMap descarta a resposta de uma consulta antiga quando o usuário já mudou de aba ou página
+    toObservable(this.consulta)
+      .pipe(
+        tap(() => this.carregando.set(true)),
+        switchMap(({ status, busca, pagina }) =>
+          this.comandaService
+            .listarComandasPaginado({ status: [status], busca, pagina: pagina + 1, tamanhoPagina: TAMANHO_PAGINA })
+            .pipe(
+              catchError((error) => {
+                console.error('Erro ao carregar comandas:', error);
+                this.notificacao.erro('Erro ao carregar comandas. Tente novamente.', { duracao: 5000 });
+                return of(null);
+              }),
+            ),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((resultado) => this.aplicarPagina(resultado));
+
+    this.carregarResumo();
   }
 
   onFiltroBuscaChange(event: Event): void {
     const valor = (event.target as HTMLInputElement).value;
-    this.filtroBusca.set(valor.replace(/\D/g, ''));
+    this.filtroDigitado$.next(valor.replace(/\D/g, ''));
+  }
+
+  selecionarAba(indice: number): void {
+    this.comandasPagina.set([]);
+    this.abaSelecionada.set(indice);
+    this.pagina.set(0);
+  }
+
+  mudarPagina(event: PageEvent): void {
+    this.pagina.set(event.pageIndex);
   }
 
   novaComanda(): void {
@@ -130,7 +185,7 @@ export class AdminComandasComponent {
           this.visualizarComanda(resultado.comanda.id);
           return;
         }
-        this.carregarComandas();
+        this.recarregar();
       });
   }
 
@@ -154,7 +209,7 @@ export class AdminComandasComponent {
         this.comandaService.encerrarComandaAdmin(comanda.id).subscribe({
           next: () => {
             this.notificacao.sucesso('Comanda encerrada com sucesso!');
-            this.carregarComandas();
+            this.recarregar();
           },
           error: (error) => {
             console.error('Erro ao encerrar comanda:', error);
@@ -164,21 +219,35 @@ export class AdminComandasComponent {
       });
   }
 
-  private carregarComandas(): void {
-    this.comandaService.obterComandasCompletas().subscribe({
-      next: (comandas) => this.comandas.set(comandas),
-      error: (error) => {
-        console.error('Erro ao carregar comandas:', error);
-        this.notificacao.erro('Erro ao carregar comandas. Tente novamente.', { duracao: 5000 });
-        this.comandas.set([]);
-      },
+  private recarregar(): void {
+    this.recarga.update((n) => n + 1);
+    this.carregarResumo();
+  }
+
+  private aplicarPagina(resultado: Pagina<Comanda> | null): void {
+    if (!resultado) {
+      this.comandasPagina.set([]);
+      this.totalItens.set(0);
+      this.carregando.set(false);
+      return;
+    }
+
+    // A página ficou vazia porque a lista encolheu (ex.: encerrou a última comanda dela): vai para a última
+    const ultimaPagina = Math.max(0, Math.ceil(resultado.totalItens / TAMANHO_PAGINA) - 1);
+    if (resultado.itens.length === 0 && this.pagina() > ultimaPagina) {
+      this.pagina.set(ultimaPagina);
+      return;
+    }
+
+    this.comandasPagina.set(resultado.itens);
+    this.totalItens.set(resultado.totalItens);
+    this.carregando.set(false);
+  }
+
+  private carregarResumo(): void {
+    this.comandaService.obterResumoComandas().subscribe({
+      next: (resumo) => this.resumo.set(resumo),
+      error: (error) => console.error('Erro ao carregar resumo das comandas:', error),
     });
   }
-}
-
-function correspondeAoFiltro(comanda: Comanda, filtro: string): boolean {
-  return (
-    String(comanda.numeroComanda).includes(filtro) ||
-    (comanda.celular || '').replace(/\D/g, '').includes(filtro)
-  );
 }

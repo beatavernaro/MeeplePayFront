@@ -20,18 +20,18 @@
     <lucide-icon matSuffix name="search" />
   </mat-form-field>
 
-  <mat-tab-group class="tabs-container">
-    @for (aba of abas(); track aba.status) {
+  <mat-tab-group class="tabs-container" [selectedIndex]="abaSelecionada()" (selectedIndexChange)="selecionarAba($event)">
+    @for (aba of abas(); track aba.status; let i = $index) {
       <mat-tab>
         <ng-template mat-tab-label>
-          {{ aba.rotulo }} ({{ aba.comandas.length }})
+          {{ aba.rotulo }} ({{ aba.quantidade }})
         </ng-template>
 
         <div class="tab-content">
           <div class="metric-grid stats-row">
             <div class="metric-card">
               <span class="metric-card__label">{{ aba.rotuloTotal }}</span>
-              <span class="metric-card__value">{{ aba.comandas.length }}</span>
+              <span class="metric-card__value">{{ aba.quantidade }}</span>
               <lucide-icon class="metric-card__icon" name="receipt-text" />
             </div>
 
@@ -44,7 +44,7 @@
 
           <div class="surface-card table-surface">
             <div class="table-scroll">
-              <table mat-table [dataSource]="aba.filtradas" class="comandas-table">
+              <table mat-table [dataSource]="i === abaSelecionada() ? comandasPagina() : []" class="comandas-table">
                 <ng-container matColumnDef="numero">
                   <th mat-header-cell *matHeaderCellDef>Nº Comanda</th>
                   <td mat-cell *matCellDef="let comanda"><span class="record-id">#{{ comanda.numeroComanda }}</span></td>
@@ -117,12 +117,33 @@
               </table>
             </div>
 
-            @if (aba.comandas.length === 0) {
-              <div class="empty-state">
-                <lucide-icon [name]="aba.vazio.icone" />
-                <h3>{{ aba.vazio.titulo }}</h3>
-                <p>{{ aba.vazio.texto }}</p>
-              </div>
+            @if (i === abaSelecionada() && totalItens() > tamanhoPagina) {
+              <mat-paginator
+                [length]="totalItens()"
+                [pageSize]="tamanhoPagina"
+                [pageIndex]="pagina()"
+                [hidePageSize]="true"
+                [showFirstLastButtons]="true"
+                [disabled]="carregando()"
+                (page)="mudarPagina($event)"
+                aria-label="Paginação de comandas"
+              />
+            }
+
+            @if (i === abaSelecionada() && !carregando() && totalItens() === 0) {
+              @if (filtroBusca()) {
+                <div class="empty-state">
+                  <lucide-icon name="search-x" />
+                  <h3>Nenhuma comanda encontrada</h3>
+                  <p>Confira o nº da comanda ou o celular digitado.</p>
+                </div>
+              } @else {
+                <div class="empty-state">
+                  <lucide-icon [name]="aba.vazio.icone" />
+                  <h3>{{ aba.vazio.titulo }}</h3>
+                  <p>{{ aba.vazio.texto }}</p>
+                </div>
+              }
             }
           </div>
         </div>

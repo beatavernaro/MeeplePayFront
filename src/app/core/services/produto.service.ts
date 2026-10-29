@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import {
   Produto,
+  EstatisticasProduto,
   CreateProdutoRequest,
   UpdateProdutoRequest,
 } from '../../shared/models/api.interfaces';
@@ -34,6 +35,13 @@ export class ProdutoService {
 
   obterProdutoPorId(id: string): Observable<Produto> {
     return this.http.get<Produto>(`${this.baseUrl}/produtos/${id}`);
+  }
+
+  /**
+   * Unidades vendidas, receita e comandas com o produto, somadas no banco
+   */
+  obterEstatisticasProduto(id: string): Observable<EstatisticasProduto> {
+    return this.http.get<EstatisticasProduto>(`${this.baseUrl}/produtos/${id}/estatisticas`);
   }
 
   criarProduto(produto: CreateProdutoRequest): Observable<Produto> {

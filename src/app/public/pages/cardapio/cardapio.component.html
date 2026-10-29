@@ -32,12 +32,6 @@
           <h3 class="produto-nome">{{ produto.nome }}</h3>
           <span class="produto-preco money">{{ produto.preco | currency }}</span>
         </div>
-        @if (produto.estoque <= 0) {
-          <span class="status-badge status-badge--warning sem-estoque">
-            <lucide-icon name="triangle-alert" />
-            Sem estoque
-          </span>
-        }
         <button
           mat-raised-button
           class="add-button"

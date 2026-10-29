@@ -11,6 +11,8 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { provideAppIcons } from './shared/icons';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { PaginatorIntlPtBr } from './shared/paginator-intl';
 
 registerLocaleData(localePt);
 
@@ -22,6 +24,7 @@ export const appConfig: ApplicationConfig = {
     // Pipes currency/date/number formatam em pt-BR (R$ 1.234,50)
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: DEFAULT_CURRENCY_CODE, useValue: 'BRL' },
+    { provide: MatPaginatorIntl, useClass: PaginatorIntlPtBr },
     ...provideAppIcons(),
   ],
 };
