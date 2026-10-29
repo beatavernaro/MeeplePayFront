@@ -1,6 +1,6 @@
 // Interfaces baseadas na documentação da API Comanda Virtual
 
-export type ComandaStatus = 'ABERTA' | 'ENCERRADA';
+export type ComandaStatus = 'ABERTA' | 'ENCERRADA' | 'PAGA';
 
 export interface Comanda {
   id: string;

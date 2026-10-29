@@ -74,6 +74,10 @@ export class AdminDashboardComponent implements OnInit {
     this.router.navigate([route]);
   }
 
+  visualizarComanda(id: string): void {
+    this.router.navigate(['/admin/comandas', id]);
+  }
+
   formatarPreco(preco: number): string {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',

@@ -1,9 +1,17 @@
 <div class="encerrada-container">
   @if (comandaAtual$ | async; as comanda) {
     <div class="success-header">
-      <mat-icon class="success-icon">check_circle</mat-icon>
-      <h2>Comanda Finalizada!</h2>
+      <mat-icon class="success-icon">{{ comanda.status === 'PAGA' ? 'check_circle' : 'lock' }}</mat-icon>
+      <h2>{{ comanda.status === 'PAGA' ? 'Comanda Paga' : 'Comanda Encerrada' }}</h2>
       <p>Obrigado por utilizar nosso serviço</p>
+    </div>
+
+    <div class="closed-notice">
+      <mat-icon>support_agent</mat-icon>
+      <p>
+        Esta comanda foi {{ comanda.status === 'PAGA' ? 'paga' : 'encerrada' }} e não aceita mais pedidos.
+        <strong>Entre em contato com o caixa.</strong>
+      </p>
     </div>
 
     <mat-card class="resumo-card">
@@ -29,6 +37,7 @@
       </mat-card-content>
     </mat-card>
 
+    @if (comanda.status !== 'PAGA') {
     <mat-card class="pix-card">
       <mat-card-header>
         <mat-card-title>
@@ -68,6 +77,26 @@
         </div>
       </mat-card-content>
     </mat-card>
+    }
+
+    <div class="actions">
+      <button mat-raised-button color="primary" class="nova-comanda-button" (click)="novaComanda()">
+        <mat-icon>refresh</mat-icon>
+        Iniciar Nova Comanda
+      </button>
+    </div>
+  } @else {
+    <div class="success-header">
+      <mat-icon class="success-icon">lock</mat-icon>
+      <h2>Comanda Encerrada</h2>
+    </div>
+
+    <div class="closed-notice">
+      <mat-icon>support_agent</mat-icon>
+      <p>
+        Esta comanda não está mais disponível. <strong>Entre em contato com o caixa.</strong>
+      </p>
+    </div>
 
     <div class="actions">
       <button mat-raised-button color="primary" class="nova-comanda-button" (click)="novaComanda()">

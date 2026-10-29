@@ -52,7 +52,7 @@ export class AdminComandasComponent implements OnInit {
   comandasEncerradasFiltradas$!: Observable<Comanda[]>;
   comandasPagasFiltradas$!: Observable<Comanda[]>;
 
-  filtroNumero = new BehaviorSubject<string>('');
+  filtroBusca = new BehaviorSubject<string>('');
 
   displayedColumns: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'total', 'acoes'];
   displayedColumnsEncerradas: string[] = ['numero', 'nome', 'status', 'dataCriacao', 'dataEncerramento', 'total', 'acoes'];
@@ -126,20 +126,26 @@ export class AdminComandasComponent implements OnInit {
       shareReplay(1),
     );
 
-    this.comandasAbertasFiltradas$ = this.filtrarPorNumero(this.comandasAbertas$);
-    this.comandasEncerradasFiltradas$ = this.filtrarPorNumero(this.comandasEncerradas$);
-    this.comandasPagasFiltradas$ = this.filtrarPorNumero(this.comandasPagas$);
+    this.comandasAbertasFiltradas$ = this.filtrarPorNumeroOuCelular(this.comandasAbertas$);
+    this.comandasEncerradasFiltradas$ = this.filtrarPorNumeroOuCelular(this.comandasEncerradas$);
+    this.comandasPagasFiltradas$ = this.filtrarPorNumeroOuCelular(this.comandasPagas$);
   }
 
-  onFiltroNumeroChange(event: Event): void {
+  onFiltroBuscaChange(event: Event): void {
     const valor = (event.target as HTMLInputElement).value;
-    this.filtroNumero.next(valor.replace(/\D/g, ''));
+    this.filtroBusca.next(valor.replace(/\D/g, ''));
   }
 
-  private filtrarPorNumero(comandas$: Observable<Comanda[]>): Observable<Comanda[]> {
-    return combineLatest([comandas$, this.filtroNumero]).pipe(
+  private filtrarPorNumeroOuCelular(comandas$: Observable<Comanda[]>): Observable<Comanda[]> {
+    return combineLatest([comandas$, this.filtroBusca]).pipe(
       map(([comandas, filtro]) =>
-        filtro ? comandas.filter((c) => String(c.numeroComanda).includes(filtro)) : comandas,
+        filtro
+          ? comandas.filter(
+              (c) =>
+                String(c.numeroComanda).includes(filtro) ||
+                (c.celular || '').replace(/\D/g, '').includes(filtro),
+            )
+          : comandas,
       ),
     );
   }

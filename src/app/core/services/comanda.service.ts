@@ -332,7 +332,7 @@ export class ComandaService {
           );
         }
       }),
-      catchError(this.handleError)
+      catchError(this.handleErrorCliente)
     );
   }
 
@@ -433,7 +433,7 @@ export class ComandaService {
           })
         );
       }),
-      catchError(this.handleError)
+      catchError(this.handleErrorCliente)
     );
   }
 
@@ -452,7 +452,7 @@ export class ComandaService {
           })
         );
       }),
-      catchError(this.handleError)
+      catchError(this.handleErrorCliente)
     );
   }
 
@@ -553,5 +553,26 @@ export class ComandaService {
     }
 
     return throwError(() => error);
+  }
+
+  /**
+   * Manipulador de erros das ações do cliente nos itens: se a comanda foi encerrada
+   * ou paga pelo caixa enquanto o cliente usava o app, redireciona para o aviso
+   */
+  private handleErrorCliente = (error: HttpErrorResponse) => {
+    const comandaAtual = this.comandaAtualSubject.value;
+
+    if (error.status === 400 && comandaAtual) {
+      this.buscarComanda(comandaAtual.id).subscribe({
+        next: (comanda) => {
+          if (comanda.status !== 'ABERTA') {
+            this.router.navigate(['/encerrada']);
+          }
+        },
+        error: () => { },
+      });
+    }
+
+    return this.handleError(error);
   }
 }

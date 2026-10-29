@@ -62,7 +62,7 @@
           } @else {
             <div class="comandas-list">
               @for (comanda of comandasAbertas; track comanda.id) {
-                <div class="comanda-item">
+                <div class="comanda-item" (click)="visualizarComanda(comanda.id)">
                   <div class="comanda-info">
                     <h4>Comanda #{{ comanda.numeroComanda }} — {{ comanda.nomeCliente }}</h4>
                     <p>{{ formatarData(comanda.dataCriacao) }}</p>
@@ -101,7 +101,7 @@
           } @else {
             <div class="comandas-list">
               @for (comanda of comandasEncerradas.slice(-5); track comanda.id) {
-                <div class="comanda-item">
+                <div class="comanda-item" (click)="visualizarComanda(comanda.id)">
                   <div class="comanda-info">
                     <h4>Comanda #{{ comanda.numeroComanda }} — {{ comanda.nomeCliente }}</h4>
                     <p>{{ formatarData(comanda.dataEncerramento || comanda.dataCriacao) }}</p>

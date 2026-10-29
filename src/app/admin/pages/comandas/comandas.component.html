@@ -10,9 +10,8 @@
   </div>
 
   <mat-form-field appearance="outline" class="filtro-numero">
-    <mat-label>Filtrar por nº da comanda</mat-label>
-    <span matTextPrefix>#&nbsp;</span>
-    <input matInput type="text" inputmode="numeric" placeholder="105" (input)="onFiltroNumeroChange($event)" />
+    <mat-label>Filtrar por nº da comanda ou celular</mat-label>
+    <input matInput type="text" inputmode="numeric" placeholder="105 ou 11999998888" (input)="onFiltroBuscaChange($event)" />
     <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>
 
