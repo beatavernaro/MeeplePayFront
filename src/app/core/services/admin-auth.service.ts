@@ -32,11 +32,33 @@ export class AdminAuthService {
     localStorage.removeItem(ADMIN_TOKEN_KEY);
   }
 
+  /**
+   * Há um token de admin ainda válido. Token expirado ou inválido é apagado, para não
+   * deixar o painel abrir sem sessão. A assinatura continua sendo conferida pela API.
+   */
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+
+    if (!tokenAdminValido(token)) {
+      this.logout();
+      return false;
+    }
+    return true;
   }
 
   getToken(): string | null {
     return localStorage.getItem(ADMIN_TOKEN_KEY);
+  }
+}
+
+function tokenAdminValido(token: string): boolean {
+  try {
+    const payload = token.split('.')[1];
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    const claims = JSON.parse(json) as { tipo?: string; exp?: number };
+    return claims.tipo === 'admin' && typeof claims.exp === 'number' && claims.exp * 1000 > Date.now();
+  } catch {
+    return false;
   }
 }

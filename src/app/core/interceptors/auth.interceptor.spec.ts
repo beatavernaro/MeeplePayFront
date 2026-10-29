@@ -101,6 +101,14 @@ describe('AuthInterceptor', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/admin/login']);
     });
 
+    it('403 em rota de admin faz logout e vai para o login do admin', () => {
+      router.url = '/admin/comandas';
+      falhar(`${API}/comandas`, 403);
+      expect(localStorage.getItem('adminToken')).toBeNull();
+      expect(router.navigate).toHaveBeenCalledWith(['/admin/login']);
+      expect(sessao.getAccessToken()).toBe(USER_TOKEN);
+    });
+
     it('401 fora do admin limpa a sessão do cliente e vai para /start', () => {
       falhar(`${API}/produtos/ativos`, 401);
       expect(sessao.getAccessToken()).toBeNull();
