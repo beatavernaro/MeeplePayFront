@@ -1,139 +1,43 @@
-<div class="start-container">
-  <mat-card class="start-card">
+<main class="start-container">
+  <mat-card class="start-card glass">
     <mat-card-header>
       <mat-card-title>
-        <img src="assets/AngatuLogo.png" alt="Angatu Jogos" class="logo-icon" />
+        <img src="assets/AngatuLogo.png" alt="" class="logo-icon" width="48" height="48" />
         Angatu Jogos
       </mat-card-title>
-      <mat-card-subtitle>
-        @if (hasActiveSession) {
-          Bem-vindo de volta, {{ userData?.nomeCliente }}!
-        } @else {
-          Inicie sua comanda digital
-        }
-      </mat-card-subtitle>
+      <mat-card-subtitle>Informe seu nome e celular para acessar sua comanda</mat-card-subtitle>
     </mat-card-header>
 
-    @if (hasActiveSession) {
-      <!-- Sessão Ativa -->
-      <mat-card-content>
-        <div class="session-info">
-          <mat-icon color="primary">check_circle</mat-icon>
-          <span>Você tem uma comanda ativa</span>
-        </div>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" id="acesso-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Seu nome</mat-label>
+          <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" autocomplete="name" />
+          <lucide-icon matSuffix name="user" />
+          <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
+        </mat-form-field>
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Seu nome</mat-label>
-            <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" />
-            <mat-icon matSuffix>person</mat-icon>
-            @if (form.get('nomeCliente')?.invalid && form.get('nomeCliente')?.touched) {
-              <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
-            }
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Celular</mat-label>
+          <input matInput formControlName="celular" placeholder="11987654321" type="tel" inputmode="tel" autocomplete="tel-national" />
+          <lucide-icon matSuffix name="phone" />
+          <mat-error>{{ getErrorMessage('celular') }}</mat-error>
+        </mat-form-field>
+      </form>
+    </mat-card-content>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Celular</mat-label>
-            <input matInput formControlName="celular" placeholder="11987654321" type="tel" />
-            <mat-icon matSuffix>phone</mat-icon>
-            @if (form.get('celular')?.invalid && form.get('celular')?.touched) {
-              <mat-error>{{ getErrorMessage('celular') }}</mat-error>
-            }
-          </mat-form-field>
-        </form>
-      </mat-card-content>
+    <mat-card-actions class="start-actions">
+      <button mat-raised-button type="submit" form="acesso-form" class="btn-block btn-lg start-button" [disabled]="loading()">
+        @if (loading()) {
+          <lucide-icon class="spin" name="loader-circle" />
+          Acessando...
+        } @else {
+          <lucide-icon name="arrow-right" />
+          Acessar Comanda
+        }
+      </button>
 
-      <mat-card-actions class="session-actions">
-        <button
-          mat-raised-button
-          color="primary"
-          class="action-button"
-          (click)="onSubmit()"
-          [disabled]="loading"
-        >
-          @if (loading) {
-            <ng-container>
-              <mat-icon>hourglass_empty</mat-icon>
-              Continuando...
-            </ng-container>
-          } @else {
-            <ng-container>
-              <mat-icon>play_arrow</mat-icon>
-              Continuar Comanda
-            </ng-container>
-          }
-        </button>
-
-        <button
-          mat-button
-          color="warn"
-          class="action-button"
-          (click)="onClearSession()"
-          [disabled]="loading"
-        >
-          <mat-icon>clear</mat-icon>
-          Nova Comanda
-        </button>
-      </mat-card-actions>
-    } @else {
-      <!-- Nova Sessão -->
-      <mat-card-content>
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Seu nome</mat-label>
-            <input matInput formControlName="nomeCliente" placeholder="Digite seu nome" />
-            <mat-icon matSuffix>person</mat-icon>
-            @if (form.get('nomeCliente')?.invalid && form.get('nomeCliente')?.touched) {
-              <mat-error>{{ getErrorMessage('nomeCliente') }}</mat-error>
-            }
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Celular</mat-label>
-            <input matInput formControlName="celular" placeholder="11987654321" type="tel" />
-            <mat-icon matSuffix>phone</mat-icon>
-            @if (form.get('celular')?.invalid && form.get('celular')?.touched) {
-              <mat-error>{{ getErrorMessage('celular') }}</mat-error>
-            }
-          </mat-form-field>
-        </form>
-      </mat-card-content>
-
-      <mat-card-actions class="new-session-actions">
-        <button
-          mat-raised-button
-          color="primary"
-          class="full-width start-button"
-          (click)="onSubmit()"
-          [disabled]="loading"
-        >
-          @if (loading) {
-            <ng-container>
-              <mat-icon>hourglass_empty</mat-icon>
-              Criando comanda...
-            </ng-container>
-          } @else {
-            <ng-container>
-              <mat-icon>play_arrow</mat-icon>
-              Iniciar Comanda
-            </ng-container>
-          }
-        </button>
-
-        <div class="recovery-section">
-          <span class="recovery-text">Já tem uma comanda?</span>
-          <button
-            mat-button
-            color="accent"
-            class="recovery-button"
-            (click)="onRecoverComanda()"
-            [disabled]="loading || !form.get('celular')?.valid"
-          >
-            <mat-icon>restore</mat-icon>
-            Recuperar Comanda
-          </button>
-        </div>
-      </mat-card-actions>
-    }
+      <p class="start-hint">Se já houver uma comanda aberta para este celular, ela será recuperada.</p>
+    </mat-card-actions>
   </mat-card>
-</div>
+</main>

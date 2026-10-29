@@ -1,13 +1,13 @@
 // Interfaces baseadas na documentação da API Comanda Virtual
 
-export type ComandaStatus = 'ABERTA' | 'ENCERRADA';
+export type ComandaStatus = 'ABERTA' | 'ENCERRADA' | 'PAGA';
 
 export interface Comanda {
   id: string;
   numeroComanda: number;
   nomeCliente: string;
   celular: string;
-  status: string;
+  status: ComandaStatus;
   valorTotal: number;
   total: number;
   dataCriacao: string;
@@ -55,6 +55,7 @@ export interface Produto {
   preco: number;
   categoria: string;
   ativo: boolean;
+  estoque: number;
 }
 
 export interface CreateProdutoRequest {
@@ -62,6 +63,7 @@ export interface CreateProdutoRequest {
   descricao?: string;
   preco: number;
   categoria?: string;
+  estoque?: number;
 }
 
 export interface UpdateProdutoRequest {
@@ -70,6 +72,7 @@ export interface UpdateProdutoRequest {
   preco?: number;
   categoria?: string;
   ativo?: boolean;
+  estoque?: number;
 }
 
 export interface LoginRequest {
@@ -80,20 +83,4 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   token: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  nome: string;
-}
-
-export interface RegisterResponse {
-  success: boolean;
-  message: string;
-}
-
-export interface ApiError {
-  message: string;
-  errors?: { [key: string]: string[] };
 }

@@ -1,24 +1,17 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Observable } from 'rxjs';
-import { switchMap, map, catchError, shareReplay } from 'rxjs/operators';
-import { of, forkJoin } from 'rxjs';
-import { Produto } from '../../../../shared/models/produto.model';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { LucideAngularModule } from 'lucide-angular';
+import { Comanda, Produto } from '../../../../shared/models/api.interfaces';
 import { ProdutoService } from '../../../../core/services/produto.service';
 import { ComandaService } from '../../../../core/services/comanda.service';
-import { Comanda } from '../../../../shared/models/comanda.model';
-import { ItemComanda } from '../../../../shared/models/item-comanda.model';
-import {
-  ConfirmDialogComponent,
-  ConfirmDialogData,
-} from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { NotificacaoService } from '../../../../core/services/notificacao.service';
 
 interface Estatisticas {
   totalVendido: number;
@@ -28,319 +21,311 @@ interface Estatisticas {
 
 @Component({
   selector: 'app-produto-detalhes',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatSnackBarModule,
-  ],
+  imports: [CurrencyPipe, MatCardModule, MatButtonModule, MatTooltipModule, LucideAngularModule],
   template: `
-    <div style="padding: 24px;">
-      <!-- Header com navegação -->
-      <ng-container *ngIf="produto$ | async as produto">
-        <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 16px;">
-          <button mat-icon-button (click)="voltar()" matTooltip="Voltar">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <mat-icon style="color: #556b2f; font-size: 32px; width: 32px; height: 32px;"
-              >restaurant_menu</mat-icon
-            >
-            <h1 style="margin: 0; color: #556b2f; font-weight: 500; font-size: 28px;">
-              {{ produto.nome }}
-            </h1>
-            <mat-chip
-              *ngIf="!produto.ativo"
-              style="background-color: #ff5722; color: white;"
-            >
-              INATIVO
-            </mat-chip>
+    <div class="page">
+      @if (produto(); as produto) {
+        <!-- Header com navegação -->
+        <div class="page-header">
+          <div class="page-header__title">
+            <button mat-icon-button (click)="voltar()" matTooltip="Voltar" aria-label="Voltar" class="back-button">
+              <lucide-icon name="arrow-left" />
+            </button>
+            <h1>{{ produto.nome }}</h1>
+            @if (!produto.ativo) {
+              <span class="status-badge status-badge--danger">Inativo</span>
+            }
           </div>
         </div>
-      </ng-container>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;" *ngIf="produto$ | async as produto">
-        <!-- Informações básicas do produto -->
-        <mat-card>
-          <mat-card-header style="margin-bottom: 16px;">
-            <mat-card-title style="color: #556b2f;">
-              <mat-icon>info</mat-icon>
-              Informações do Produto
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Nome:</label
-                >
-                <span style="font-size: 18px; color: #333;">{{ produto.nome }}</span>
-              </div>
-              <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Preço:</label
-                >
-                <span style="font-size: 24px; font-weight: 600; color: #556b2f;">
-                  R$ {{ formatarMoeda(produto.preco) }}
-                </span>
-              </div>
-              <div>
-                <label style="font-weight: 500; color: #666; display: block; margin-bottom: 4px;"
-                  >Status:</label
-                >
-                <mat-chip
-                  [style.background-color]="produto.ativo ? '#4caf50' : '#ff5722'"
-                  style="color: white;"
-                >
-                  {{ produto.ativo ? 'ATIVO' : 'INATIVO' }}
-                </mat-chip>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Estatísticas do produto -->
-        <mat-card>
-          <mat-card-header style="margin-bottom: 16px;">
-            <mat-card-title style="color: #556b2f;">
-              <mat-icon>analytics</mat-icon>
-              Estatísticas de Vendas
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-              <div
-                style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px;"
-              >
-                <div style="font-size: 32px; font-weight: 600; color: #556b2f;">
-                  {{ (estatisticas$ | async)?.totalVendido || 0 }}
+        <div class="detalhes-grid">
+          <!-- Informações básicas do produto -->
+          <mat-card>
+            <mat-card-header class="card-header">
+              <mat-card-title>
+                <lucide-icon name="info" />
+                Informações do Produto
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <dl class="info-list">
+                <div>
+                  <dt>Nome</dt>
+                  <dd class="info-value">{{ produto.nome }}</dd>
                 </div>
-                <div style="color: #666; font-size: 14px;">Total de Unidades Vendidas</div>
-              </div>
-              <div
-                style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px;"
-              >
-                <div style="font-size: 32px; font-weight: 600; color: #556b2f;">
-                  R$ {{ formatarMoeda((estatisticas$ | async)?.receitaTotal || 0) }}
+                <div>
+                  <dt>Preço</dt>
+                  <dd class="info-value info-value--price money">{{ produto.preco | currency }}</dd>
                 </div>
-                <div style="color: #666; font-size: 14px;">Receita Total Gerada</div>
-              </div>
-              <div
-                style="text-align: center; padding: 16px; background-color: #f5f5f5; border-radius: 8px;"
-              >
-                <div style="font-size: 32px; font-weight: 600; color: #556b2f;">
-                  {{ (estatisticas$ | async)?.comandasComProduto || 0 }}
+                <div>
+                  <dt>Estoque</dt>
+                  <dd class="info-value money" [class.estoque-zerado]="produto.estoque <= 0">
+                    @if (produto.estoque <= 0) {
+                      <lucide-icon aria-label="Sem estoque" name="triangle-alert" />
+                    }
+                    {{ produto.estoque }}
+                  </dd>
                 </div>
-                <div style="color: #666; font-size: 14px;">Comandas que Incluíram</div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>
+                    <span
+                      class="status-badge"
+                      [class.status-badge--success]="produto.ativo"
+                      [class.status-badge--danger]="!produto.ativo"
+                    >
+                      {{ produto.ativo ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Estatísticas do produto -->
+          <mat-card>
+            <mat-card-header class="card-header">
+              <mat-card-title>
+                <lucide-icon name="chart-line" />
+                Estatísticas de Vendas
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="stats-list">
+                <div class="stat-row">
+                  <span class="stat-row__label">Unidades vendidas</span>
+                  <span class="stat-row__value money">{{ estatisticas().totalVendido }}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-row__label">Receita gerada</span>
+                  <span class="stat-row__value stat-row__value--accent money">
+                    {{ estatisticas().receitaTotal | currency }}
+                  </span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-row__label">Comandas que incluíram</span>
+                  <span class="stat-row__value money">{{ estatisticas().comandasComProduto }}</span>
+                </div>
               </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
 
-      <!-- Ações do produto -->
-      <div style="margin-top: 24px; display: flex; gap: 16px;" *ngIf="produto$ | async as produto">
-        <button
-          mat-raised-button
-          style="background-color: #556b2f; color: white;"
-          (click)="editarProduto(produto)"
-        >
-          <mat-icon>edit</mat-icon>
-          Editar Produto
-        </button>
-        <button
-          mat-raised-button
-          [style.background-color]="produto.ativo ? '#ff5722' : '#4caf50'"
-          style="color: white;"
-          (click)="toggleStatus(produto)"
-        >
-          <mat-icon>{{ produto.ativo ? 'toggle_off' : 'toggle_on' }}</mat-icon>
-          {{ produto.ativo ? 'Desativar' : 'Ativar' }} Produto
-        </button>
-      </div>
-
-      <!-- Loading state -->
-      <div *ngIf="!(produto$ | async)" style="text-align: center; padding: 48px;">
-        <mat-icon
-          style="font-size: 64px; width: 64px; height: 64px; color: #ddd; animation: spin 1s linear infinite;"
-          >sync</mat-icon
-        >
-        <p style="margin: 16px 0; color: #666;">Carregando informações do produto...</p>
-      </div>
+        <!-- Ações do produto -->
+        <div class="detalhes-actions">
+          <button mat-raised-button (click)="editarProduto(produto)">
+            <lucide-icon name="pencil" />
+            Editar Produto
+          </button>
+          <button
+            mat-stroked-button
+            [class.btn-danger-outline]="produto.ativo"
+            (click)="toggleStatus(produto)"
+          >
+            <lucide-icon [name]="produto.ativo ? 'toggle-left' : 'toggle-right'" />
+            {{ produto.ativo ? 'Desativar' : 'Ativar' }} Produto
+          </button>
+        </div>
+      } @else {
+        <!-- Loading state -->
+        <div class="empty-state" role="status">
+          <lucide-icon class="spin" name="loader-circle" />
+          <p>Carregando informações do produto...</p>
+        </div>
+      }
     </div>
   `,
   styles: [
     `
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+      .detalhes-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
       }
 
-      mat-card {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      .card-header {
+        padding: var(--space-3) var(--space-4);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      mat-card-title lucide-icon {
+        color: var(--color-icon);
+      }
+
+      mat-card-content {
+        padding: var(--space-2) var(--space-4) var(--space-3) !important;
+      }
+
+      .info-list > div,
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-3);
+        min-height: 44px;
+        padding: var(--space-2) 0;
+      }
+
+      .info-list > div + div,
+      .stat-row + .stat-row {
+        border-top: 1px solid var(--color-border);
+      }
+
+      dt,
+      .stat-row__label {
+        font-size: var(--text-sm);
+        color: var(--color-text-muted);
+      }
+
+      .info-value {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        color: var(--color-text);
+        text-align: right;
+      }
+
+      .info-value--price {
+        font-size: var(--text-lg);
+        font-weight: var(--weight-semibold);
+      }
+
+      .estoque-zerado {
+        color: var(--color-danger);
+      }
+
+      .estoque-zerado lucide-icon {
+        color: var(--color-warning);
+      }
+
+      .stat-row__value {
+        font-size: var(--text-lg);
+        color: var(--color-text);
+      }
+
+      .stat-row__value--accent {
+        color: var(--color-accent);
+      }
+
+      .detalhes-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-top: var(--space-4);
+      }
+
+      @media (max-width: 768px) {
+        .detalhes-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .detalhes-actions button {
+          flex: 1 1 100%;
+        }
       }
     `,
   ],
 })
-export class ProdutoDetalhesComponent implements OnInit {
-  produto$!: Observable<Produto | null>;
-  estatisticas$!: Observable<Estatisticas>;
+export class ProdutoDetalhesComponent {
+  private router = inject(Router);
+  private produtoService = inject(ProdutoService);
+  private notificacao = inject(NotificacaoService);
+  private readonly produtoId = inject(ActivatedRoute).snapshot.paramMap.get('id');
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private produtoService: ProdutoService,
-    private comandaService: ComandaService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-  ) {}
+  readonly produto = signal<Produto | null>(null);
 
-  ngOnInit(): void {
-    const produtoId = this.route.snapshot.paramMap.get('id');
-    if (produtoId) {
-      // Observable do produto
-      this.produto$ = this.produtoService.obterProdutoPorId(produtoId).pipe(
+  // A listagem de comandas já traz os itens de cada uma
+  private readonly comandas = toSignal(
+    inject(ComandaService)
+      .obterComandasCompletas()
+      .pipe(
         catchError((error) => {
-          console.error('Erro ao carregar produto:', error);
-          this.snackBar.open('Erro ao carregar produto. Tente novamente.', 'Fechar', {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-          });
-          return of(null);
+          console.error('Erro ao carregar estatísticas:', error);
+          return of([] as Comanda[]);
         }),
-        shareReplay(1),
-      );
+      ),
+    { initialValue: [] },
+  );
 
-      // Observable das estatísticas baseado no produto
-      this.estatisticas$ = this.produto$.pipe(
-        switchMap((produto) => {
-          if (!produto) {
-            return of({ totalVendido: 0, receitaTotal: 0, comandasComProduto: 0 });
-          }
-          return this.carregarEstatisticas(produto);
-        }),
-        shareReplay(1),
-      );
-    }
-  }
+  readonly estatisticas = computed<Estatisticas>(() => {
+    const produto = this.produto();
+    const estatisticas: Estatisticas = { totalVendido: 0, receitaTotal: 0, comandasComProduto: 0 };
+    if (!produto) return estatisticas;
 
-  private carregarEstatisticas(produto: Produto): Observable<Estatisticas> {
-    return this.comandaService.obterComandasCompletas().pipe(
-      switchMap((comandas: Comanda[]) => {
-        if (comandas.length === 0) {
-          return of({ totalVendido: 0, receitaTotal: 0, comandasComProduto: 0 });
+    for (const comanda of this.comandas()) {
+      let temProduto = false;
+      for (const item of comanda.itens ?? []) {
+        // Priorizar matching por produtoId, fallback para nome
+        const isMatch = item.produtoId ? item.produtoId === produto.id : item.nome === produto.nome;
+        if (isMatch) {
+          estatisticas.totalVendido += item.quantidade;
+          estatisticas.receitaTotal += item.quantidade * item.valorUnitario;
+          temProduto = true;
         }
+      }
+      if (temProduto) {
+        estatisticas.comandasComProduto++;
+      }
+    }
+    return estatisticas;
+  });
 
-        // Criar array de observables para todas as comandas
-        const itensObservables = comandas.map((comanda) =>
-          this.comandaService.obterItensComanda(comanda.id).pipe(
-            map((itens) => ({ comanda, itens })),
-            catchError((error) => {
-              console.error(`Erro ao carregar itens da comanda ${comanda.id}:`, error);
-              return of({ comanda, itens: [] as ItemComanda[] });
-            }),
-          ),
-        );
-
-        // Usar forkJoin para aguardar todas as requisições
-        return forkJoin(itensObservables).pipe(
-          map((resultados) => {
-            let totalVendido = 0;
-            let receitaTotal = 0;
-            let comandasComProduto = 0;
-
-            resultados.forEach(({ comanda, itens }) => {
-              let temProduto = false;
-
-              itens.forEach((item: ItemComanda) => {
-                // Priorizar matching por produtoId, fallback para nome
-                const isMatch = item.produtoId
-                  ? item.produtoId === produto.id
-                  : item.nome === produto.nome;
-
-                if (isMatch) {
-                  totalVendido += item.quantidade;
-                  receitaTotal += item.quantidade * item.valorUnitario;
-                  temProduto = true;
-                }
-              });
-
-              if (temProduto) {
-                comandasComProduto++;
-              }
-            });
-
-            return { totalVendido, receitaTotal, comandasComProduto };
-          }),
-        );
-      }),
-      catchError((error) => {
-        console.error('Erro ao carregar estatísticas:', error);
-        return of({ totalVendido: 0, receitaTotal: 0, comandasComProduto: 0 });
-      }),
-    );
+  constructor() {
+    this.carregarProduto();
   }
 
   voltar(): void {
     this.router.navigate(['/admin/produtos']);
   }
 
-  formatarMoeda(valor: number): string {
-    return valor.toFixed(2).replace('.', ',');
-  }
-
   editarProduto(produto: Produto): void {
-    if (produto && produto.id) {
-      this.router.navigate(['/admin/produtos', produto.id, 'editar']);
-    }
+    this.router.navigate(['/admin/produtos', produto.id, 'editar']);
   }
 
   toggleStatus(produto: Produto): void {
-    if (!produto || !produto.id) return;
-
     const novoStatus = !produto.ativo;
     const acao = novoStatus ? 'ativar' : 'desativar';
+    const acaoCapitalizada = acao.charAt(0).toUpperCase() + acao.slice(1);
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: `${acao.charAt(0).toUpperCase()}${acao.slice(1)} Produto`,
+    this.notificacao
+      .confirmar({
+        title: `${acaoCapitalizada} Produto`,
         message: `Tem certeza que deseja ${acao} o produto "${produto.nome}"?`,
-        confirmText: acao.charAt(0).toUpperCase() + acao.slice(1),
+        confirmText: acaoCapitalizada,
         cancelText: 'Cancelar',
-      } as ConfirmDialogData,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result && produto.id) {
-        const produtoAtualizado = { ...produto, ativo: novoStatus };
-
-        this.produtoService.atualizarProduto(produto.id, produtoAtualizado).subscribe({
+      })
+      .subscribe((confirmado) => {
+        if (!confirmado) return;
+        this.produtoService.atualizarProduto(produto.id, { ativo: novoStatus }).subscribe({
           next: () => {
-            const mensagem = `Produto ${acao === 'ativar' ? 'ativado' : 'desativado'} com sucesso!`;
-            this.snackBar.open(mensagem, 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
-            // Recarregar página para atualizar dados
-            location.reload();
+            this.notificacao.sucesso(`Produto ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
+            this.carregarProduto();
           },
           error: (error) => {
             console.error(`Erro ao ${acao} produto:`, error);
-            this.snackBar.open(`Erro ao ${acao} produto. Tente novamente.`, 'Fechar', {
-              duration: 3000,
-              panelClass: ['error-snackbar'],
-            });
+            this.notificacao.erro(`Erro ao ${acao} produto. Tente novamente.`);
           },
         });
-      }
+      });
+  }
+
+  private carregarProduto(): void {
+    if (!this.produtoId) return;
+
+    this.produtoService.obterProdutoPorId(this.produtoId).subscribe({
+      next: (produto) => this.produto.set(produto),
+      error: (error) => {
+        console.error('Erro ao carregar produto:', error);
+        this.notificacao.erro('Erro ao carregar produto. Tente novamente.', { duracao: 5000 });
+      },
     });
   }
 }

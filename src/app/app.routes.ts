@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { AdminAuthGuard } from './core/guards/admin-auth.guard';
-import { SessionGuard } from './core/guards/session.guard';
+import { adminAuthGuard } from './core/guards/admin-auth.guard';
+import { sessionGuard } from './core/guards/session.guard';
 
 export const routes: Routes = [
   // Rota principal - Landing Page
@@ -18,13 +18,13 @@ export const routes: Routes = [
   },
   {
     path: 'cardapio',
-    canActivate: [SessionGuard],
+    canActivate: [sessionGuard],
     loadComponent: () =>
       import('./public/pages/cardapio/cardapio.component').then((m) => m.CardapioComponent),
   },
   {
     path: 'carrinho',
-    canActivate: [SessionGuard],
+    canActivate: [sessionGuard],
     loadComponent: () =>
       import('./public/pages/carrinho/carrinho.component').then((m) => m.CarrinhoComponent),
   },
@@ -48,7 +48,7 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import('./admin/layout/admin-layout.component').then((m) => m.AdminLayoutComponent),
-        canActivate: [AdminAuthGuard],
+        canActivate: [adminAuthGuard],
         children: [
           {
             path: 'dashboard',

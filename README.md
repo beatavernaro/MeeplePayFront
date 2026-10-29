@@ -99,7 +99,7 @@ App (Root)
 │   │   ├── ComandaService
 │   │   ├── ProdutoService
 │   │   ├── AdminAuthService
-│   │   └── LocalStorageService
+│   │   └── SessaoClienteService
 │   ├── Guards
 │   │   ├── AdminAuthGuard
 │   │   └── SessionGuard
@@ -186,7 +186,7 @@ src/
 │   │   └── services/
 │   │       ├── admin-auth.service.ts   # Autenticação admin
 │   │       ├── comanda.service.ts      # Operações com comandas
-│   │       ├── local-storage.service.ts # Gerenciamento de dados locais
+│   │       ├── sessao-cliente.service.ts # Sessão do cliente (token + comanda, 6h)
 │   │       └── produto.service.ts      # Operações com produtos
 │   │
 │   ├── public/                         # Módulo público (clientes)
@@ -474,34 +474,26 @@ public/                                 # Arquivos estáticos servidos
 
 ---
 
-### 4. **LocalStorageService**
-**Localização**: `core/services/local-storage.service.ts`
+### 4. **SessaoClienteService**
+**Localização**: `core/services/sessao-cliente.service.ts`
 
 **Responsabilidades**:
-- Gerenciar dados da sessão do cliente
-- Persistência de dados locais
-- Validação de expiração de dados
+- Guardar o token JWT e o id da comanda do cliente para recuperar a comanda ao recarregar a página
 
-**Métodos Principais**:
+**Métodos**:
 
 | Método | Parâmetros | Retorno | Descrição |
 |--------|-----------|----------|-----------|
-| `saveUserData()` | `userData: UserData` | `void` | Salva dados do usuário |
-| `getUserData()` | - | `UserData \| null` | Recupera dados do usuário |
-| `hasValidUserData()` | - | `boolean` | Verifica se có dados válidos |
-| `updateComandaId()` | `comandaId` | `void` | Atualiza ID da comanda |
-| `clearUserData()` | - | `void` | Limpa sessão |
-| `updateLastActivity()` | - | `void` | Atualiza timestamp da última atividade |
-| `getAccessToken()` | - | `string \| null` | Obtém token JWT do usuário |
-| `saveAccessToken()` | `token: string` | `void` | Salva token JWT |
+| `getAccessToken()` | - | `string \| null` | Token atual do cliente |
+| `getComandaId()` | - | `string \| null` | Id da comanda da sessão |
+| `iniciar()` | `accessToken, comandaId` | `void` | Salva a sessão (válida por 6 horas) |
+| `limpar()` | - | `void` | Remove a sessão |
 
 **Armazenamento**:
-- Utiliza `sessionStorage` (não persiste entre abas/fechamento)
-- Chave padrão: `comanda_virtual_user_data`
-
-**Expiração**:
-- Dados expiram automaticamente após 24 horas
-- Validação automática na recuperação de dados
+- `localStorage`, chave `meeplepay_sessao_cliente`: `{ accessToken, comandaId, expiraEm }`
+- Expira 6 horas depois de o cliente entrar; sessão expirada ou ilegível é apagada
+- Só serve para recuperar a comanda: os dados da comanda sempre vêm do backend, e a tela inicial sempre consulta pelo celular digitado
+- A expiração do token (24h) é validada pela API; um 401 leva o cliente de volta para `/start`
 
 **Dados Armazenados** (UserData):
 ```typescript
@@ -678,13 +670,13 @@ O sistema implementa dois níveis distintos de autenticação:
 
 #### 1. **Autenticação de Cliente (Session)**
 - **Tipo**: JWT (JSON Web Token)
-- **Armazenamento**: `sessionStorage` (LocalStorageService)
-- **Duração**: Sessão do navegador (até 24 horas)
+- **Armazenamento**: `localStorage` com token e id da comanda (SessaoClienteService)
+- **Duração**: 6 horas (o token expira em 24 horas na API); recarregar a página recupera a comanda
 - **Fluxo**:
-  1. Cliente insere nome e celular na tela de start
-  2. Sistema cria/busca comanda na API
-  3. API retorna JWT único para essa comanda
-  4. Token salvo localmente
+  1. Cliente insere nome e celular na tela de start ("Acessar Comanda")
+  2. `POST /api/comandas/reconectar`: se houver comanda aberta para o celular, ela é recuperada (com o nome salvo nela)
+  3. Se a API responder 404, `POST /api/comandas` cria uma nova
+  4. A API retorna um JWT único para essa comanda, salvo por 6 horas junto com o id da comanda
   5. Usado em requisições para produtos, itens, etc.
 
 #### 2. **Autenticação Admin (Admin JWT)**
@@ -761,27 +753,27 @@ Interceptor HTTP que:
 
 ## Fluxo de Dados
 
-### Fluxo de Criação de Comanda (Cliente)
+### Fluxo de Acesso à Comanda (Cliente)
 
 ```
 Start Component
     ↓ (input: nome, celular)
-ComandaService.criarComanda()
+ComandaService.acessarComanda()
     ↓
-AuthInterceptor (injeta token público)
+API Backend POST /api/comandas/reconectar
+    ↓ 200: comanda aberta do celular   ↓ 404: nenhuma comanda aberta
+    ↓                                  API Backend POST /api/comandas
     ↓
-API Backend POST /api/comandas
-    ↓
-Retorna: { comanda, accessToken, message }
+Retorna: { comanda, accessToken }
     ↓
 ComandaService:
-  - Salva comanda em BehaviorSubject
-  - LocalStorageService.saveAccessToken()
-  - LocalStorageService.saveUserData()
+  - Guarda a comanda no estado (signal)
+  - SessaoClienteService.iniciar(token, comandaId)
     ↓
 Start Component:
+  - Mostra "Comanda #N recuperada/criada"
   - Navega para /cardapio
-  - SessionGuard valida dados locais
+  - SessionGuard exige comanda carregada e consulta o status na API
     ↓
 Cardápio Component carrega produtos
 ```
@@ -986,11 +978,8 @@ Erro → Exibe mensagem de erro
 
 #### A. Validação de Sessão
 - SessionGuard verifica:
-  - Existência de dados do usuário
-  - Validade dos dados (até 24h)
-  - Token JWT presente
-- LocalStorageService atualiza timestamp automaticamente
-- Sessão expira automaticamente
+  - Sessão do cliente: comanda carregada nesta página ou sessão salva há menos de 6h (senão, volta para /start)
+  - Status atual da comanda na API, que também recupera a comanda após recarregar a página (encerrada ou paga vai para /encerrada)
 
 #### B. Tratamento de Erros
 - Erros HTTP tratados globalmente pelo interceptor
@@ -1011,26 +1000,22 @@ Erro → Exibe mensagem de erro
 
 ## Armazenamento de Dados
 
-### SessionStorage (Dados do Cliente)
-**Chave**: `comanda_virtual_user_data`
+### LocalStorage (Sessão do Cliente)
+**Chave**: `meeplepay_sessao_cliente`
 
 **Dados Armazenados**:
 ```json
 {
-  "nomeCliente": "João Silva",
-  "celular": "11999999999",
-  "comandaId": "abc123",
   "accessToken": "eyJhbGc...",
-  "tokenExpiration": "2026-03-03T14:30:00Z",
-  "lastActivity": "2026-03-02T14:30:00Z"
+  "comandaId": "abc123",
+  "expiraEm": 1772462400000
 }
 ```
 
 **Características**:
-- Limpo ao fechar navegador/aba
-- Válido por 24 horas
-- Atualiza timestamp em qualquer atividade
-- Necessário para acessar cardápio e carrinho
+- Válida por 6 horas a partir da entrada na comanda
+- Permite recarregar a página sem perder a comanda (os dados são buscados de novo no backend)
+- Limpa ao iniciar uma nova comanda, ao acessar outra pelo celular ou após 401/403
 
 ### LocalStorage (Dados do Admin)
 **Chave**: `adminToken`
@@ -1234,7 +1219,7 @@ describe('App Component', () => {
 - JWT para autenticação
 - HTTPS obrigatório em produção
 - CORS configurado no backend
-- SessionStorage para dados sensíveis (não persiste)
+- Sessão do cliente expira em 6 horas (só token e id da comanda)
 - Tokens expiram automaticamente
 
 ### Escalabilidade
@@ -1282,11 +1267,11 @@ describe('App Component', () => {
 │  │  └─────────────────┘  └─────────────────────────┘   │    │
 │  │                                                       │    │
 │  │  ┌──────────────────────┐  ┌──────────────────────┐ │    │
-│  │  │ AdminAuthService     │  │ LocalStorageService  │ │    │
+│  │  │ AdminAuthService     │  │ SessaoClienteService │ │    │
 │  │  ├──────────────────────┤  ├──────────────────────┤ │    │
-│  │  │ - login              │  │ - saveUserData       │ │    │
-│  │  │ - logout             │  │ - getUserData        │ │    │
-│  │  │ - isAuthenticated    │  │ - clearUserData      │ │    │
+│  │  │ - login              │  │ - iniciar            │ │    │
+│  │  │ - logout             │  │ - getAccessToken     │ │    │
+│  │  │ - isAuthenticated    │  │ - limpar             │ │    │
 │  │  └──────────────────────┘  └──────────────────────┘ │    │
 │  └─────────────────────────────────────────────────────┘    │
 │          ▲                                                    │
@@ -1322,7 +1307,7 @@ O **Comanda Virtual** é uma aplicação web moderna desenvolvida em **Angular 2
 ✅ **Reatividade completa** utilizando RxJS Observables
 ✅ **Lazy loading** de rotas para performance otimizada
 ✅ **Tratamento robusto** de erros e edge cases
-✅ **Armazenamento inteligente** com SessionStorage e LocalStorage
+✅ **Sessão do cliente de 6 horas** e token do admin em LocalStorage
 ✅ **Experiência mobile-first** com Material Design
 
 A plataforma está pronta para produção e integrada com API backend robusta, oferecendo uma solução completa para modernizar a experiência de atendimento.

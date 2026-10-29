@@ -1,9 +1,9 @@
-<div class="login-container">
+<main class="login-container">
   <div class="login-wrapper">
-    <mat-card class="login-card">
+    <mat-card class="login-card glass">
       <mat-card-header>
+        <img src="/logo.png" alt="" class="login-logo" width="40" height="40" />
         <mat-card-title>
-          <mat-icon>admin_panel_settings</mat-icon>
           Área Administrativa
         </mat-card-title>
         <mat-card-subtitle>Luderia Digital - Painel de Controle</mat-card-subtitle>
@@ -13,11 +13,9 @@
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email</mat-label>
-            <input matInput formControlName="email" type="email" placeholder="admin@luderia.com" />
-            <mat-icon matSuffix>email</mat-icon>
-            @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-              <mat-error>{{ getErrorMessage('email') }}</mat-error>
-            }
+            <input matInput formControlName="email" type="email" placeholder="admin@luderia.com" autocomplete="username" />
+            <lucide-icon matSuffix name="mail" />
+            <mat-error>{{ getErrorMessage('email') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
@@ -25,15 +23,21 @@
             <input
               matInput
               formControlName="password"
-              [type]="hidePassword ? 'password' : 'text'"
+              [type]="hidePassword() ? 'password' : 'text'"
               placeholder="Digite sua senha"
+              autocomplete="current-password"
             />
-            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              [attr.aria-label]="hidePassword() ? 'Mostrar senha' : 'Ocultar senha'"
+              [attr.aria-pressed]="!hidePassword()"
+              (click)="hidePassword.set(!hidePassword())"
+            >
+              <lucide-icon [name]="hidePassword() ? 'eye-off' : 'eye'" />
             </button>
-            @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-              <mat-error>{{ getErrorMessage('password') }}</mat-error>
-            }
+            <mat-error>{{ getErrorMessage('password') }}</mat-error>
           </mat-form-field>
         </form>
       </mat-card-content>
@@ -41,24 +45,19 @@
       <mat-card-actions>
         <button
           mat-raised-button
-          color="primary"
-          class="full-width login-button"
+          class="btn-block btn-lg login-button"
           (click)="onSubmit()"
-          [disabled]="loading"
+          [disabled]="loading()"
         >
-          @if (loading) {
-            <ng-container>
-              <mat-icon>hourglass_empty</mat-icon>
-              Entrando...
-            </ng-container>
+          @if (loading()) {
+            <lucide-icon class="spin" name="loader-circle" />
+            Entrando...
           } @else {
-            <ng-container>
-              <mat-icon>login</mat-icon>
-              Entrar
-            </ng-container>
+            <lucide-icon name="log-in" />
+            Entrar
           }
         </button>
       </mat-card-actions>
     </mat-card>
   </div>
-</div>
+</main>

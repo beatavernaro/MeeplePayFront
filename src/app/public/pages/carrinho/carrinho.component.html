@@ -1,97 +1,89 @@
 <app-header
   titulo="Itens da Comanda"
+  [numeroComanda]="comandaAtual()?.numeroComanda"
   [showSearchField]="false"
->
-</app-header>
+/>
 
-<app-footer-nav
-  currentRoute="carrinho"
-  [totalItens]="totalItens"
-  (navClick)="onNavClick($event)"
->
-</app-footer-nav>
+<app-footer-nav currentRoute="carrinho" [totalItens]="totalItens()" (navClick)="onNavClick($event)" />
 
-<div class="carrinho-container">
-  @if (itensComanda$ | async; as itens) {
-    @if (itens.length === 0) {
-      <div class="empty-cart">
-        <mat-icon class="empty-icon">shopping_cart</mat-icon>
-        <h3>Sua comanda está vazia</h3>
-        <p>Adicione itens do cardápio para continuar</p>
-        <button mat-raised-button color="primary" (click)="voltarCardapio()">
-          <mat-icon>restaurant_menu</mat-icon>
-          Ver Cardápio
-        </button>
-      </div>
-    } @else {
-      <mat-card class="itens-card">
-        <mat-card-header>
-          <mat-card-title>Itens da Comanda</mat-card-title>
-        </mat-card-header>
+<main class="carrinho-container">
+  @if (itens().length === 0) {
+    <div class="surface-card empty-state empty-cart">
+      <lucide-icon name="shopping-bag" />
+      <h3>Sua comanda está vazia</h3>
+      <p>Adicione itens do cardápio para continuar</p>
+      <button mat-raised-button (click)="voltarCardapio()">
+        <lucide-icon name="book-open" />
+        Ver Cardápio
+      </button>
+    </div>
+  } @else {
+    <section class="surface-card itens-card" aria-labelledby="itens-title">
+      <header class="itens-card__header">
+        <h2 id="itens-title">Itens da Comanda</h2>
+        <span class="itens-card__count">{{ itens().length }} {{ itens().length === 1 ? 'item' : 'itens' }}</span>
+      </header>
 
-        <mat-card-content>
-          <mat-list>
-            @for (item of itens; track item.id) {
-              <mat-list-item class="item-line">
-                <div class="item-content">
-                  <div class="item-header">
-                    <span class="item-nome">{{ item.nome }}</span>
-                    <span class="item-preco-unitario">{{ formatarPreco(item.valorUnitario) }}</span>
-                  </div>
-
-                  <div class="item-footer">
-                    <div class="quantity-controls">
-                      <button
-                        mat-icon-button
-                        (click)="diminuirQuantidade(item)"
-                        class="quantity-btn decrease"
-                      >
-                        <mat-icon>remove</mat-icon>
-                      </button>
-
-                      <span class="quantity-display">{{ item.quantidade }}</span>
-
-                      <button
-                        mat-icon-button
-                        (click)="aumentarQuantidade(item)"
-                        class="quantity-btn increase"
-                      >
-                        <mat-icon>add</mat-icon>
-                      </button>
-                    </div>
-
-                    <span class="item-total">{{ formatarPreco(calcularSubtotal(item)) }}</span>
-                  </div>
-                </div>
-              </mat-list-item>
-              <mat-divider></mat-divider>
-            }
-          </mat-list>
-        </mat-card-content>
-      </mat-card>
-
-      @if (comandaAtual$ | async; as comanda) {
-        <mat-card class="total-card">
-          <mat-card-content>
-            <div class="total-row">
-              <span class="total-label">Total da Comanda:</span>
-              <span class="total-value">{{ formatarPreco(comanda.valorTotal) }}</span>
+      <ul class="item-list">
+        @for (item of itens(); track item.id) {
+          <li class="item-line">
+            <div class="item-header">
+              <span class="item-nome">{{ item.nome }}</span>
+              <span class="item-preco-unitario">{{ item.valorUnitario | currency }} un.</span>
             </div>
-          </mat-card-content>
-        </mat-card>
-      }
 
-      <div class="actions">
-        <button mat-stroked-button class="action-button" (click)="voltarCardapio()">
-          <mat-icon>add</mat-icon>
-          Adicionar Mais Itens
-        </button>
+            <div class="item-footer">
+              <div class="stepper" role="group" [attr.aria-label]="'Quantidade de ' + item.nome">
+                <button
+                  mat-icon-button
+                  class="decrease"
+                  aria-label="Diminuir quantidade"
+                  (click)="diminuirQuantidade(item)"
+                >
+                  <lucide-icon name="minus" />
+                </button>
 
-        <button mat-raised-button style="background-color: #4caf50; color: white;" class="action-button" (click)="encerrarComanda()">
-          <mat-icon>check</mat-icon>
-          Finalizar Comanda
-        </button>
-      </div>
+                <span class="stepper__value" aria-live="polite">{{ item.quantidade }}</span>
+
+                <button
+                  mat-icon-button
+                  class="increase"
+                  aria-label="Aumentar quantidade"
+                  (click)="aumentarQuantidade(item)"
+                >
+                  <lucide-icon name="plus" />
+                </button>
+              </div>
+
+              <span class="item-total money">{{ item.valorUnitario * item.quantidade | currency }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    @if (comandaAtual(); as comanda) {
+      <section class="total-card" aria-label="Total da comanda">
+        <span class="total-label">Total da Comanda</span>
+        <span class="total-value money">{{ comanda.valorTotal | currency }}</span>
+      </section>
     }
+
+    <div class="actions">
+      <button mat-stroked-button class="btn-lg" (click)="voltarCardapio()">
+        <lucide-icon name="plus" />
+        Adicionar Mais Itens
+      </button>
+
+      <button mat-raised-button class="btn-lg finalizar-button" (click)="encerrarComanda()" [disabled]="encerrando()">
+        @if (encerrando()) {
+          <lucide-icon class="spin" name="loader-circle" />
+          Encerrando...
+        } @else {
+          <lucide-icon name="check" />
+          Encerrar Comanda
+        }
+      </button>
+    </div>
   }
-</div>
+</main>

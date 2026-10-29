@@ -1,79 +1,99 @@
-import { Component } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { map } from 'rxjs/operators';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { LucideAngularModule } from 'lucide-angular';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 
 @Component({
   selector: 'app-admin-layout',
-  standalone: true,
   imports: [
-    CommonModule,
     RouterOutlet,
-    MatToolbarModule,
+    RouterLink,
+    RouterLinkActive,
     MatSidenavModule,
     MatListModule,
     MatButtonModule,
-    MatIconModule,
+    LucideAngularModule,
   ],
   template: `
     <mat-sidenav-container class="admin-container">
-      <mat-sidenav opened="true" mode="side" class="admin-sidenav" disableClose="true">
+      <mat-sidenav
+        #sidenav
+        class="admin-sidenav"
+        [mode]="isHandset() ? 'over' : 'side'"
+        [opened]="!isHandset()"
+        [disableClose]="!isHandset()"
+      >
         <div class="sidenav-header">
-          <img src="/logo.png" alt="Logo" class="logo-image" />
-          <h3>Angatu Admin</h3>
+          <img src="/logo.png" alt="" class="logo-image" width="28" height="28" />
+          <span class="sidenav-brand__name">Angatu Admin</span>
         </div>
 
-        <mat-nav-list>
-          <mat-list-item
-            *ngFor="let item of menuItems"
-            (click)="navigateTo(item.route)"
-            class="menu-item"
-            [class.active]="isActive(item.route)"
-          >
-            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-            <span matListItemTitle>{{ item.label }}</span>
-          </mat-list-item>
+        <nav class="sidenav-nav" aria-label="Menu administrativo">
+          <mat-nav-list>
+            @for (item of menuItems; track item.route) {
+              <a
+                mat-list-item
+                class="menu-item"
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="isHandset() && sidenav.close()"
+              >
+                <lucide-icon matListItemIcon [name]="item.icon" [size]="20" />
+                <span matListItemTitle>{{ item.label }}</span>
+              </a>
+            }
+          </mat-nav-list>
+        </nav>
 
-          <mat-divider></mat-divider>
-
-          <mat-list-item (click)="logout()" class="menu-item logout-item">
-            <mat-icon matListItemIcon>exit_to_app</mat-icon>
-            <span matListItemTitle>Sair</span>
-          </mat-list-item>
-        </mat-nav-list>
+        <div class="sidenav-footer">
+          <button type="button" class="logout-item" (click)="logout()">
+            <lucide-icon name="log-out" [size]="20" />
+            <span>Sair</span>
+          </button>
+        </div>
       </mat-sidenav>
 
       <mat-sidenav-content class="admin-content">
-        <router-outlet></router-outlet>
+        @if (isHandset()) {
+          <header class="mobile-topbar">
+            <button mat-icon-button aria-label="Abrir menu" (click)="sidenav.open()">
+              <lucide-icon name="menu" [size]="20" />
+            </button>
+            <span class="mobile-topbar__title">Angatu Admin</span>
+          </header>
+        }
+        <main class="admin-main">
+          <router-outlet />
+        </main>
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
   styleUrl: './admin-layout.component.scss',
 })
 export class AdminLayoutComponent {
-  menuItems = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/admin/dashboard' },
-    { icon: 'restaurant_menu', label: 'Comandas', route: '/admin/comandas' },
-    { icon: 'inventory', label: 'Produtos', route: '/admin/produtos' },
+  private adminAuthService = inject(AdminAuthService);
+  private router = inject(Router);
+
+  readonly menuItems = [
+    { icon: 'layout-dashboard', label: 'Dashboard', route: '/admin/dashboard' },
+    { icon: 'receipt-text', label: 'Comandas', route: '/admin/comandas' },
+    { icon: 'package', label: 'Produtos', route: '/admin/produtos' },
   ];
 
-  constructor(
-    private adminAuthService: AdminAuthService,
-    private router: Router,
-  ) {}
-
-  navigateTo(route: string): void {
-    this.router.navigate([route]);
-  }
-
-  isActive(route: string): boolean {
-    return this.router.url.startsWith(route);
-  }
+  // Below 1024px the sidebar becomes an overlay drawer
+  readonly isHandset = toSignal(
+    inject(BreakpointObserver)
+      .observe('(max-width: 1023.98px)')
+      .pipe(map((result) => result.matches)),
+    { initialValue: false },
+  );
 
   logout(): void {
     this.adminAuthService.logout();

@@ -1,79 +1,120 @@
-<div class="encerrada-container">
-  @if (comandaAtual$ | async; as comanda) {
-    <div class="success-header">
-      <mat-icon class="success-icon">check_circle</mat-icon>
-      <h2>Comanda Finalizada!</h2>
-      <p>Obrigado por utilizar nosso serviço</p>
-    </div>
+<main class="encerrada-container">
+  <div class="encerrada-content">
+    @if (comandaAtual(); as comanda) {
+      <div class="success-header">
+        <span class="status-icon" [class.status-icon--paga]="comanda.status === 'PAGA'">
+          <lucide-icon [name]="comanda.status === 'PAGA' ? 'circle-check' : 'lock'" [size]="28" />
+        </span>
+        <h1>{{ comanda.status === 'PAGA' ? 'Comanda Paga' : 'Comanda Encerrada' }}</h1>
+        <p>
+          {{ comanda.status === 'PAGA' ? 'Obrigado por utilizar nosso serviço' : 'Agora é só fazer o pagamento' }}
+        </p>
+      </div>
 
-    <mat-card class="resumo-card">
-      <mat-card-header>
-        <mat-card-title>Resumo da Comanda</mat-card-title>
-      </mat-card-header>
-
-      <mat-card-content>
-        <div class="info-row">
-          <span class="label">Cliente:</span>
-          <span class="value">{{ comanda.nomeCliente }}</span>
-        </div>
-
-        <div class="info-row">
-          <span class="label">Celular:</span>
-          <span class="value">{{ comanda.celular }}</span>
-        </div>
-
-        <div class="total-row">
-          <span class="total-label">Total a Pagar:</span>
-          <span class="total-value">{{ formatarPreco(comanda.valorTotal) }}</span>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="pix-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>qr_code</mat-icon>
-          Dados para Pagamento - PIX
-        </mat-card-title>
-      </mat-card-header>
-
-      <mat-card-content>
-        <div class="pix-info">
-          <div class="pix-row">
-            <span class="pix-label">Chave PIX:</span>
-            <div class="pix-value-container">
-              <span class="pix-value">{{ pixDados.chave }}</span>
-              <button mat-icon-button (click)="copiarChavePix()" class="copy-button">
-                <mat-icon>content_copy</mat-icon>
-              </button>
-            </div>
-          </div>
-
-          <div class="pix-row">
-            <span class="pix-label">Favorecido:</span>
-            <span class="pix-value">{{ pixDados.favorecido }}</span>
-          </div>
-          <div class="pix-row">
-            <span class="pix-label">Valor:</span>
-            <span class="pix-value highlight">{{ formatarPreco(comanda.valorTotal) }}</span>
-          </div>
-        </div>
-
-        <div class="payment-notice">
-          <mat-icon>info</mat-icon>
+      @if (comanda.status === 'PAGA') {
+        <div class="closed-notice" role="status">
+          <lucide-icon name="headset" />
           <p>
-            <strong>Importante:</strong> O pagamento deve ser realizado diretamente no caixa ou
-            através do PIX acima. Apresente esta tela para confirmação do pagamento.
+            Esta comanda foi paga e não aceita mais pedidos.
+            <strong>Entre em contato com o caixa.</strong>
           </p>
         </div>
-      </mat-card-content>
-    </mat-card>
+      } @else {
+        <section class="surface-card pix-card" aria-labelledby="pix-title">
+          <h2 id="pix-title">Pagamento via Pix</h2>
 
-    <div class="actions">
-      <button mat-raised-button color="primary" class="nova-comanda-button" (click)="novaComanda()">
-        <mat-icon>refresh</mat-icon>
-        Iniciar Nova Comanda
-      </button>
-    </div>
-  }
-</div>
+          <div class="pix-valor">
+            <span class="pix-valor__label">Valor a pagar</span>
+            <span class="pix-valor__total money">{{ comanda.valorTotal | currency }}</span>
+          </div>
+
+          @if (pix.chave) {
+            <div class="pix-chave">
+              <span class="pix-chave__label">Chave Pix</span>
+              <div class="pix-chave__linha">
+                <code class="pix-chave__valor">{{ pix.chave }}</code>
+                <button mat-stroked-button (click)="copiarChavePix()">
+                  <lucide-icon [name]="chaveCopiada() ? 'check' : 'copy'" />
+                  {{ chaveCopiada() ? 'Copiada' : 'Copiar' }}
+                </button>
+              </div>
+              @if (pix.favorecido) {
+                <span class="pix-chave__favorecido">Favorecido: {{ pix.favorecido }}</span>
+              }
+            </div>
+          }
+
+          <ol class="pix-passos">
+            @if (pix.chave) {
+              <li>Faça um Pix com o valor total para a chave acima.</li>
+            } @else {
+              <li>Peça a chave Pix no caixa e faça o pagamento do valor total.</li>
+            }
+            <li><strong>Apresente o comprovante no caixa</strong> para liberar sua comanda.</li>
+          </ol>
+        </section>
+
+        <div class="closed-notice" role="note">
+          <lucide-icon name="credit-card" />
+          <p>
+            Prefere pagar com cartão?
+            <strong>Dirija-se ao caixa.</strong>
+          </p>
+        </div>
+      }
+
+      <mat-card class="resumo-card">
+        <mat-card-header>
+          <mat-card-title>Resumo da Comanda #{{ comanda.numeroComanda }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <dl class="info-list">
+            <div class="info-row">
+              <dt class="label">Cliente</dt>
+              <dd class="value">{{ comanda.nomeCliente }}</dd>
+            </div>
+
+            <div class="info-row">
+              <dt class="label">Celular</dt>
+              <dd class="value">{{ comanda.celular }}</dd>
+            </div>
+          </dl>
+
+          <div class="total-row">
+            <span class="total-label">{{ comanda.status === 'PAGA' ? 'Total' : 'Total a Pagar' }}</span>
+            <span class="total-value money">{{ comanda.valorTotal | currency }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <div class="actions">
+        <button mat-stroked-button class="btn-lg nova-comanda-button" (click)="novaComanda()">
+          <lucide-icon name="refresh-cw" />
+          Iniciar Nova Comanda
+        </button>
+      </div>
+    } @else {
+      <div class="success-header">
+        <span class="status-icon">
+          <lucide-icon name="lock" [size]="28" />
+        </span>
+        <h1>Comanda Encerrada</h1>
+      </div>
+
+      <div class="closed-notice" role="status">
+        <lucide-icon name="headset" />
+        <p>
+          Esta comanda não está mais disponível. <strong>Entre em contato com o caixa.</strong>
+        </p>
+      </div>
+
+      <div class="actions">
+        <button mat-stroked-button class="btn-lg nova-comanda-button" (click)="novaComanda()">
+          <lucide-icon name="refresh-cw" />
+          Iniciar Nova Comanda
+        </button>
+      </div>
+    }
+  </div>
+</main>

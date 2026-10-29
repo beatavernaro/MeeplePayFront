@@ -1,80 +1,47 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
+import { Clipboard } from '@angular/cdk/clipboard';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Observable } from 'rxjs';
-import { Comanda } from '../../../shared/models/comanda.model';
+import { LucideAngularModule } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 import { ComandaService } from '../../../core/services/comanda.service';
+import { NotificacaoService } from '../../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-encerrada',
-  standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatSnackBarModule],
+  imports: [CurrencyPipe, MatCardModule, MatButtonModule, LucideAngularModule],
   templateUrl: './encerrada.component.html',
   styleUrl: './encerrada.component.scss',
 })
-export class EncerradaComponent implements OnInit {
-  comandaAtual$!: Observable<Comanda | null>;
+export class EncerradaComponent {
+  private comandaService = inject(ComandaService);
+  private clipboard = inject(Clipboard);
+  private notificacao = inject(NotificacaoService);
+  private router = inject(Router);
 
-  // Dados de Pix mockados - em um ambiente real, viriam da configuração
-  pixDados = {
-    chave: 'angatujogos@gmail.com',
-    banco: 'Bradesco S.A.',
-    favorecido: 'Gustavo Moraes Ramos Valladao'
-  };
+  readonly comandaAtual = this.comandaService.comandaAtual;
+  readonly pix = environment.pix;
+  readonly chaveCopiada = signal(false);
 
-  constructor(
-    private comandaService: ComandaService,
-    private router: Router,
-    private snackBar: MatSnackBar,
-  ) {}
+  constructor() {
+    // Ao recarregar a página, recupera a comanda da sessão salva para mostrar o pagamento
+    this.comandaService.restaurarSessao().subscribe();
+  }
 
-  ngOnInit(): void {
-    this.comandaAtual$ = this.comandaService.comandaAtual$;
+  copiarChavePix(): void {
+    if (this.clipboard.copy(this.pix.chave)) {
+      this.chaveCopiada.set(true);
+      this.notificacao.sucesso('Chave Pix copiada!', { duracao: 2000 });
+    } else {
+      this.notificacao.erro('Não foi possível copiar. Selecione a chave e copie manualmente.');
+    }
   }
 
   novaComanda(): void {
     // Garantir que todos os dados da sessão anterior sejam limpos
     this.comandaService.limparSessaoComanda();
     this.router.navigate(['/start']);
-  }
-
-  formatarPreco(preco: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(preco);
-  }
-
-  formatarData(data: Date | string): string {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(data));
-  }
-
-  copiarChavePix(): void {
-    navigator.clipboard.writeText(this.pixDados.chave).then(() => {
-      this.snackBar.open('Chave PIX copiada com sucesso!', 'Fechar', {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top',
-        panelClass: ['snackbar-success'],
-      });
-    }).catch(() => {
-      this.snackBar.open('Erro ao copiar chave PIX', 'Fechar', {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top',
-        panelClass: ['snackbar-error'],
-      });
-    });
   }
 }

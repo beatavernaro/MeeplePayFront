@@ -1,127 +1,58 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AdminAuthService } from '../services/admin-auth.service';
-import { LocalStorageService } from '../services/local-storage.service';
+import { SessaoClienteService } from '../services/sessao-cliente.service';
 
+// Endpoints que sempre usam o token do admin
+const ADMIN_ENDPOINTS = ['/api/admin', '/api/auth'];
+
+/**
+ * Anexa o token correto a cada requisição:
+ * - admin: endpoints de admin/auth, ou qualquer requisição feita numa rota /admin;
+ * - cliente (JWT da comanda): todo o resto, exceto as consultas públicas de comanda.
+ * Também trata 401/403 redirecionando para o login correspondente.
+ */
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const adminAuthService = inject(AdminAuthService);
-  const localStorageService = inject(LocalStorageService);
+  const sessaoCliente = inject(SessaoClienteService);
   const router = inject(Router);
 
-  // Endpoints que requerem autenticação admin
-  const adminEndpoints = [
-    '/api/admin',
-    '/api/auth'
-  ];
-
-  // Endpoints que requerem token de usuário (JWT da comanda)
-  const userAuthEndpoints = [
-    '/api/produtos',
-    '/api/itens-comanda'
-  ];
-
-  // Endpoints completamente públicos (sem token)
-  const publicEndpoints = [
-    '/api/comandas/celular/',
-    '/api/comandas/' // POST criar comanda é público
-  ];
-
-  const isAdminEndpoint = adminEndpoints.some(endpoint => 
-    req.url.includes(endpoint)
-  );
-  
-  const isUserAuthEndpoint = userAuthEndpoints.some(endpoint => 
-    req.url.includes(endpoint)
-  );
-
-  const isPublicEndpoint = publicEndpoints.some(endpoint => 
-    req.url.includes(endpoint)
-  );
-
-  // Verificar se é GET de comanda por ID (público)
-  const isGetComandaById = req.method === 'GET' && req.url.match(/\/api\/comandas\/[^\/]+$/) && 
-    !req.url.includes('/itens');
-
-  // Verificar se estamos em rota de admin
   const isAdminRoute = router.url.includes('/admin');
+  const usaTokenAdmin = isAdminRoute || ADMIN_ENDPOINTS.some((e) => req.url.includes(e));
 
-  let authReq = req;
-
-  if (isAdminEndpoint) {
-    // Usar token admin
-    const adminToken = adminAuthService.getToken();
-    if (adminToken) {
-      authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      });
-    }
-  } else if (isAdminRoute) {
-    // Se estamos em uma rota de admin, usar token admin para todas as requisições do admin
-    const adminToken = adminAuthService.getToken();
-    if (adminToken) {
-      authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      });
-    }
-  } else if (isUserAuthEndpoint && !isPublicEndpoint) {
-    // Usar token de usuário
-    const userToken = localStorageService.getAccessToken();
-    if (userToken) {
-      authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-    }
-  } else if (req.method === 'PUT' && req.url.includes('/api/comandas/') && req.url.includes('/encerrar')) {
-    // Encerrar comanda requer token de usuário
-    const userToken = localStorageService.getAccessToken();
-    if (userToken) {
-      authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-    }
-  } else if (!isPublicEndpoint && !isGetComandaById) {
-    // Para outros endpoints que não são explicitamente públicos, tentar usar token de usuário
-    const userToken = localStorageService.getAccessToken();
-    if (userToken) {
-      authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-    }
+  let token: string | null = null;
+  if (usaTokenAdmin) {
+    token = adminAuthService.getToken();
+  } else if (!ehEndpointPublico(req)) {
+    token = sessaoCliente.getAccessToken();
   }
+
+  const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
-        if (isAdminRoute) {
-          // Token admin expirado
-          adminAuthService.logout();
-          router.navigate(['/admin/login']);
-        } else {
-          // Token de usuário expirado
-          localStorageService.clearUserData();
-          router.navigate(['/start']);
-        }
-      } else if (error.status === 403) {
-        // Tentativa de modificar comanda de outro cliente
-        console.warn('Tentativa de modificar comanda de outro cliente');
-        // Redirecionar para tela inicial para criar nova comanda
-        localStorageService.clearUserData();
+      if (isAdminRoute && (error.status === 401 || error.status === 403)) {
+        // Token admin expirado, com assinatura antiga ou sem permissão de admin
+        adminAuthService.logout();
+        router.navigate(['/admin/login']);
+      } else if (error.status === 401 || error.status === 403) {
+        // Token do cliente expirado, ou tentativa de modificar comanda de outro cliente
+        sessaoCliente.limpar();
         router.navigate(['/start']);
       }
       return throwError(() => error);
     }),
   );
 };
+
+/**
+ * Consultas de comanda por id/celular e reconexão são públicas.
+ * Encerrar a comanda exige o token do cliente.
+ */
+function ehEndpointPublico(req: HttpRequest<unknown>): boolean {
+  const encerrar = req.method === 'PUT' && req.url.includes('/encerrar');
+  return req.url.includes('/api/comandas/') && !encerrar;
+}

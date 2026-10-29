@@ -1,22 +1,7 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 import { AdminAuthService } from '../services/admin-auth.service';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AdminAuthGuard implements CanActivate {
-  constructor(
-    private adminAuthService: AdminAuthService,
-    private router: Router,
-  ) {}
-
-  canActivate(): boolean {
-    if (this.adminAuthService.isAuthenticated()) {
-      return true;
-    }
-
-    this.router.navigate(['/admin/login']);
-    return false;
-  }
-}
+// Sem token de admin válido (ausente, expirado ou malformado) volta para o login
+export const adminAuthGuard: CanActivateFn = () =>
+  inject(AdminAuthService).isAuthenticated() || inject(Router).createUrlTree(['/admin/login']);

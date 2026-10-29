@@ -1,126 +1,104 @@
-<div class="dashboard-container">
-  <div class="stats-grid">
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-content">
-          <div class="stat-icon">
-            <mat-icon>restaurant_menu</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>{{ totalAbertas$ | async }}</h3>
-            <p>Comandas Abertas</p>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__title">
+      <div>
+        <h1>Dashboard</h1>
+        <p class="page-header__subtitle">Visão geral das comandas da luderia</p>
+      </div>
+    </div>
+  </div>
 
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-content">
-          <div class="stat-icon completed">
-            <mat-icon>check_circle</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>{{ totalEncerradas$ | async }}</h3>
-            <p>Comandas Finalizadas</p>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+  <div class="metric-grid stats-grid">
+    <div class="metric-card">
+      <span class="metric-card__label">Comandas abertas</span>
+      <span class="metric-card__value">{{ comandasAbertas()?.length }}</span>
+      <lucide-icon class="metric-card__icon" name="receipt-text" />
+    </div>
 
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-content">
-          <div class="stat-icon revenue">
-            <mat-icon>attach_money</mat-icon>
-          </div>
-          <div class="stat-info">
-            <h3>{{ formatarPreco((totalReceita$ | async) || 0) }}</h3>
-            <p>Receita Total</p>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="metric-card">
+      <span class="metric-card__label">Comandas finalizadas</span>
+      <span class="metric-card__value">{{ comandasFinalizadas()?.length }}</span>
+      <lucide-icon class="metric-card__icon" name="circle-check" />
+    </div>
+
+    <div class="metric-card">
+      <span class="metric-card__label">Receita total</span>
+      <span class="metric-card__value metric-card__value--accent">{{ totalReceita() | currency }}</span>
+      <lucide-icon class="metric-card__icon" name="wallet" />
+    </div>
   </div>
 
   <div class="tables-grid">
-    <mat-card class="table-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>schedule</mat-icon>
-          Comandas em Andamento
-        </mat-card-title>
-        
-      </mat-card-header>
-      <mat-card-content>
-        @if (comandasAbertas$ | async; as comandasAbertas) {
+    <section class="surface-card list-card">
+      <header class="card-head">
+        <h2><lucide-icon name="clock" />Comandas em andamento</h2>
+        <button mat-button (click)="navigateTo('/admin/comandas')">
+          Ver todas
+          <lucide-icon name="chevron-right" [size]="16" />
+        </button>
+      </header>
+      <div class="list-card__body">
+        @if (comandasAbertas(); as comandasAbertas) {
           @if (comandasAbertas.length === 0) {
             <div class="empty-state">
-              <mat-icon>info</mat-icon>
+              <lucide-icon name="info" />
               <p>Nenhuma comanda em andamento</p>
             </div>
           } @else {
-            <div class="comandas-list">
+            <ul class="comandas-list">
               @for (comanda of comandasAbertas; track comanda.id) {
-                <div class="comanda-item">
-                  <div class="comanda-info">
-                    <h4>{{ comanda.nomeCliente }}</h4>
-                    <p>{{ formatarData(comanda.dataCriacao) }}</p>
-                  </div>
-                  <div class="comanda-total">
-                    <span class="total">{{ formatarPreco(comanda.valorTotal) }}</span>
-                  </div>
-                </div>
+                <li>
+                  <button type="button" class="comanda-item" (click)="visualizarComanda(comanda.id)">
+                    <span class="record-id">#{{ comanda.numeroComanda }}</span>
+                    <span class="comanda-info">
+                      <span class="comanda-info__name">{{ comanda.nomeCliente }}</span>
+                      <span class="comanda-info__date">{{ comanda.dataCriacao | date: 'dd/MM/yyyy, HH:mm' }}</span>
+                    </span>
+                    <span class="money">{{ comanda.valorTotal | currency }}</span>
+                    <lucide-icon class="chevron" name="chevron-right" [size]="16" />
+                  </button>
+                </li>
               }
-            </div>
+            </ul>
           }
         }
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-stroked-button (click)="navigateTo('/admin/comandas')">
-          <mat-icon>visibility</mat-icon>
-          Ver Todas
-        </button>
-      </mat-card-actions>
-    </mat-card>
+      </div>
+    </section>
 
-    <mat-card class="table-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>history</mat-icon>
-          Últimas Finalizadas
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        @if (comandasEncerradas$ | async; as comandasEncerradas) {
+    <section class="surface-card list-card">
+      <header class="card-head">
+        <h2><lucide-icon name="history" />Últimas finalizadas</h2>
+        <button mat-button (click)="navigateTo('/admin/comandas')">
+          Ver histórico
+          <lucide-icon name="chevron-right" [size]="16" />
+        </button>
+      </header>
+      <div class="list-card__body">
+        @if (comandasFinalizadas(); as comandasEncerradas) {
           @if (comandasEncerradas.length === 0) {
             <div class="empty-state">
-              <mat-icon>info</mat-icon>
+              <lucide-icon name="info" />
               <p>Nenhuma comanda finalizada</p>
             </div>
           } @else {
-            <div class="comandas-list">
+            <ul class="comandas-list">
               @for (comanda of comandasEncerradas.slice(-5); track comanda.id) {
-                <div class="comanda-item">
-                  <div class="comanda-info">
-                    <h4>{{ comanda.nomeCliente }}</h4>
-                    <p>{{ formatarData(comanda.dataEncerramento || comanda.dataCriacao) }}</p>
-                  </div>
-                  <div class="comanda-total">
-                    <span class="total completed">{{ formatarPreco(comanda.valorTotal) }}</span>
-                  </div>
-                </div>
+                <li>
+                  <button type="button" class="comanda-item" (click)="visualizarComanda(comanda.id)">
+                    <span class="record-id">#{{ comanda.numeroComanda }}</span>
+                    <span class="comanda-info">
+                      <span class="comanda-info__name">{{ comanda.nomeCliente }}</span>
+                      <span class="comanda-info__date">{{ comanda.dataEncerramento || comanda.dataCriacao | date: 'dd/MM/yyyy, HH:mm' }}</span>
+                    </span>
+                    <span class="money">{{ comanda.valorTotal | currency }}</span>
+                    <lucide-icon class="chevron" name="chevron-right" [size]="16" />
+                  </button>
+                </li>
               }
-            </div>
+            </ul>
           }
         }
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-stroked-button (click)="navigateTo('/admin/comandas')">
-          <mat-icon>visibility</mat-icon>
-          Ver Histórico
-        </button>
-      </mat-card-actions>
-    </mat-card>
+      </div>
+    </section>
   </div>
 </div>

@@ -1,381 +1,255 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CurrencyPipe, DatePipe, LowerCasePipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
-import { switchMap, map, catchError, shareReplay, startWith, take } from 'rxjs/operators';
-import { Comanda } from '../../../../shared/models/comanda.model';
-import { ItemComanda } from '../../../../shared/models/item-comanda.model';
-import { Produto } from '../../../../shared/models/produto.model';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { LucideAngularModule } from 'lucide-angular';
+import { Comanda, ItemComanda, Produto } from '../../../../shared/models/api.interfaces';
 import { ComandaService } from '../../../../core/services/comanda.service';
 import { ProdutoService } from '../../../../core/services/produto.service';
-import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { NotificacaoService } from '../../../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-comanda-detalhes',
-  standalone: true,
   imports: [
-    CommonModule,
+    CurrencyPipe,
+    DatePipe,
+    LowerCasePipe,
     ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
     MatProgressSpinnerModule,
     MatTableModule,
     MatTooltipModule,
     MatFormFieldModule,
     MatInputModule,
     MatAutocompleteModule,
+    LucideAngularModule,
   ],
   templateUrl: './comanda-detalhes.component.html',
   styleUrl: './comanda-detalhes.component.scss',
 })
-export class ComandaDetalhesComponent implements OnInit {
-  comanda$!: Observable<Comanda | null>;
-  itens$!: Observable<ItemComanda[]>;
-  produtos$!: Observable<Produto[]>;
-  produtosFiltrados$!: Observable<Produto[]>;
-  displayedColumns: string[] = ['quantidade', 'nome', 'valorUnitario', 'valorTotal'];
-  produtoBuscaControl = new FormControl<string | Produto>('');
-  produtoSelecionado: Produto | null = null;
-  adicionandoProduto = false;
-  private comandaId: string | null = null;
-  private itensRefresh$ = new BehaviorSubject<void>(undefined);
+export class ComandaDetalhesComponent {
+  private router = inject(Router);
+  private comandaService = inject(ComandaService);
+  private notificacao = inject(NotificacaoService);
+  private readonly comandaId: string = inject(ActivatedRoute).snapshot.params['id'];
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private comandaService: ComandaService,
-    private produtoService: ProdutoService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-  ) { }
+  readonly displayedColumns = ['quantidade', 'nome', 'valorUnitario', 'valorTotal'];
 
-  ngOnInit(): void {
-    const comandaId = this.route.snapshot.params['id'] as string | undefined;
-    if (comandaId) {
-      this.comandaId = comandaId;
-      this.carregarDadosComanda(comandaId);
-    }
+  // undefined = carregando, null = não encontrada
+  readonly comanda = signal<Comanda | null | undefined>(undefined);
+  readonly itens = signal<ItemComanda[] | undefined>(undefined);
 
-    this.inicializarBuscaProdutos();
-  }
+  readonly produtoBuscaControl = new FormControl<string | Produto>('', { nonNullable: true });
+  readonly produtoSelecionado = signal<Produto | null>(null);
+  readonly adicionandoProduto = signal(false);
 
-  private carregarDadosComanda(comandaId: string): void {
-    this.comanda$ = this.comandaService.buscarComanda(comandaId).pipe(
-      catchError((error) => {
-        console.error('Erro ao carregar comanda:', error);
-        this.snackBar.open('Erro ao carregar comanda', 'Fechar', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-        return of(null);
-      }),
-      shareReplay(1),
-    );
-
-    this.itens$ = this.itensRefresh$.pipe(
-      switchMap(() => this.comandaService.obterItensComanda(comandaId).pipe(
+  private readonly produtos = toSignal(
+    inject(ProdutoService)
+      .obterProdutosAtivos()
+      .pipe(
+        map((produtos) => [...produtos].sort((a, b) => a.nome.localeCompare(b.nome))),
         catchError((error) => {
-          console.error('Erro ao carregar itens:', error);
-          this.snackBar.open('Erro ao carregar itens da comanda', 'Fechar', {
-            duration: 3000,
-            panelClass: ['error-snackbar']
-          });
+          console.error('Erro ao carregar produtos:', error);
+          this.notificacao.erro('Erro ao carregar produtos para adicionar');
           return of([]);
         }),
-      )),
-      shareReplay(1),
-    );
-  }
+      ),
+  );
+  private readonly busca = toSignal(this.produtoBuscaControl.valueChanges, { initialValue: '' });
 
-  private inicializarBuscaProdutos(): void {
-    this.produtos$ = this.produtoService.obterProdutosAtivos().pipe(
-      map((produtos) => produtos.sort((a, b) => a.nome.localeCompare(b.nome))),
-      catchError((error) => {
-        console.error('Erro ao carregar produtos:', error);
-        this.snackBar.open('Erro ao carregar produtos para adicionar', 'Fechar', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-        return of([]);
-      }),
-      shareReplay(1),
-    );
+  readonly produtosFiltrados = computed(() => {
+    const produtos = this.produtos();
+    if (!produtos) return undefined;
 
-    this.produtosFiltrados$ = combineLatest([
-      this.produtos$,
-      this.produtoBuscaControl.valueChanges.pipe(startWith('')),
-    ]).pipe(
-      map(([produtos, valorBusca]) => {
-        const termoBusca = this.normalizarTexto(
-          typeof valorBusca === 'string' ? valorBusca : (valorBusca?.nome || ''),
-        );
-
-        if (!termoBusca) {
-          return produtos.slice(0, 10);
-        }
-
-        return produtos.filter((produto) =>
-          this.normalizarTexto(produto.nome).includes(termoBusca),
-        );
-      }),
-      shareReplay(1),
-    );
-  }
-
-  displayProduto(produto: Produto | string | null): string {
-    if (!produto) {
-      return '';
+    const valorBusca = this.busca();
+    const termo = normalizarTexto(typeof valorBusca === 'string' ? valorBusca : valorBusca.nome);
+    if (!termo) {
+      return produtos.slice(0, 10);
     }
-    return typeof produto === 'string' ? produto : produto.nome;
+    return produtos.filter((produto) => normalizarTexto(produto.nome).includes(termo));
+  });
+
+  constructor() {
+    this.carregarComanda();
+    this.carregarItens();
   }
+
+  displayProduto = (produto: Produto | string | null): string =>
+    !produto ? '' : typeof produto === 'string' ? produto : produto.nome;
 
   onProdutoDigitado(): void {
     if (typeof this.produtoBuscaControl.value === 'string') {
-      this.produtoSelecionado = null;
+      this.produtoSelecionado.set(null);
     }
-  }
-
-  onProdutoSelecionado(produto: Produto): void {
-    this.produtoSelecionado = produto;
   }
 
   adicionarProdutoSelecionado(comandaId: string): void {
-    if (!this.produtoSelecionado?.id || this.adicionandoProduto) {
-      this.snackBar.open('Selecione um produto para adicionar', 'OK', {
-        duration: 2000,
-        panelClass: ['error-snackbar']
-      });
+    const produto = this.produtoSelecionado();
+    if (!produto || this.adicionandoProduto()) {
+      this.notificacao.erro('Selecione um produto para adicionar', { acao: 'OK', duracao: 2000 });
       return;
     }
 
-    this.adicionandoProduto = true;
-    const produto = this.produtoSelecionado;
+    this.definirAdicionando(true);
 
-    this.itens$.pipe(
-      take(1),
-      switchMap((itens) => {
-        const itemExistente = itens.find(
-          item => item.produtoId === produto.id
-        );
+    // Produto já na comanda: soma 1 na quantidade do item existente
+    const itemExistente = this.itens()?.find((item) => item.produtoId === produto.id);
+    const operacao: Observable<unknown> = itemExistente
+      ? this.comandaService.atualizarQuantidadeItemAdmin(itemExistente.id, itemExistente.quantidade + 1)
+      : this.comandaService.adicionarItemAdmin(comandaId, produto.id, 1);
 
-        if (itemExistente?.id) {
-          return this.comandaService.atualizarQuantidadeItemAdmin(
-            itemExistente.id,
-            itemExistente.quantidade + 1,
-          );
-        }
-
-        return this.comandaService.adicionarItemAdmin(
-          comandaId,
-          produto.id!,
-          1
-        );
-      })
-    ).subscribe({
+    operacao.subscribe({
       next: () => {
-        this.adicionandoProduto = false;
-        this.produtoSelecionado = null;
+        this.definirAdicionando(false);
+        this.produtoSelecionado.set(null);
         this.produtoBuscaControl.setValue('');
-
-        this.snackBar.open(`${produto.nome} adicionado à comanda!`, 'OK', {
-          duration: 2000,
-          panelClass: ['success-snackbar']
-        });
-
-        this.itensRefresh$.next();
+        this.notificacao.sucesso(`${produto.nome} adicionado à comanda!`, { acao: 'OK', duracao: 2000 });
+        this.carregarItens();
       },
       error: () => {
-        this.adicionandoProduto = false;
-
-        this.snackBar.open('Erro ao adicionar produto na comanda', 'OK', {
-          duration: 2500,
-          panelClass: ['error-snackbar']
-        });
+        this.definirAdicionando(false);
+        this.notificacao.erro('Erro ao adicionar produto na comanda', { acao: 'OK', duracao: 2500 });
       },
     });
-  }
-
-  private normalizarTexto(texto: string): string {
-    return texto
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
   }
 
   encerrarComanda(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Encerrar Comanda',
-        message: 'Tem certeza que deseja encerrar esta comanda?',
-        confirmText: 'Encerrar',
-        cancelText: 'Cancelar',
-      },
-    });
-
-
-    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-      if (confirmed) {
-        this.comanda$.pipe(
-          switchMap((comanda) => {
-            if (!comanda) {
-              return of(null);
-            }
-            return this.comandaService.encerrarComandaAdmin(comanda.id);
-          }),
-          catchError((error) => {
-            console.error('Erro ao encerrar comanda:', error);
-            this.snackBar.open('Erro ao encerrar comanda', 'Fechar', {
-              duration: 3000,
-              panelClass: ['error-snackbar'],
-            });
-            return of(null);
-          }),
-        ).subscribe((result) => {
-          location.reload();
-          if (result !== null) {
-            this.snackBar.open('Comanda encerrada com sucesso!', 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
-          }
-        });
-      }
-    });
+    this.executarAcaoComanda(
+      { title: 'Encerrar Comanda', message: 'Tem certeza que deseja encerrar esta comanda?', confirmText: 'Encerrar' },
+      (id) => this.comandaService.encerrarComandaAdmin(id),
+      'Comanda encerrada com sucesso!',
+      'Erro ao encerrar comanda',
+    );
   }
 
   confirmarPagamento(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Confirmar Pagamento',
-        message: 'Tem certeza que deseja confirmar o pagamento?',
-        confirmText: 'Confirmar',
-        cancelText: 'Cancelar',
-      },
-    });
-
-
-    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-      if (confirmed) {
-        this.comanda$.pipe(
-          switchMap((comanda) => {
-            if (!comanda) {
-              return of(null);
-            }
-            return this.comandaService.confirmarPagamentoAdmin(comanda.id);
-          }),
-          catchError((error) => {
-            console.error('Erro ao confirmar pagamento:', error);
-            this.snackBar.open('Erro ao confirmar pagamento', 'Fechar', {
-              duration: 3000,
-              panelClass: ['error-snackbar'],
-            });
-            return of(null);
-          }),
-        ).subscribe((result) => {
-          location.reload();
-          if (result !== null) {
-            this.snackBar.open('Pagamento confirmado com sucesso!', 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
-          }
-        });
-      }
-    });
+    this.executarAcaoComanda(
+      { title: 'Confirmar Pagamento', message: 'Tem certeza que deseja confirmar o pagamento?', confirmText: 'Confirmar' },
+      (id) => this.comandaService.confirmarPagamentoAdmin(id),
+      'Pagamento confirmado com sucesso!',
+      'Erro ao confirmar pagamento',
+    );
   }
 
   voltar(): void {
     this.router.navigate(['/admin/comandas']);
   }
 
-  trackByItemId(index: number, item: ItemComanda): string {
-    return item.id || index.toString();
-  }
-
   aumentarQuantidade(item: ItemComanda): void {
-    if (item.id) {
-      this.comandaService.atualizarQuantidadeItemAdmin(item.id, item.quantidade + 1).subscribe({
-        next: () => {
-          this.snackBar.open('Quantidade atualizada!', 'OK', {
-            duration: 1500,
-            panelClass: ['success-snackbar']
-          });
-          this.itensRefresh$.next();
-        },
-        error: () => {
-          this.snackBar.open('Erro ao atualizar quantidade', 'OK', {
-            duration: 2000,
-            panelClass: ['error-snackbar']
-          });
-        },
-      });
-    }
+    this.alterarQuantidade(item, item.quantidade + 1);
   }
 
   diminuirQuantidade(item: ItemComanda): void {
-    if (item.id) {
-      if (item.quantidade === 1) {
-        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-          data: {
-            title: 'Remover Item',
-            message: 'Deseja remover este item da comanda?',
-            confirmText: 'Remover',
-            cancelText: 'Cancelar',
-          },
-        });
+    if (item.quantidade > 1) {
+      this.alterarQuantidade(item, item.quantidade - 1);
+      return;
+    }
 
-        dialogRef.afterClosed().subscribe((result) => {
-          if (result && item.id) {
-            this.comandaService.removerItemAdmin(item.id).subscribe({
-              next: () => {
-                this.snackBar.open('Item removido!', 'OK', {
-                  duration: 2000,
-                  panelClass: ['success-snackbar']
-                });
-                this.itensRefresh$.next();
-              },
-              error: () => {
-                this.snackBar.open('Erro ao remover item', 'OK', {
-                  duration: 3000,
-                  panelClass: ['error-snackbar']
-                });
-              },
-            });
-          }
-        });
-      } else {
-        this.comandaService.atualizarQuantidadeItemAdmin(item.id, item.quantidade - 1).subscribe({
+    this.notificacao
+      .confirmar({
+        title: 'Remover Item',
+        message: 'Deseja remover este item da comanda?',
+        confirmText: 'Remover',
+        cancelText: 'Cancelar',
+      })
+      .subscribe((confirmado) => {
+        if (!confirmado) return;
+        this.comandaService.removerItemAdmin(item.id).subscribe({
           next: () => {
-            this.snackBar.open('Quantidade atualizada!', 'OK', {
-              duration: 1500,
-              panelClass: ['success-snackbar']
-            });
-            this.itensRefresh$.next();
+            this.notificacao.sucesso('Item removido!', { acao: 'OK', duracao: 2000 });
+            this.carregarItens();
           },
-          error: () => {
-            this.snackBar.open('Erro ao atualizar quantidade', 'OK', {
-              duration: 2000,
-              panelClass: ['error-snackbar']
-            });
-          },
+          error: () => this.notificacao.erro('Erro ao remover item', { acao: 'OK' }),
         });
-      }
+      });
+  }
+
+  private alterarQuantidade(item: ItemComanda, quantidade: number): void {
+    this.comandaService.atualizarQuantidadeItemAdmin(item.id, quantidade).subscribe({
+      next: () => {
+        this.notificacao.sucesso('Quantidade atualizada!', { acao: 'OK', duracao: 1500 });
+        this.carregarItens();
+      },
+      error: () => this.notificacao.erro('Erro ao atualizar quantidade', { acao: 'OK', duracao: 2000 }),
+    });
+  }
+
+  /**
+   * Confirma com o usuário, executa a ação na comanda e recarrega os dados
+   */
+  private executarAcaoComanda(
+    dialogo: { title: string; message: string; confirmText: string },
+    acao: (comandaId: string) => Observable<void>,
+    mensagemSucesso: string,
+    mensagemErro: string,
+  ): void {
+    const comanda = this.comanda();
+    if (!comanda) return;
+
+    this.notificacao.confirmar({ ...dialogo, cancelText: 'Cancelar' }).subscribe((confirmado) => {
+      if (!confirmado) return;
+      acao(comanda.id).subscribe({
+        next: () => {
+          this.notificacao.sucesso(mensagemSucesso);
+          this.carregarComanda();
+          this.carregarItens();
+        },
+        error: (error) => {
+          console.error(`${mensagemErro}:`, error);
+          this.notificacao.erro(mensagemErro);
+        },
+      });
+    });
+  }
+
+  private carregarComanda(): void {
+    this.comandaService.obterComanda(this.comandaId).subscribe({
+      next: (comanda) => this.comanda.set(comanda),
+      error: (error) => {
+        console.error('Erro ao carregar comanda:', error);
+        this.notificacao.erro('Erro ao carregar comanda');
+        this.comanda.set(null);
+      },
+    });
+  }
+
+  private carregarItens(): void {
+    this.comandaService.obterItensComanda(this.comandaId).subscribe({
+      next: (itens) => this.itens.set(itens),
+      error: (error) => {
+        console.error('Erro ao carregar itens:', error);
+        this.notificacao.erro('Erro ao carregar itens da comanda');
+        this.itens.set([]);
+      },
+    });
+  }
+
+  private definirAdicionando(adicionando: boolean): void {
+    this.adicionandoProduto.set(adicionando);
+    if (adicionando) {
+      this.produtoBuscaControl.disable();
+    } else {
+      this.produtoBuscaControl.enable();
     }
   }
+}
+
+function normalizarTexto(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim();
 }

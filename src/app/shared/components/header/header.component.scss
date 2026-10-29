@@ -1,190 +1,116 @@
-// Header styles
-.header-container {
-  position: fixed;
+// Sticky glass header — content scrolls beneath it, so blur adds legibility.
+// Pages can project extra rows (e.g. category tabs) via <ng-content>.
+:host {
+  display: block;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: var(--white);
-  border-bottom: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 40px; // Space for the search bar overlay
+  z-index: var(--z-header);
 }
 
-.custom-toolbar {
-  background-color: var(--primary-green) !important;
-  color: var(--white) !important;
-  min-height: 80px;
-  padding: 0;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--primary-green);
-    z-index: -1;
-  }
-
-  .toolbar-content {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: var(--space-1);
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: var(--space-3) var(--space-6);
-    height: 100%;
-    background-color: transparent;
-    position: relative;
-  }
+.app-header {
+  background: var(--glass-bg-strong);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
 }
 
-.header-greeting {
-  width: 100%;
+.app-header__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: var(--container-lg);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+}
+
+.app-header__row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
 
-  .greeting-text {
-    margin-top: 16px !important;
-    font-size: 30px !important;
-    font-weight: 600;
-    color: var(--white);
+.app-header__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.comanda-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-badge);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  lucide-icon {
+    color: var(--color-icon);
   }
 }
 
-.search-wrapper {
-  position: absolute;
-  bottom: -24px;
-  left: var(--space-6);
-  right: var(--space-6);
-  width: auto;
-  background-color: var(--white);
-  border-radius: 12px;
-  border: 1px solid var(--gray-300);
-  padding: 8px 12px;
-  z-index: 1001;
-  height: 52px;
-  overflow: hidden;
+.search-field {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
+  height: var(--control-height-touch);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 
-  .search-icon {
-    color: var(--gray-600);
-    font-size: 22px !important;
-    width: 20px !important;
-    height: 20px !important;
-    flex-shrink: 0;
+  &:hover {
+    border-color: var(--color-border-hover);
   }
 
-  .search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    color: var(--gray-900);
-    font-size: 14px;
-    outline: none;
-    padding: 0;
-
-    &::placeholder {
-      color: var(--gray-500);
-    }
-
-    &:focus {
-      outline: none;
-    }
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
   }
 }
 
-// Mobile-first responsive design
+.search-field__icon {
+  color: var(--color-icon);
+}
+
+.search-field__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-base);
+
+  &::placeholder {
+    color: var(--color-placeholder);
+  }
+
+  &:focus-visible {
+    outline: none; // focus shown on the wrapper via :focus-within
+  }
+}
+
 @media (max-width: 480px) {
-  .header-container {
-    margin-bottom: 50px;
+  .app-header__inner {
+    padding: var(--space-3) var(--space-4);
   }
 
-  .custom-toolbar {
-    min-height: 100px;
-
-    .toolbar-content {
-      padding: var(--space-3);
-      gap: var(--space-2);
-    }
+  .app-header__title {
+    font-size: var(--text-lg);
   }
 
-  .header-greeting {
-    padding-left: calc(var(--space-4) - var(--space-3));
-
-    .greeting-text {
-      font-size: var(--text-xl);
-    }
-  }
-
-  .search-wrapper {
-    bottom: -32px;
-    left: var(--space-4);
-    right: var(--space-4);
-    max-width: calc(100% - var(--space-8));
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .header-container {
-    margin-bottom: 45px;
-  }
-
-  .custom-toolbar {
-    min-height: 85px;
-
-    .toolbar-content {
-      padding: var(--space-3) var(--space-5);
-      gap: var(--space-2);
-    }
-  }
-
-  .header-greeting {
-    .greeting-text {
-      font-size: var(--text-xl);
-    }
-  }
-
-  .search-wrapper {
-    bottom: -28px;
-    left: var(--space-5);
-    right: var(--space-5);
-    max-width: calc(100% - var(--space-10));
-  }
-}
-
-@media (min-width: 769px) {
-  .header-container {
-    margin-bottom: 40px;
-  }
-
-  .custom-toolbar {
-    min-height: 80px;
-
-    .toolbar-content {
-      padding: var(--space-3) var(--space-6);
-      gap: var(--space-1);
-    }
-  }
-
-  .header-greeting {
-    .greeting-text {
-      font-size: var(--text-2xl);
-    }
-  }
-
-  .search-wrapper {
-    bottom: -24px;
-    left: var(--space-6);
-    right: var(--space-6);
-    max-width: calc(100% - var(--space-12));
+  .comanda-badge {
+    font-size: var(--text-xs);
   }
 }

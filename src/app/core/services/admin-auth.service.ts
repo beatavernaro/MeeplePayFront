@@ -1,64 +1,64 @@
-import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, catchError, tap, of } from 'rxjs';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, tap } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../../shared/models/api.interfaces';
+import { LoginRequest, LoginResponse } from '../../shared/models/api.interfaces';
+
+const ADMIN_TOKEN_KEY = 'adminToken';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminAuthService {
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+  private http = inject(HttpClient);
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {
-    this.verificarToken();
-  }
-
+  /**
+   * Faz login e guarda o token. Credenciais inválidas retornam erro 401.
+   */
   login(email: string, password: string): Observable<LoginResponse> {
     const loginData: LoginRequest = { email, password };
-    
+
     return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, loginData).pipe(
-      tap(response => {
+      tap((response) => {
         if (response.success && response.token) {
-          localStorage.setItem('adminToken', response.token);
-          this.isAuthenticatedSubject.next(true);
+          localStorage.setItem(ADMIN_TOKEN_KEY, response.token);
         }
       }),
-      catchError((error: HttpErrorResponse) => {
-        console.error('Login error:', error);
-        return of({ success: false, token: '' });
-      })
-    );
-  }
-
-  register(email: string, password: string, nome: string): Observable<RegisterResponse> {
-    const registerData: RegisterRequest = { email, password, nome };
-    
-    return this.http.post<RegisterResponse>(`${this.baseUrl}/auth/register`, registerData).pipe(
-      catchError((error: HttpErrorResponse) => {
-        console.error('Register error:', error);
-        return of({ success: false, message: 'Erro ao criar administrador' });
-      })
     );
   }
 
   logout(): void {
-    localStorage.removeItem('adminToken');
-    this.isAuthenticatedSubject.next(false);
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
   }
 
+  /**
+   * Há um token de admin ainda válido. Token expirado ou inválido é apagado, para não
+   * deixar o painel abrir sem sessão. A assinatura continua sendo conferida pela API.
+   */
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('adminToken');
+    const token = this.getToken();
+    if (!token) return false;
+
+    if (!tokenAdminValido(token)) {
+      this.logout();
+      return false;
+    }
+    return true;
   }
 
   getToken(): string | null {
-    return localStorage.getItem('adminToken');
+    return localStorage.getItem(ADMIN_TOKEN_KEY);
   }
+}
 
-  private verificarToken(): void {
-    const token = this.getToken();
-    this.isAuthenticatedSubject.next(!!token);
+function tokenAdminValido(token: string): boolean {
+  try {
+    const payload = token.split('.')[1];
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    const claims = JSON.parse(json) as { tipo?: string; exp?: number };
+    return claims.tipo === 'admin' && typeof claims.exp === 'number' && claims.exp * 1000 > Date.now();
+  } catch {
+    return false;
   }
 }

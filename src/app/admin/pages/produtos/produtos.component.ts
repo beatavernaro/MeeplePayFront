@@ -1,294 +1,262 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
+import { Component, computed, inject, signal } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { Router, NavigationEnd } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map, catchError, shareReplay, filter } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { Produto } from '../../../shared/models/produto.model';
+import { LucideAngularModule } from 'lucide-angular';
+import { Produto } from '../../../shared/models/api.interfaces';
 import { ProdutoService } from '../../../core/services/produto.service';
-import {
-  ConfirmDialogComponent,
-  ConfirmDialogData,
-} from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { Subscription } from 'rxjs';
+import { NotificacaoService } from '../../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-admin-produtos',
-  standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
+    CurrencyPipe,
     MatButtonModule,
-    MatIconModule,
     MatTableModule,
     MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
     MatInputModule,
     MatFormFieldModule,
+    LucideAngularModule,
   ],
   template: `
-    <div style="padding: 24px;">
-      <!-- Header com título -->
-      <div
-        style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;"
-      >
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <mat-icon style="color: #556b2f; font-size: 32px; width: 32px; height: 32px;"
-            >inventory</mat-icon
-          >
-          <h1 style="margin: 0; color: #556b2f; font-weight: 500; font-size: 28px;">
-            Gerenciamento de Produtos
-          </h1>
+    <div class="page produtos-page">
+      <div class="page-header">
+        <div class="page-header__title">
+          <div>
+            <h1>Gerenciamento de Produtos</h1>
+            <p class="page-header__subtitle">Cadastre produtos, preços e estoque</p>
+          </div>
         </div>
-        <button
-          mat-raised-button
-          style="background-color: #556b2f; color: white;"
-          (click)="criarNovoProduto()"
-        >
-          <mat-icon>add</mat-icon>
-          Novo Produto
-        </button>
+        <div class="page-header__actions">
+          <button mat-raised-button (click)="criarNovoProduto()">
+            <lucide-icon name="plus" />
+            Novo Produto
+          </button>
+        </div>
       </div>
 
       <!-- Barra de pesquisa -->
-      <div style="margin-bottom: 24px;">
-        <mat-form-field style="width: 400px;" appearance="outline">
-          <mat-label>Buscar produtos</mat-label>
-          <input
-            matInput
-            [(ngModel)]="termoBusca"
-            (ngModelChange)="filtrarProdutos()"
-            placeholder="Digite o nome do produto..."
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-      </div>
+      <mat-form-field class="produtos-busca" appearance="outline">
+        <mat-label>Buscar produtos</mat-label>
+        <input
+          matInput
+          type="search"
+          [value]="termoBusca()"
+          (input)="termoBusca.set($any($event.target).value)"
+          placeholder="Digite o nome do produto..."
+        />
+        <lucide-icon matSuffix name="search" />
+      </mat-form-field>
 
       <!-- Tabela de produtos -->
-      <div
-        style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-      >
-        <table mat-table [dataSource]="(produtosFiltrados$ | async) || []" style="width: 100%;">
-          <!-- Coluna Nome -->
-          <ng-container matColumnDef="nome">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px;"
-            >
-              Nome do Produto
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <mat-icon style="color: #556b2f;">restaurant_menu</mat-icon>
-                <span style="font-weight: 500;">{{ produto.nome }}</span>
-                <span
-                  *ngIf="!produto.ativo"
-                  style="background-color: #ff5722; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;"
-                >
-                  INATIVO
+      <div class="surface-card table-surface">
+        <div class="table-scroll">
+          <table mat-table [dataSource]="produtosFiltrados() ?? []">
+            <!-- Coluna Nome -->
+            <ng-container matColumnDef="nome">
+              <th mat-header-cell *matHeaderCellDef>Nome do Produto</th>
+              <td mat-cell *matCellDef="let produto">
+                <div class="produto-cell">
+                  <span class="produto-cell__name">{{ produto.nome }}</span>
+                  @if (produto.estoque <= 0) {
+                    <span class="status-badge status-badge--warning">
+                      <lucide-icon name="triangle-alert" />
+                      Sem estoque
+                    </span>
+                  }
+                  @if (!produto.ativo) {
+                    <span class="status-badge status-badge--danger">Inativo</span>
+                  }
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Coluna Valor Unitário -->
+            <ng-container matColumnDef="preco">
+              <th mat-header-cell *matHeaderCellDef>Valor Unitário</th>
+              <td mat-cell *matCellDef="let produto">
+                <span class="money produto-preco">{{ produto.preco | currency }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Coluna Estoque -->
+            <ng-container matColumnDef="estoque">
+              <th mat-header-cell *matHeaderCellDef>Estoque</th>
+              <td mat-cell *matCellDef="let produto">
+                <span class="money" [class.estoque-zerado]="produto.estoque <= 0">
+                  {{ produto.estoque }}
                 </span>
-              </div>
-            </td>
-          </ng-container>
+              </td>
+            </ng-container>
 
-          <!-- Coluna Valor Unitário -->
-          <ng-container matColumnDef="preco">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px;"
-            >
-              Valor Unitário
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px;">
-              <span style="font-weight: 500; color: #556b2f; font-size: 16px;">
-                R$ {{ formatarMoeda(produto.preco) }}
-              </span>
-            </td>
-          </ng-container>
+            <!-- Coluna Ações -->
+            <ng-container matColumnDef="acoes">
+              <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+              <td mat-cell *matCellDef="let produto" class="col-acoes">
+                <div class="row-actions">
+                  <button
+                    mat-icon-button
+                    class="row-action row-action--edit"
+                    matTooltip="Editar produto"
+                    matTooltipPosition="above"
+                    matTooltipShowDelay="300"
+                    matTooltipClass="produtos-tooltip"
+                    aria-label="Editar produto"
+                    (click)="editarProduto(produto)"
+                  >
+                    <lucide-icon name="pencil" />
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="row-action"
+                    matTooltip="Detalhes do produto"
+                    matTooltipPosition="above"
+                    matTooltipShowDelay="300"
+                    matTooltipClass="produtos-tooltip"
+                    aria-label="Detalhes do produto"
+                    (click)="verDetalhes(produto.id)"
+                  >
+                    <lucide-icon name="eye" />
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="row-action"
+                    [class.row-action--danger]="produto.ativo"
+                    [class.row-action--success]="!produto.ativo"
+                    [matTooltip]="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
+                    matTooltipPosition="above"
+                    matTooltipClass="produtos-tooltip"
+                    [attr.aria-label]="produto.ativo ? 'Desativar produto' : 'Ativar produto'"
+                    (click)="toggleStatusProduto(produto)"
+                  >
+                    <lucide-icon [name]="produto.ativo ? 'toggle-right' : 'toggle-left'" />
+                  </button>
+                </div>
+              </td>
+            </ng-container>
 
-          <!-- Coluna Ações -->
-          <ng-container matColumnDef="acoes">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              style="background-color: #f5f5f5; font-weight: 600; padding: 16px; text-align: center;"
-            >
-              Ações
-            </th>
-            <td mat-cell *matCellDef="let produto" style="padding: 16px; text-align: center;">
-              <div style="display: flex; gap: 8px; justify-content: center;">
-                <button
-                  mat-icon-button
-                  matTooltip="Editar produto"
-                  matTooltipPosition="above"
-                  matTooltipShowDelay="300"
-                  (click)="editarProduto(produto)"
-                  style="color: #2196f3;"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="Detalhes do produto"
-                  matTooltipPosition="above"
-                  matTooltipShowDelay="300"
-                  (click)="verDetalhes(produto.id!)"
-                  style="color: #556b2f;"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  matTooltip="{{ produto.ativo ? 'Desativar produto' : 'Ativar produto' }}"
-                  matTooltipPosition="above"
-                  (click)="toggleStatusProduto(produto)"
-                  [style.color]="produto.ativo ? '#ff5722' : '#4caf50'"
-                >
-                  <mat-icon>{{ produto.ativo ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
 
         <!-- Mensagem quando não há produtos -->
-        <div
-          *ngIf="(produtosFiltrados$ | async) as produtosFiltrados; else semProdutos"
-        >
-          <div
-            *ngIf="produtosFiltrados.length === 0"
-            style="padding: 48px; text-align: center; color: #666;"
-          >
-            <mat-icon style="font-size: 64px; width: 64px; height: 64px; color: #ddd;"
-              >inventory</mat-icon
-            >
-            <p style="margin: 16px 0; font-size: 18px;">
-              {{
-                (produtos$ | async)?.length === 0
-                  ? 'Nenhum produto cadastrado'
-                  : 'Nenhum produto encontrado para "' + termoBusca + '"'
-              }}
-            </p>
-            <button
-              *ngIf="(produtos$ | async)?.length === 0"
-              mat-raised-button
-              style="background-color: #556b2f; color: white;"
-              (click)="criarNovoProduto()"
-            >
-              <mat-icon>add</mat-icon>
-              Cadastrar Primeiro Produto
-            </button>
-          </div>
-        </div>
-        <ng-template #semProdutos>
-          <div style="padding: 48px; text-align: center; color: #666;">
+        @if (produtosFiltrados(); as produtosFiltrados) {
+          @if (produtosFiltrados.length === 0) {
+            <div class="empty-state">
+              <lucide-icon name="package" />
+              <h3>
+                {{
+                  produtos()?.length === 0
+                    ? 'Nenhum produto cadastrado'
+                    : 'Nenhum produto encontrado para "' + termoBusca() + '"'
+                }}
+              </h3>
+              @if (produtos()?.length === 0) {
+                <button mat-raised-button (click)="criarNovoProduto()">
+                  <lucide-icon name="plus" />
+                  Cadastrar Primeiro Produto
+                </button>
+              }
+            </div>
+          }
+        } @else {
+          <div class="empty-state" role="status">
             <p>Carregando produtos...</p>
           </div>
-        </ng-template>
+        }
       </div>
     </div>
   `,
   styles: [
     `
-      table {
-        background-color: white;
+      .produtos-page .produtos-busca {
+        width: 100%;
+        max-width: 400px;
       }
 
-      .mat-mdc-row:hover {
-        background-color: #f9f9f9;
+      .produtos-page .produto-cell {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-width: 0;
       }
 
-      .mat-mdc-header-row {
-        background-color: #f5f5f5;
+      .produtos-page .produto-cell__name {
+        font-weight: var(--weight-semibold);
+        overflow-wrap: anywhere;
       }
 
-      .mat-mdc-tooltip {
-        transform: translateY(14px) !important;
+      .produtos-page .produto-preco {
+        color: var(--color-text);
+      }
+
+      .produtos-page .estoque-zerado {
+        color: var(--color-danger);
+      }
+
+      .produtos-page .mat-mdc-cell,
+      .produtos-page .mat-mdc-header-cell {
+        padding: 0 16px;
+      }
+
+      .produtos-page .col-acoes {
+        text-align: center;
+        width: 160px;
+      }
+
+      .produtos-page .row-actions {
+        display: flex;
+        gap: var(--space-1);
+        justify-content: center;
+      }
+
+      .produtos-page .row-action {
+        color: var(--color-icon);
+      }
+
+      .produtos-page .row-action:hover {
+        color: var(--color-primary);
+      }
+
+      .produtos-page .row-action--danger:hover {
+        color: var(--color-danger);
+      }
+
+      .produtos-page .row-action--success {
+        color: var(--color-success);
+      }
+
+      @media (max-width: 768px) {
+        .produtos-page .produtos-busca {
+          max-width: none;
+        }
       }
     `,
   ],
-  encapsulation: ViewEncapsulation.None,
 })
-export class AdminProdutosComponent implements OnInit, OnDestroy {
-  termoBusca: string = '';
-  displayedColumns: string[] = ['nome', 'preco', 'acoes'];
-  private routeSubscription?: Subscription;
-  
-  // Observable com todos os produtos
-  produtos$!: Observable<Produto[]>;
-  // Observable filtrado baseado no termo de busca
-  produtosFiltrados$!: Observable<Produto[]>;
+export class AdminProdutosComponent {
+  private produtoService = inject(ProdutoService);
+  private notificacao = inject(NotificacaoService);
+  private router = inject(Router);
 
-  constructor(
-    private produtoService: ProdutoService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private router: Router,
-  ) {}
+  readonly displayedColumns = ['nome', 'preco', 'estoque', 'acoes'];
+  readonly termoBusca = signal('');
 
-  ngOnInit(): void {
-    this.carregarProdutos();
+  // undefined enquanto carrega
+  readonly produtos = signal<Produto[] | undefined>(undefined);
+  readonly produtosFiltrados = computed(() => {
+    const produtos = this.produtos();
+    const termo = this.termoBusca();
+    if (!produtos || !termo.trim()) return produtos;
+    return produtos.filter((p) => p.nome.toLowerCase().includes(termo.toLowerCase()));
+  });
 
-    // Recarregar produtos quando voltar para a página
-    this.routeSubscription = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        if (event.url === '/admin/produtos') {
-          this.carregarProdutos();
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    if (this.routeSubscription) {
-      this.routeSubscription.unsubscribe();
-    }
-  }
-
-  private carregarProdutos(): void {
-    this.produtos$ = this.produtoService.obterTodosProdutos().pipe(
-      catchError((error) => {
-        console.error('Erro ao carregar produtos:', error);
-        this.snackBar.open('Erro ao carregar produtos', 'Fechar', { 
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-        return of([]);
-      }),
-      shareReplay(1),
-    );
-
-    this.produtosFiltrados$ = this.produtos$.pipe(
-      map((produtos) => 
-        !this.termoBusca.trim()
-          ? produtos
-          : produtos.filter((produto) =>
-              produto.nome.toLowerCase().includes(this.termoBusca.toLowerCase()),
-            ),
-      ),
-      shareReplay(1),
-    );
-  }
-
-  filtrarProdutos(): void {
-    // Recarregar observables com novo termo de busca
+  constructor() {
     this.carregarProdutos();
   }
 
@@ -301,52 +269,48 @@ export class AdminProdutosComponent implements OnInit, OnDestroy {
   }
 
   verDetalhes(produtoId: string): void {
-    // Navegar para página de detalhes (implementar futuramente)
     this.router.navigate(['/admin/produtos', produtoId]);
-  }
-
-  formatarMoeda(valor: number): string {
-    return valor.toFixed(2).replace('.', ',');
   }
 
   toggleStatusProduto(produto: Produto): void {
     const acao = produto.ativo ? 'desativar' : 'ativar';
-    const dialogData: ConfirmDialogData = {
-      title: `${acao.charAt(0).toUpperCase() + acao.slice(1)} Produto`,
-      message: `Tem certeza que deseja ${acao} o produto "${produto.nome}"?`,
-      confirmText: acao.charAt(0).toUpperCase() + acao.slice(1),
-      cancelText: 'Cancelar',
-    };
+    const acaoCapitalizada = acao.charAt(0).toUpperCase() + acao.slice(1);
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: dialogData,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.produtoService.atualizarProduto(produto.id!, { ativo: !produto.ativo }).subscribe({
+    this.notificacao
+      .confirmar(
+        {
+          title: `${acaoCapitalizada} Produto`,
+          message: `Tem certeza que deseja ${acao} o produto "${produto.nome}"?`,
+          confirmText: acaoCapitalizada,
+          cancelText: 'Cancelar',
+        },
+        '400px',
+      )
+      .subscribe((confirmado) => {
+        if (!confirmado) return;
+        this.produtoService.atualizarProduto(produto.id, { ativo: !produto.ativo }).subscribe({
           next: () => {
-            this.snackBar.open(
+            this.notificacao.sucesso(
               `Produto ${!produto.ativo ? 'ativado' : 'desativado'} com sucesso`,
-              'Fechar',
-              { 
-                duration: 3000,
-                panelClass: ['success-snackbar']
-              },
             );
-            // Recarregar produtos para manter sincronizado
             this.carregarProdutos();
           },
           error: (error) => {
             console.error(`Erro ao ${acao} produto:`, error);
-            this.snackBar.open(`Erro ao ${acao} produto`, 'Fechar', { 
-              duration: 3000,
-              panelClass: ['error-snackbar']
-            });
+            this.notificacao.erro(`Erro ao ${acao} produto`);
           },
         });
-      }
+      });
+  }
+
+  private carregarProdutos(): void {
+    this.produtoService.obterTodosProdutos().subscribe({
+      next: (produtos) => this.produtos.set(produtos),
+      error: (error) => {
+        console.error('Erro ao carregar produtos:', error);
+        this.notificacao.erro('Erro ao carregar produtos');
+        this.produtos.set([]);
+      },
     });
   }
 }

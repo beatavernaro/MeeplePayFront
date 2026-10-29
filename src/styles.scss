@@ -1,99 +1,152 @@
 @use '@angular/material' as mat;
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-// Custom Material theme
-$custom-green-palette: (
-  50: #f4f6f0,
-  100: #e3e9d1,
-  200: #cfd9a1,
-  300: #bac970,
-  400: #a9bc4a,
-  500: #556b2f,
-  600: #4e612a,
-  700: #455524,
-  800: #3d4f21,
-  900: #30401a,
-  contrast: (
-    50: #000000,
-    100: #000000,
-    200: #000000,
-    300: #000000,
-    400: #ffffff,
-    500: #ffffff,
-    600: #ffffff,
-    700: #ffffff,
-    800: #ffffff,
-    900: #ffffff,
-  ),
-);
+// =============================================================================
+// MeeplePay Design System — Angatu Jogos brand
+// Style: minimal Flat Design with selective Glassmorphism — neutral surfaces,
+// Angatu green as the single action color, yellow only as a pinpoint highlight,
+// emerald / amber / red reserved for success, warning and error states. Glass is
+// used only on sticky chrome that content scrolls under (header, bottom nav) and
+// on auth cards. Icons: Lucide (outline, 18–20px, stroke 1.75) — see shared/icons.ts.
+// =============================================================================
 
-// Snackbar customizations
-.success-snackbar {
-  --mdc-snackbar-container-color: #4caf50 !important;
-  --mdc-snackbar-supporting-text-color: #ffffff !important;
-}
-
-.error-snackbar {
-  --mdc-snackbar-container-color: #f44336 !important;
-  --mdc-snackbar-supporting-text-color: #ffffff !important;
-}
-
-html {
-  height: 100%;
-  @include mat.theme(
-    (
-      color: (
-        primary: $custom-green-palette,
-        tertiary: $custom-green-palette,
-      ),
-      typography: 'Roboto',
-      density: 0,
-    )
-  );
-}
-
-// Global reset and base styles
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  height: 100%;
-  font-family:
-    'Roboto',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
-  background-color: #fafafa;
-  color: #1a1a1a;
-  line-height: 1.6;
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-// Design system variables
+// -----------------------------------------------------------------------------
+// 1. Tokens
+// -----------------------------------------------------------------------------
 :root {
-  --primary-green: #556b2f;
-  --primary-green-dark: #3d4f21;
-  --primary-green-light: #f4f6f0;
-  --gray-50: #fafafa;
-  --gray-100: #f5f5f5;
-  --gray-200: #e5e5e5;
-  --gray-300: #d4d4d4;
-  --gray-400: #a3a3a3;
-  --gray-500: #737373;
-  --gray-600: #525252;
-  --gray-700: #404040;
-  --gray-800: #262626;
-  --gray-900: #171717;
-  --white: #ffffff;
-  --black: #000000;
+  // Primitives -----------------------------------------------------------------
+  // Brand green. #008D45 is the logo green (4.3:1 on white): use it for non-text
+  // marks (indicators, focus, icons). Text and filled buttons use brand-600 (5.4:1).
+  --brand-50: #e9f5ee;
+  --brand-100: #d2ebdd;
+  --brand-200: #a6d7ba;
+  --brand-500: #008d45;
+  --brand-600: #007a3c;
+  --brand-700: #006633;
+  --brand-900: #00381b;
 
-  // Spacing scale
+  // Brand yellow — decorative only (1.8:1 on white, never as text color)
+  --yellow-50: #fef8e1;
+  --yellow-400: #f3b900;
+
+  // Semantic state primitives
+  --green-50: #ecfdf5;
+  --green-100: #d1fae5;
+  --green-700: #047857;
+  --green-800: #065f46;
+
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-700: #b45309;
+
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+
+  // Neutrals — cool gray anchored on graphite #1F2933 and background #F5F7F6
+  --neutral-50: #f5f7f6;
+  --neutral-100: #eef1f0;
+  --neutral-200: #e1e6e4;
+  --neutral-300: #cbd2d0;
+  --neutral-400: #9aa5b1;
+  --neutral-500: #7b8794; // icons (3.6:1)
+  --neutral-600: #616e7c; // muted text (5.2:1)
+  --neutral-700: #52606d; // secondary text (6.5:1)
+  --neutral-800: #323f4b;
+  --neutral-900: #1f2933; // primary text (14:1)
+
+  // RGB channels for alpha tints: rgb(var(--rgb-brand) / 0.2)
+  --rgb-brand: 0 141 69;
+  --rgb-highlight: 243 185 0;
+  --rgb-ink: 31 41 51;
+  --rgb-white: 255 255 255;
+
+  // Semantic colors ------------------------------------------------------------
+  --color-primary: var(--brand-600); // text + filled buttons, 5.4:1 on white
+  --color-primary-hover: var(--brand-700);
+  --color-primary-soft: var(--brand-50); // selection / subtle highlight backgrounds
+  --color-primary-border: var(--brand-200);
+  --color-on-primary: #ffffff;
+  --color-brand: var(--brand-500); // exact logo green for non-text marks
+
+  --color-accent: var(--color-primary); // emphasized values (e.g. revenue)
+  --color-highlight: var(--yellow-400); // pinpoint details only
+  --color-highlight-soft: var(--yellow-50);
+  --color-on-highlight: var(--neutral-900); // 8:1 on yellow
+
+  --color-success: var(--green-700); // text-safe 5.5:1
+  --color-success-solid: var(--green-700);
+  --color-success-solid-hover: var(--green-800);
+  --color-success-soft: var(--green-50);
+  --color-success-border: var(--green-100);
+
+  --color-warning: var(--amber-700);
+  --color-warning-soft: var(--amber-50);
+  --color-warning-border: var(--amber-100);
+
+  --color-danger: var(--red-600);
+  --color-danger-hover: var(--red-700);
+  --color-danger-text: var(--red-700); // 5.9:1 on danger-soft, for small text
+  --color-danger-soft: var(--red-50);
+  --color-danger-border: var(--red-100);
+
+  --color-bg: var(--neutral-50);
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--neutral-100);
+  --color-surface-sunken: var(--neutral-50);
+  --color-surface-hover: var(--neutral-50);
+  --color-surface-inverse: var(--neutral-800); // tooltips, snackbars
+  --color-text: var(--neutral-900);
+  --color-text-secondary: var(--neutral-700);
+  --color-text-muted: var(--neutral-600);
+  --color-text-inverse: #ffffff;
+  --color-placeholder: var(--neutral-400);
+  --color-icon: var(--neutral-500);
+  --color-icon-subtle: var(--neutral-300);
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-300);
+  --color-border-hover: var(--neutral-400);
+  --color-ring: var(--brand-500); // 4.3:1 — above the 3:1 non-text minimum
+  --color-disabled-bg: var(--neutral-100);
+  --color-disabled-text: var(--neutral-400);
+  --color-scrollbar: var(--neutral-300);
+  --color-scrollbar-hover: var(--neutral-400);
+  --color-selection-bg: var(--brand-100);
+  --color-selection-text: var(--brand-900);
+
+  // Backdrop — a barely-there tint so glass has something to sit on
+  --gradient-app:
+    radial-gradient(1000px 500px at 0% 0%, rgb(var(--rgb-brand) / 0.04), transparent 60%),
+    radial-gradient(800px 400px at 100% 0%, rgb(var(--rgb-highlight) / 0.035), transparent 60%),
+    var(--color-bg);
+
+  // Glass ------------------------------------------------------------------------
+  --glass-bg: rgb(var(--rgb-white) / 0.78);
+  --glass-bg-strong: rgb(var(--rgb-white) / 0.9);
+  --glass-border: rgb(var(--rgb-ink) / 0.08);
+  --glass-blur: 12px;
+
+  // Typography -----------------------------------------------------------------
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 15px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+  --text-4xl: 36px;
+  --text-5xl: 44px;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  // Spacing (4px base) -----------------------------------------------------------
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -105,250 +158,888 @@ body {
   --space-12: 48px;
   --space-16: 64px;
 
-  // Typography
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 18px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-3xl: 30px;
-  --text-4xl: 36px;
+  // Radii ------------------------------------------------------------------------
+  --radius-badge: 4px;
+  --radius-control: 6px; // buttons, inputs, tabs, steppers
+  --radius-card: 8px; // cards, tables, panels
+  --radius-overlay: 10px; // dialogs, sheets, menus
+  --radius-round: 50%; // avatars and dots only
 
-  // Shadows
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  // Elevation (very restrained) ---------------------------------------------------
+  --shadow-xs: 0 1px 2px rgb(var(--rgb-ink) / 0.04);
+  --shadow-sm: 0 1px 3px rgb(var(--rgb-ink) / 0.06), 0 1px 2px rgb(var(--rgb-ink) / 0.03);
+  --shadow-overlay: 0 12px 32px -8px rgb(var(--rgb-ink) / 0.18), 0 2px 6px rgb(var(--rgb-ink) / 0.05);
+  --shadow-focus: 0 0 0 3px rgb(var(--rgb-brand) / 0.2);
 
-  // Borders
+  // Icons --------------------------------------------------------------------------
+  --icon-sm: 16px;
+  --icon-md: 18px;
+  --icon-lg: 20px;
+
+  // Motion -------------------------------------------------------------------------
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Layout ---------------------------------------------------------------------------
+  --container-sm: 640px;
+  --container-lg: 1200px;
+  --control-height: 40px;
+  --control-height-touch: 44px;
+  --z-sticky: 100;
+  --z-nav: 900;
+  --z-header: 1000;
+
+  // Legacy aliases (older selectors resolve to the current palette) --------------
+  --primary-green: var(--color-primary);
+  --primary-green-dark: var(--color-primary-hover);
+  --primary-green-light: var(--color-primary-soft);
+  --gray-50: var(--neutral-50);
+  --gray-100: var(--neutral-100);
+  --gray-200: var(--neutral-200);
+  --gray-300: var(--neutral-300);
+  --gray-400: var(--neutral-400);
+  --gray-500: var(--neutral-500);
+  --gray-600: var(--neutral-600);
+  --gray-700: var(--neutral-700);
+  --gray-800: var(--neutral-800);
+  --gray-900: var(--neutral-900);
+  --white: #ffffff;
+  --black: #000000;
+  --shadow: var(--shadow-xs);
   --border-width: 1px;
-  --border-color: var(--gray-200);
-  --border-focus: var(--primary-green);
+  --border-color: var(--color-border);
+  --border-focus: var(--color-ring);
 }
 
-// Typography classes
-.text-xs {
-  font-size: var(--text-xs);
+// -----------------------------------------------------------------------------
+// 2. Angular Material theme (M3) mapped onto the tokens
+// -----------------------------------------------------------------------------
+html {
+  height: 100%;
+  color-scheme: light;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$green-palette,
+        tertiary: mat.$yellow-palette,
+        theme-type: light,
+      ),
+      typography: 'Plus Jakarta Sans',
+      density: 0,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      primary: #007a3c,
+      on-primary: #ffffff,
+      primary-container: #e9f5ee,
+      on-primary-container: #00381b,
+      tertiary: #f3b900,
+      on-tertiary: #1f2933,
+      error: #dc2626,
+      surface: #ffffff,
+      on-surface: #1f2933,
+      on-surface-variant: #52606d,
+      outline: #cbd2d0,
+      outline-variant: #e1e6e4,
+      surface-container-lowest: #ffffff,
+      surface-container-low: #ffffff,
+      surface-container: #f5f7f6,
+      surface-container-high: #eef1f0,
+      surface-container-highest: #e1e6e4,
+      corner-extra-small: 4px,
+      corner-small: 6px,
+      corner-medium: 8px,
+      corner-large: 10px,
+      corner-extra-large: 10px,
+      corner-full: 6px,
+    )
+  );
+
+  // Buttons: raised = primary CTA, stroked = secondary, text = tertiary
+  @include mat.button-overrides(
+    (
+      protected-container-color: var(--color-primary),
+      protected-label-text-color: var(--color-on-primary),
+      protected-container-shape: var(--radius-control),
+      protected-container-height: var(--control-height),
+      protected-container-elevation-shadow: none,
+      protected-hover-container-elevation-shadow: none,
+      protected-focus-container-elevation-shadow: none,
+      protected-pressed-container-elevation-shadow: none,
+      protected-disabled-container-color: var(--color-disabled-bg),
+      protected-disabled-label-text-color: var(--color-disabled-text),
+      protected-label-text-weight: 600,
+      protected-label-text-size: 14px,
+      protected-label-text-tracking: 0,
+      protected-horizontal-padding: 16px,
+      protected-icon-spacing: 8px,
+      filled-container-shape: var(--radius-control),
+      filled-container-height: var(--control-height),
+      filled-label-text-weight: 600,
+      filled-label-text-tracking: 0,
+      outlined-container-shape: var(--radius-control),
+      outlined-container-height: var(--control-height),
+      outlined-outline-color: var(--color-border-strong),
+      outlined-label-text-color: var(--color-text),
+      outlined-label-text-weight: 600,
+      outlined-label-text-size: 14px,
+      outlined-label-text-tracking: 0,
+      outlined-horizontal-padding: 16px,
+      outlined-icon-spacing: 8px,
+      text-container-shape: var(--radius-control),
+      text-container-height: var(--control-height),
+      text-label-text-weight: 600,
+      text-label-text-size: 14px,
+      text-label-text-tracking: 0,
+      text-icon-spacing: 8px,
+    )
+  );
+
+  @include mat.icon-button-overrides(
+    (
+      state-layer-size: 36px,
+      container-shape: var(--radius-control),
+      icon-color: var(--color-icon),
+    )
+  );
+
+  @include mat.card-overrides(
+    (
+      elevated-container-color: var(--color-surface),
+      elevated-container-shape: var(--radius-card),
+      elevated-container-elevation: var(--shadow-xs),
+      outlined-container-shape: var(--radius-card),
+      outlined-outline-color: var(--color-border),
+      title-text-weight: 600,
+      title-text-size: 15px,
+      subtitle-text-color: var(--color-text-secondary),
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      outlined-container-shape: var(--radius-control),
+      outlined-outline-color: var(--color-border-strong),
+      outlined-hover-outline-color: var(--color-border-hover),
+      outlined-focus-outline-color: var(--color-primary),
+      outlined-focus-outline-width: 1.5px,
+      outlined-label-text-color: var(--color-text-secondary),
+      outlined-input-text-placeholder-color: var(--color-placeholder),
+    )
+  );
+
+  @include mat.dialog-overrides(
+    (
+      container-color: var(--color-surface),
+      container-shape: var(--radius-overlay),
+      container-elevation-shadow: var(--shadow-overlay),
+    )
+  );
+
+  @include mat.snack-bar-overrides(
+    (
+      container-shape: var(--radius-control),
+      container-color: var(--color-surface-inverse),
+      supporting-text-color: #ffffff,
+    )
+  );
+
+  @include mat.tabs-overrides(
+    (
+      active-indicator-color: var(--color-brand),
+      active-label-text-color: var(--color-text),
+      active-focus-label-text-color: var(--color-text),
+      active-hover-label-text-color: var(--color-text),
+      active-focus-indicator-color: var(--color-brand),
+      active-hover-indicator-color: var(--color-brand),
+      inactive-label-text-color: var(--color-text-muted),
+      inactive-hover-label-text-color: var(--color-text),
+      active-indicator-height: 2px,
+      active-indicator-shape: 0,
+      label-text-weight: 600,
+      label-text-size: 14px,
+      label-text-tracking: 0,
+      divider-color: var(--color-border),
+      container-height: 44px,
+    )
+  );
+
+  @include mat.table-overrides(
+    (
+      background-color: var(--color-surface),
+      header-headline-color: var(--color-text-muted),
+      header-headline-weight: 600,
+      header-headline-size: 12px,
+      header-container-height: 40px,
+      row-item-container-height: 52px,
+      row-item-label-text-color: var(--color-text),
+      row-item-label-text-size: 14px,
+      row-item-outline-color: var(--color-border),
+    )
+  );
+
+  @include mat.sidenav-overrides(
+    (
+      container-shape: 0,
+      container-elevation-shadow: none,
+      content-background-color: transparent,
+    )
+  );
+
+  @include mat.autocomplete-overrides(
+    (
+      background-color: var(--color-surface),
+      container-shape: var(--radius-card),
+      container-elevation-shadow: var(--shadow-overlay),
+    )
+  );
+
+  @include mat.tooltip-overrides(
+    (
+      container-color: var(--color-surface-inverse),
+      container-shape: var(--radius-badge),
+    )
+  );
+
+  @include mat.checkbox-overrides(
+    (
+      selected-icon-color: var(--color-brand),
+      selected-focus-icon-color: var(--color-brand),
+      selected-hover-icon-color: var(--color-brand),
+    )
+  );
 }
-.text-sm {
-  font-size: var(--text-sm);
+
+// -----------------------------------------------------------------------------
+// 3. Base
+// -----------------------------------------------------------------------------
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-.text-base {
+
+body {
+  min-height: 100%;
+  font-family: var(--font-sans);
   font-size: var(--text-base);
-}
-.text-lg {
-  font-size: var(--text-lg);
-}
-.text-xl {
-  font-size: var(--text-xl);
-}
-.text-2xl {
-  font-size: var(--text-2xl);
-}
-.text-3xl {
-  font-size: var(--text-3xl);
-}
-.text-4xl {
-  font-size: var(--text-4xl);
+  line-height: var(--leading-normal);
+  font-weight: var(--weight-regular);
+  color: var(--color-text);
+  background: var(--gradient-app);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-.font-light {
-  font-weight: 300;
-}
-.font-normal {
-  font-weight: 400;
-}
-.font-medium {
-  font-weight: 500;
-}
-.font-semibold {
-  font-weight: 600;
-}
-.font-bold {
-  font-weight: 700;
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
-// Color utilities
-.text-red {
-  color: var(--primary-green);
-}
-.text-gray-500 {
-  color: var(--gray-500);
-}
-.text-gray-600 {
-  color: var(--gray-600);
-}
-.text-gray-700 {
-  color: var(--gray-700);
-}
-.text-gray-800 {
-  color: var(--gray-800);
-}
-.text-gray-900 {
-  color: var(--gray-900);
+img {
+  max-width: 100%;
+  display: block;
 }
 
-// Global button reset
 button {
   border: none;
   background: none;
   cursor: pointer;
   font-family: inherit;
-
-  // Mobile touch target optimization
-  min-height: 44px;
-  min-width: 44px;
+  color: inherit;
+  touch-action: manipulation;
 }
 
-// Input reset
 input,
 textarea {
   border: none;
   outline: none;
   font-family: inherit;
-
-  // Mobile optimization
-  font-size: 16px; // Prevents zoom on iOS
+  font-size: 16px; // prevents iOS zoom
 }
 
-// Mobile-first touch targets
-@media (max-width: 768px) {
-  // Ensure all interactive elements are at least 44px
-  button,
-  .mat-mdc-button,
-  .mat-mdc-raised-button,
-  .mat-mdc-outlined-button,
-  .mat-mdc-icon-button {
-    min-height: 44px !important;
-    min-width: 44px !important;
-  }
-
-  // Form fields mobile optimization
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      min-height: 48px;
-    }
-  }
-
-  // Better spacing for mobile
-  .mat-mdc-card {
-    margin-bottom: var(--space-3) !important;
-  }
-
-  // Improved text readability
-  body {
-    font-size: 16px;
-    line-height: 1.5;
-  }
+a {
+  color: var(--color-primary);
 }
 
-// Focus styles
 :focus-visible {
-  outline: 2px solid var(--primary-green);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 
-// Scrollbar styling
+::selection {
+  background: var(--color-selection-bg);
+  color: var(--color-selection-text);
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: var(--gray-100);
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
-  border-radius: 0;
+  background: var(--color-scrollbar);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-400);
+  background-color: var(--color-scrollbar-hover);
 }
 
-/* Angular Material overrides */
-.mat-mdc-button {
-  border-radius: 0 !important;
-}
+// Lucide icons -------------------------------------------------------------------
+lucide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
 
-.mat-mdc-raised-button {
-  border-radius: 0 !important;
-  box-shadow: var(--shadow) !important;
-}
-
-.mat-mdc-outlined-button {
-  border-radius: 0 !important;
-}
-
-.mat-mdc-form-field {
-  .mat-mdc-text-field-wrapper {
-    border-radius: 0 !important;
+  svg {
+    display: block;
   }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin svg {
+  animation: spin 1s linear infinite;
+}
+
+// -----------------------------------------------------------------------------
+// 4. Material polish that tokens cannot express
+// -----------------------------------------------------------------------------
+.mat-mdc-button-base {
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard) !important;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  // icon + label alignment for Lucide icons inside text buttons
+  .mdc-button__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+}
+
+.mat-mdc-raised-button:not(:disabled):hover {
+  background-color: var(--color-primary-hover);
+}
+
+.mat-mdc-outlined-button:not(:disabled):hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border-hover);
+}
+
+.mat-mdc-icon-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  border-radius: var(--radius-control) !important;
+
+  .mat-mdc-button-persistent-ripple,
+  .mat-ripple {
+    border-radius: var(--radius-control);
+  }
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.mat-mdc-button-base:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
 }
 
 .mat-mdc-card {
-  border-radius: 0 !important;
+  border: 1px solid var(--color-border);
 }
 
-.mat-toolbar {
-  border-radius: 0 !important;
+.mat-mdc-form-field-error {
+  color: var(--color-danger);
+  font-weight: var(--weight-medium);
 }
 
-// Snackbar styles
+.mat-mdc-form-field-icon-suffix,
+.mat-mdc-form-field-icon-prefix {
+  color: var(--color-icon);
+
+  lucide-icon {
+    padding: 0 12px;
+  }
+}
+
+.mat-mdc-dialog-container .mat-mdc-dialog-title {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
+}
+
+.cdk-overlay-dark-backdrop {
+  background: rgb(var(--rgb-ink) / 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.mat-mdc-header-row {
+  background: var(--color-surface-sunken);
+}
+
+.mat-mdc-header-cell {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// Snackbar feedback variants
+// Tooltips das ações da tabela de produtos
+.mat-mdc-tooltip.produtos-tooltip {
+  transform: translateY(14px) !important;
+}
+
 .success-snackbar {
-  background-color: #10b981 !important;
-  color: white !important;
-
-  .mat-mdc-snack-bar-label {
-    color: white !important;
-  }
-
-  .mat-mdc-button {
-    color: white !important;
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  }
+  @include mat.snack-bar-overrides(
+    (
+      container-color: var(--color-success-solid),
+      supporting-text-color: #ffffff,
+      button-color: #ffffff,
+    )
+  );
 }
 
 .error-snackbar {
-  background-color: #ef4444 !important;
-  color: white !important;
+  @include mat.snack-bar-overrides(
+    (
+      container-color: var(--color-danger),
+      supporting-text-color: #ffffff,
+      button-color: #ffffff,
+    )
+  );
+}
 
-  .mat-mdc-snack-bar-label {
-    color: white !important;
+// -----------------------------------------------------------------------------
+// 5. Component primitives (shared classes)
+// -----------------------------------------------------------------------------
+
+// Glass — only on sticky chrome over scrolling content, and auth cards
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+}
+
+// Flat surface
+.surface-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-xs);
+}
+
+// Page scaffold (admin)
+.page {
+  width: 100%;
+  max-width: var(--container-lg);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+.page--narrow {
+  max-width: var(--container-sm);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.page-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+
+  h1 {
+    font-size: var(--text-2xl);
+    overflow-wrap: anywhere;
+  }
+}
+
+.page-header__subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-top: 2px;
+}
+
+.page-header__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+// Back button used next to page titles
+.back-button.mat-mdc-icon-button {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+// Card header row: title + optional meta, separated by a hairline
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+
+  h2,
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-md);
   }
 
-  .mat-mdc-button {
-    color: white !important;
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  lucide-icon {
+    color: var(--color-icon);
   }
 }
 
-// Fix dialog background
-.mat-mdc-dialog-container {
-  background: white !important;
+// Compact metric card: label / value / optional hint, icon top-right
+.metric-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-xs);
 }
 
-.mat-mdc-dialog-surface {
-  background: white !important;
+.metric-card__label {
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  padding-right: var(--space-8);
 }
 
-// Bottom Sheet customizations
-.custom-bottom-sheet {
-  .mat-bottom-sheet-container {
-    background: white !important;
-    opacity: 1 !important;
-    
-    .bottom-sheet-content {
-      background: white !important;
-      opacity: 1 !important;
+.metric-card__value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.metric-card__value--accent {
+  color: var(--color-accent);
+}
+
+.metric-card__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.metric-card__icon {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  color: var(--color-icon);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+// Status badge (text + color, never color alone)
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-badge);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+
+  lucide-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &--aberta,
+  &--info {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary-border);
+    color: var(--color-primary-hover);
+  }
+  &--encerrada,
+  &--warning {
+    background: var(--color-warning-soft);
+    border-color: var(--color-warning-border);
+    color: var(--color-warning);
+  }
+  &--paga,
+  &--success {
+    background: var(--color-success-soft);
+    border-color: var(--color-success-border);
+    color: var(--color-success);
+  }
+  &--danger {
+    background: var(--color-danger-soft);
+    border-color: var(--color-danger-border);
+    color: var(--color-danger-text);
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-1);
+  padding: var(--space-10) var(--space-6);
+  color: var(--color-text-secondary);
+
+  > lucide-icon {
+    color: var(--color-placeholder);
+    margin-bottom: var(--space-2);
+
+    svg {
+      width: 24px;
+      height: 24px;
     }
   }
+
+  h3 {
+    font-size: var(--text-md);
+    color: var(--color-text);
+  }
+
+  p {
+    max-width: 42ch;
+    font-size: var(--text-sm);
+  }
+
+  button {
+    margin-top: var(--space-4);
+  }
 }
 
-.mat-bottom-sheet-container {
-  background: white !important;
-  opacity: 1 !important;
+// Table wrapper with horizontal scroll on small screens
+.table-surface {
+  overflow: hidden;
+  padding: 0;
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    min-width: 640px;
+  }
+
+  .mat-mdc-row {
+    transition: background-color var(--duration-fast) var(--ease-standard);
+
+    &:hover {
+      background-color: var(--color-surface-hover);
+    }
+  }
+
+  .mat-mdc-row.is-clickable {
+    cursor: pointer;
+  }
+
+  .mat-mdc-row:last-child .mat-mdc-cell {
+    border-bottom: none;
+  }
+}
+
+// Monetary / numeric values
+.money {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+// Inline record id ("#105")
+.record-id {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+// Quantity stepper
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  overflow: hidden;
+
+  .mat-mdc-icon-button {
+    border-radius: 0 !important;
+    color: var(--color-text-secondary);
+
+    &:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text);
+    }
+  }
+
+  .stepper__value {
+    min-width: 32px;
+    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Semantic button modifiers (applied to mat buttons)
+.btn-success.mat-mdc-raised-button:not(:disabled) {
+  background-color: var(--color-success-solid);
+  &:hover {
+    background-color: var(--color-success-solid-hover);
+  }
+}
+
+.btn-danger.mat-mdc-raised-button:not(:disabled) {
+  background-color: var(--color-danger);
+  &:hover {
+    background-color: var(--color-danger-hover);
+  }
+}
+
+.btn-danger-outline.mat-mdc-outlined-button:not(:disabled) {
+  color: var(--color-danger);
+  &:hover {
+    background-color: var(--color-danger-soft);
+    border-color: var(--color-danger-border);
+  }
+}
+
+.btn-danger-text.mat-mdc-button:not(:disabled) {
+  color: var(--color-danger);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-lg.mat-mdc-button-base {
+  height: var(--control-height-touch);
+  font-size: var(--text-md);
+}
+
+// Utility -----------------------------------------------------------------------
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.text-muted {
+  color: var(--color-text-secondary);
+}
+
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-3xl { font-size: var(--text-3xl); }
+.text-4xl { font-size: var(--text-4xl); }
+.font-normal { font-weight: var(--weight-regular); }
+.font-medium { font-weight: var(--weight-medium); }
+.font-semibold { font-weight: var(--weight-semibold); }
+.font-bold { font-weight: var(--weight-bold); }
+
+// -----------------------------------------------------------------------------
+// 6. Responsive + motion preferences
+// Breakpoints: 480 (phone) / 768 (tablet) / 1024 (laptop) / 1440 (desktop)
+// -----------------------------------------------------------------------------
+@media (max-width: 768px) {
+  .page {
+    padding: var(--space-4) var(--space-4) var(--space-8);
+  }
+
+  .page-header__title h1 {
+    font-size: var(--text-xl);
+  }
+
+  // touch targets
+  .mat-mdc-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .mat-mdc-button-base:not(.mat-mdc-icon-button) {
+    height: var(--control-height-touch) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

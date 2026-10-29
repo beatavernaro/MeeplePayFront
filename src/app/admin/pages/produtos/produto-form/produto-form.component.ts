@@ -1,41 +1,45 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  ReactiveFormsModule,
+  FormBuilder,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Produto } from '../../../../shared/models/produto.model';
+import { LucideAngularModule } from 'lucide-angular';
+import { CreateProdutoRequest } from '../../../../shared/models/api.interfaces';
 import { ProdutoService } from '../../../../core/services/produto.service';
+import { NotificacaoService } from '../../../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-produto-form',
-  standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatIconModule,
-    MatSnackBarModule,
+    LucideAngularModule,
   ],
   template: `
-    <div class="container">
+    <div class="page page--narrow">
       <!-- Header com navegação -->
-      <div class="header">
-        <button mat-icon-button (click)="voltar()" class="back-button">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h1>{{ isEditMode ? 'Editar Produto' : 'Novo Produto' }}</h1>
+      <div class="page-header">
+        <div class="page-header__title">
+          <button mat-icon-button (click)="voltar()" class="back-button" aria-label="Voltar para produtos">
+            <lucide-icon name="arrow-left" />
+          </button>
+          <h1>{{ isEditMode ? 'Editar Produto' : 'Novo Produto' }}</h1>
+        </div>
       </div>
 
       <!-- Formulário -->
-      <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="form-container">
+      <form [formGroup]="produtoForm" (ngSubmit)="onSubmit()" class="form-container surface-card">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nome do Produto</mat-label>
           <input
@@ -43,38 +47,55 @@ import { ProdutoService } from '../../../../core/services/produto.service';
             formControlName="nome"
             placeholder="Digite o nome do produto"
             maxlength="50"
+            required
             #nomeInput
           />
-          <mat-hint>{{ nomeInput.value.length || 0 }}/50</mat-hint>
-          <mat-error *ngIf="produtoForm.get('nome')?.hasError('required')">
-            O nome do produto é obrigatório
-          </mat-error>
-          <mat-error *ngIf="produtoForm.get('nome')?.hasError('minlength')">
-            O nome deve ter pelo menos 2 caracteres
-          </mat-error>
+          <mat-hint align="end">{{ nomeInput.value.length || 0 }}/50</mat-hint>
+          @if (produtoForm.controls.nome.hasError('required')) {
+            <mat-error>O nome do produto é obrigatório</mat-error>
+          }
+          @if (produtoForm.controls.nome.hasError('minlength')) {
+            <mat-error>O nome deve ter pelo menos 2 caracteres</mat-error>
+          }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Preço</mat-label>
-          <span matPrefix class="prefix-spacing">R$&nbsp;</span>
-          <input
-            matInput
-            formControlName="preco"
-            type="text"
-            placeholder="0,00"
-            (input)="formatPreco($event)"
-            (blur)="validatePreco()"
-          />
-          <mat-error *ngIf="produtoForm.get('preco')?.hasError('required')">
-            O preço é obrigatório
-          </mat-error>
-          <mat-error *ngIf="produtoForm.get('preco')?.hasError('min')">
-            O preço deve ser maior que zero
-          </mat-error>
-          <mat-error *ngIf="produtoForm.get('preco')?.hasError('invalid')">
-            Formato inválido. Use vírgula para decimais (ex: 10,50)
-          </mat-error>
-        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Preço</mat-label>
+            <span matTextPrefix class="prefix-spacing">R$&nbsp;</span>
+            <input
+              matInput
+              formControlName="preco"
+              type="text"
+              inputmode="decimal"
+              placeholder="0,00"
+              required
+              (input)="formatPreco($event)"
+            />
+            @if (produtoForm.controls.preco.hasError('required')) {
+              <mat-error>O preço é obrigatório</mat-error>
+            }
+            @if (produtoForm.controls.preco.hasError('min')) {
+              <mat-error>O preço deve ser maior que zero</mat-error>
+            }
+            @if (produtoForm.controls.preco.hasError('invalid')) {
+              <mat-error>Formato inválido. Use vírgula para decimais (ex: 10,50)</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Estoque</mat-label>
+            <input matInput formControlName="estoque" type="number" min="0" step="1" placeholder="0" required />
+            @if (produtoForm.controls.estoque.hasError('required')) {
+              <mat-error>O estoque é obrigatório</mat-error>
+            }
+            @if (
+              produtoForm.controls.estoque.hasError('min') || produtoForm.controls.estoque.hasError('pattern')
+            ) {
+              <mat-error>O estoque deve ser um número inteiro maior ou igual a zero</mat-error>
+            }
+          </mat-form-field>
+        </div>
 
         <div class="checkbox-container">
           <mat-checkbox formControlName="ativo" color="primary"> Produto ativo </mat-checkbox>
@@ -87,12 +108,13 @@ import { ProdutoService } from '../../../../core/services/produto.service';
           </button>
           <button
             mat-raised-button
-            color="primary"
             type="submit"
-            [disabled]="produtoForm.invalid || isLoading"
+            [disabled]="produtoForm.invalid || isLoading()"
             class="submit-button"
           >
-            <mat-icon *ngIf="isLoading">hourglass_empty</mat-icon>
+            @if (isLoading()) {
+              <lucide-icon class="spin" name="loader-circle" />
+            }
             {{ isEditMode ? 'Salvar Alterações' : 'Criar Produto' }}
           </button>
         </div>
@@ -101,38 +123,17 @@ import { ProdutoService } from '../../../../core/services/produto.service';
   `,
   styles: [
     `
-      .container {
-        padding: 24px;
-        max-width: 600px;
-        margin: 0 auto;
-      }
-
-      .header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 24px;
-      }
-
-      .back-button {
-        color: #556b2f;
-      }
-
-      h1 {
-        margin: 0;
-        color: #556b2f;
-        font-weight: 500;
-        font-size: 28px;
-      }
-
       .form-container {
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        background: white;
-        padding: 24px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        gap: var(--space-1);
+        padding: var(--space-5);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
       }
 
       .full-width {
@@ -140,56 +141,48 @@ import { ProdutoService } from '../../../../core/services/produto.service';
       }
 
       .checkbox-container {
-        margin: 8px 0 16px 0;
         display: flex;
         align-items: center;
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-control);
+        background: var(--color-surface-sunken);
+        border: 1px solid var(--color-border);
       }
 
       .actions {
         display: flex;
-        gap: 16px;
+        gap: var(--space-3);
         justify-content: flex-end;
-        margin-top: 24px;
-        padding-top: 16px;
-        border-top: 1px solid #e0e0e0;
+        margin-top: var(--space-4);
+        padding-top: var(--space-5);
+        border-top: 1px solid var(--color-border);
       }
 
       .cancel-button {
-        color: #666;
+        color: var(--color-text-secondary);
       }
 
       .submit-button {
-        background-color: #556b2f !important;
-        color: white !important;
-        min-width: 160px;
-      }
-
-      .submit-button:disabled {
-        background-color: #ccc !important;
-        color: #999 !important;
-      }
-
-      mat-checkbox {
-        margin: 8px 0;
-      }
-
-      mat-form-field {
-        margin-bottom: 8px;
+        min-width: 180px;
       }
 
       .prefix-spacing {
-        color: #556b2f;
-        font-weight: 500;
-        margin-left: 10px;
+        color: var(--color-text-secondary);
+        font-weight: var(--weight-semibold);
       }
 
       @media (max-width: 768px) {
-        .container {
-          padding: 16px;
+        .form-container {
+          padding: var(--space-4);
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+          gap: 0;
         }
 
         .actions {
-          flex-direction: column;
+          flex-direction: column-reverse;
         }
 
         .cancel-button,
@@ -200,65 +193,38 @@ import { ProdutoService } from '../../../../core/services/produto.service';
     `,
   ],
 })
-export class ProdutoFormComponent implements OnInit {
-  produtoForm: FormGroup;
-  isEditMode = false;
-  isLoading = false;
-  produtoId: string | null = null;
+export class ProdutoFormComponent {
+  private router = inject(Router);
+  private produtoService = inject(ProdutoService);
+  private notificacao = inject(NotificacaoService);
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private produtoService: ProdutoService,
-    private snackBar: MatSnackBar,
-  ) {
-    this.produtoForm = this.createForm();
-  }
+  readonly produtoId = inject(ActivatedRoute).snapshot.paramMap.get('id');
+  readonly isEditMode = this.produtoId !== null && this.produtoId !== 'novo';
+  readonly isLoading = signal(false);
 
-  ngOnInit(): void {
-    this.produtoId = this.route.snapshot.paramMap.get('id');
-    this.isEditMode = this.produtoId !== null && this.produtoId !== 'novo';
+  readonly produtoForm = inject(FormBuilder).nonNullable.group({
+    nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    descricao: ['', [Validators.maxLength(255)]],
+    preco: ['', [Validators.required, precoValidator]],
+    categoria: ['', [Validators.maxLength(50)]],
+    estoque: [0, [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]],
+    ativo: [true],
+  });
 
-    if (this.isEditMode && this.produtoId) {
+  constructor() {
+    if (this.isEditMode) {
       this.carregarProduto();
     }
   }
 
-  private createForm(): FormGroup {
-    return this.fb.group({
-      nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      descricao: ['', [Validators.maxLength(255)]],
-      preco: ['', [Validators.required, this.precoValidator]],
-      categoria: ['', [Validators.maxLength(50)]],
-      ativo: [true],
-    });
-  }
-
-  private precoValidator(control: any) {
-    if (!control.value) {
-      return { required: true };
-    }
-
-    const valorLimpo = control.value.replace(/[^\d,]/g, '');
-    const valorNumerico = parseFloat(valorLimpo.replace(',', '.'));
-
-    if (isNaN(valorNumerico) || valorNumerico <= 0) {
-      return { min: true };
-    }
-
-    if (!/^\d{1,6}(,\d{1,2})?$/.test(valorLimpo)) {
-      return { invalid: true };
-    }
-
-    return null;
-  }
-
-  formatPreco(event: any): void {
-    let valor = event.target.value;
+  /**
+   * Mantém o preço no formato 999999,99 enquanto o usuário digita
+   */
+  formatPreco(event: Event): void {
+    const input = event.target as HTMLInputElement;
 
     // Remove tudo que não é dígito ou vírgula
-    valor = valor.replace(/[^\d,]/g, '');
+    let valor = input.value.replace(/[^\d,]/g, '');
 
     // Remove vírgulas extras (deixa só uma)
     const partes = valor.split(',');
@@ -276,106 +242,91 @@ export class ProdutoFormComponent implements OnInit {
       valor = partes[0].substring(0, 6) + (partes[1] ? ',' + partes[1] : '');
     }
 
-    event.target.value = valor;
+    input.value = valor;
     this.produtoForm.patchValue({ preco: valor });
   }
 
-  validatePreco(): void {
-    const precoControl = this.produtoForm.get('preco');
-    if (precoControl && precoControl.value) {
-      precoControl.updateValueAndValidity();
-    }
-  }
+  onSubmit(): void {
+    if (this.produtoForm.invalid) return;
 
-  private carregarProduto(): void {
-    if (!this.produtoId) return;
+    this.isLoading.set(true);
+    const formValue = this.produtoForm.getRawValue();
+    const produto: CreateProdutoRequest & { ativo: boolean } = {
+      nome: formValue.nome.trim(),
+      descricao: formValue.descricao.trim(),
+      preco: precoParaNumero(formValue.preco),
+      categoria: formValue.categoria.trim(),
+      ativo: formValue.ativo,
+      estoque: Number(formValue.estoque),
+    };
 
-    this.isLoading = true;
-    this.produtoService.obterProdutoPorId(this.produtoId).subscribe({
-      next: (produto: Produto | null) => {
-        if (produto) {
-          this.produtoForm.patchValue({
-            nome: produto.nome,
-            preco: produto.preco.toString().replace('.', ','),
-            ativo: produto.ativo,
-          });
-        } else {
-          this.snackBar.open('Produto não encontrado.', 'Fechar', {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-          });
-        }
-        this.isLoading = false;
+    const requisicao =
+      this.isEditMode && this.produtoId
+        ? this.produtoService.atualizarProduto(this.produtoId, produto)
+        : this.produtoService.criarProduto(produto);
+    const operacao = this.isEditMode ? 'atualizar' : 'criar';
+
+    requisicao.subscribe({
+      next: () => {
+        this.notificacao.sucesso(
+          this.isEditMode ? 'Produto atualizado com sucesso!' : 'Produto criado com sucesso!',
+        );
+        this.router.navigate(['/admin/produtos']);
       },
       error: (error) => {
-        console.error('Erro ao carregar produto:', error);
-        this.snackBar.open('Erro ao carregar produto. Tente novamente.', 'Fechar', {
-          duration: 5000,
-          panelClass: ['error-snackbar'],
-        });
-        this.isLoading = false;
+        console.error(`Erro ao ${operacao} produto:`, error);
+        this.notificacao.erro(`Erro ao ${operacao} produto. Tente novamente.`, { duracao: 5000 });
+        this.isLoading.set(false);
       },
     });
-  }
-
-  onSubmit(): void {
-    if (this.produtoForm.valid) {
-      this.isLoading = true;
-      const formValue = this.produtoForm.value;
-      const precoLimpo = formValue.preco.replace(/[^\d,]/g, '');
-      const precoNumerico = parseFloat(precoLimpo.replace(',', '.'));
-
-      const produto: Omit<Produto, 'id'> = {
-        nome: formValue.nome.trim(),
-        descricao: formValue.descricao?.trim() || '',
-        preco: precoNumerico,
-        categoria: formValue.categoria?.trim() || '',
-        ativo: formValue.ativo,
-      };
-
-      if (this.isEditMode && this.produtoId) {
-        // Editar produto existente
-        this.produtoService.atualizarProduto(this.produtoId, produto).subscribe({
-          next: () => {
-            this.snackBar.open('Produto atualizado com sucesso!', 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
-            this.router.navigate(['/admin/produtos']);
-          },
-          error: (error) => {
-            console.error('Erro ao atualizar produto:', error);
-            this.snackBar.open('Erro ao atualizar produto. Tente novamente.', 'Fechar', {
-              duration: 5000,
-              panelClass: ['error-snackbar'],
-            });
-            this.isLoading = false;
-          },
-        });
-      } else {
-        // Criar novo produto
-        this.produtoService.criarProduto(produto).subscribe({
-          next: () => {
-            this.snackBar.open('Produto criado com sucesso!', 'Fechar', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-            });
-            this.router.navigate(['/admin/produtos']);
-          },
-          error: (error) => {
-            console.error('Erro ao criar produto:', error);
-            this.snackBar.open('Erro ao criar produto. Tente novamente.', 'Fechar', {
-              duration: 5000,
-              panelClass: ['error-snackbar'],
-            });
-            this.isLoading = false;
-          },
-        });
-      }
-    }
   }
 
   voltar(): void {
     this.router.navigate(['/admin/produtos']);
   }
+
+  private carregarProduto(): void {
+    if (!this.produtoId) return;
+
+    this.isLoading.set(true);
+    this.produtoService.obterProdutoPorId(this.produtoId).subscribe({
+      next: (produto) => {
+        this.produtoForm.patchValue({
+          nome: produto.nome,
+          preco: produto.preco.toString().replace('.', ','),
+          estoque: produto.estoque,
+          ativo: produto.ativo,
+        });
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Erro ao carregar produto:', error);
+        this.notificacao.erro('Erro ao carregar produto. Tente novamente.', { duracao: 5000 });
+        this.isLoading.set(false);
+      },
+    });
+  }
+}
+
+function precoParaNumero(preco: string): number {
+  return parseFloat(preco.replace(/[^\d,]/g, '').replace(',', '.'));
+}
+
+function precoValidator(control: AbstractControl<string>): ValidationErrors | null {
+  if (!control.value) {
+    return { required: true };
+  }
+
+  const valorLimpo = control.value.replace(/[^\d,]/g, '');
+  const valorNumerico = precoParaNumero(valorLimpo);
+
+  if (isNaN(valorNumerico) || valorNumerico <= 0) {
+    return { min: true };
+  }
+
+  if (!/^\d{1,6}(,\d{1,2})?$/.test(valorLimpo)) {
+    return { invalid: true };
+  }
+
+  return null;
 }
